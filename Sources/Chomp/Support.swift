@@ -20,7 +20,19 @@ enum Prefs {
         let v = UserDefaults.standard.double(forKey: "quality")
         return v == 0 ? 0.85 : v
     }
-    static var beside: Bool { UserDefaults.standard.object(forKey: "outputBeside") as? Bool ?? true }
+    enum SaveTo: String { case beside, downloads, custom }
+
+    /// Where results go. Falls back from the old two-way "outputBeside" setting.
+    static var saveTo: SaveTo {
+        let d = UserDefaults.standard
+        if let raw = d.string(forKey: "saveTo"), let v = SaveTo(rawValue: raw) { return v }
+        return d.object(forKey: "outputBeside") as? Bool ?? true ? .beside : .downloads
+    }
+
+    static var customFolder: URL? {
+        guard let p = UserDefaults.standard.string(forKey: "customFolder"), !p.isEmpty else { return nil }
+        return URL(fileURLWithPath: p, isDirectory: true)
+    }
     static var haptics: Bool { UserDefaults.standard.object(forKey: "haptics") as? Bool ?? true }
     static var sounds: Bool { UserDefaults.standard.object(forKey: "sounds") as? Bool ?? true }
     static var pixelText: Bool { UserDefaults.standard.object(forKey: "pixelText") as? Bool ?? true }
@@ -74,7 +86,20 @@ enum Shell {
 
 enum Files {
     static func outputDir(for src: URL) throws -> URL {
-        if Prefs.beside { return src.deletingLastPathComponent() }
+        switch Prefs.saveTo {
+        case .beside:
+            return src.deletingLastPathComponent()
+        case .custom:
+            // A folder that's gone (deleted, drive unplugged) falls back to Downloads/Chomp.
+            var isDir: ObjCBool = false
+            if let dir = Prefs.customFolder,
+               FileManager.default.fileExists(atPath: dir.path, isDirectory: &isDir), isDir.boolValue,
+               FileManager.default.isWritableFile(atPath: dir.path) {
+                return dir
+            }
+        case .downloads:
+            break
+        }
         let dir = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("Chomp", isDirectory: true)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)

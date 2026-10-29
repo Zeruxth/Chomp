@@ -6,7 +6,9 @@ import UniformTypeIdentifiers
 struct MenuPanel: View {
     @ObservedObject private var history = History.shared
     @AppStorage("quality") private var quality = 0.85
-    @AppStorage("outputBeside") private var beside = true
+    @AppStorage("saveTo") private var saveTo = Prefs.saveTo.rawValue
+    @AppStorage("customFolder") private var customFolder = ""
+    @State private var lastSaveTo = Prefs.saveTo.rawValue
     @AppStorage("skin") private var skinRaw = Skin.current.rawValue
     @AppStorage("pixelText") private var pixelText = true
     @AppStorage("haptics") private var haptics = true
@@ -143,12 +145,38 @@ struct MenuPanel: View {
 
             VStack(alignment: .leading, spacing: 6) {
                 Text("Save to").font(label)
-                Picker("", selection: $beside) {
-                    Text("Next to original").tag(true)
-                    Text("Downloads/Chomp").tag(false)
+                Picker("", selection: $saveTo) {
+                    Text("Beside original").tag(Prefs.SaveTo.beside.rawValue)
+                    Text("Downloads").tag(Prefs.SaveTo.downloads.rawValue)
+                    Text("Folder…").tag(Prefs.SaveTo.custom.rawValue)
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
+                .onChange(of: saveTo) { now in
+                    if now == Prefs.SaveTo.custom.rawValue && customFolder.isEmpty {
+                        if !chooseFolder() { saveTo = lastSaveTo; return }
+                    }
+                    lastSaveTo = now
+                }
+                if saveTo == Prefs.SaveTo.custom.rawValue && !customFolder.isEmpty {
+                    HStack(spacing: 8) {
+                        Text((customFolder as NSString).abbreviatingWithTildeInPath)
+                            .font(Fonts.body(11))
+                            .foregroundStyle(Pal.mutedC)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                            .help(customFolder)
+                        Spacer(minLength: 4)
+                        Button("Change") { _ = chooseFolder() }
+                            .buttonStyle(.plain)
+                            .font(Fonts.label(9))
+                            .foregroundStyle(accent)
+                    }
+                } else if saveTo == Prefs.SaveTo.downloads.rawValue {
+                    Text("~/Downloads/Chomp")
+                        .font(Fonts.body(11))
+                        .foregroundStyle(Pal.mutedC)
+                }
             }
 
             skins
@@ -209,6 +237,22 @@ struct MenuPanel: View {
             Spacer()
             Toggle("", isOn: value).labelsHidden().toggleStyle(.switch).controlSize(.mini).tint(accent)
         }
+    }
+
+    /// Returns false if the person cancels.
+    private func chooseFolder() -> Bool {
+        NSApp.activate(ignoringOtherApps: true)
+        let p = NSOpenPanel()
+        p.canChooseFiles = false
+        p.canChooseDirectories = true
+        p.canCreateDirectories = true
+        p.allowsMultipleSelection = false
+        p.prompt = "Save Here"
+        p.message = "Chomp will save everything it makes into this folder."
+        if !customFolder.isEmpty { p.directoryURL = URL(fileURLWithPath: customFolder) }
+        guard p.runModal() == .OK, let url = p.url else { return false }
+        customFolder = url.path
+        return true
     }
 
     // MARK: Input
