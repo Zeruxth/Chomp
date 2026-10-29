@@ -1,0 +1,802 @@
+<title>Chomp Pixel Pass</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Silkscreen&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one dungeon-dark column; every panel is a notched pixel frame, like the chest itself. Single dark theme on purpose. */
+:root {
+  --night: #17121c;      /* page */
+  --panel: #241a26;      /* frames */
+  --panel-2: #2f2231;
+  --ink: #0d0809;
+  --wood: #7f512d;
+  --wood-lt: #a06a3a;
+  --gold: #ffd45c;
+  --gold-dk: #c48d2a;
+  --tooth: #f6f1e6;
+  --eye: #8ff6ff;
+  --tongue: #ea4f86;
+  --muted: #b3a6b8;
+  --line: #3d2d3f;
+  --display: "Pixelify Sans", "Silkscreen", ui-monospace, monospace;
+  --label: "Silkscreen", "Pixelify Sans", ui-monospace, monospace;
+  --body: "Atkinson Hyperlegible", -apple-system, "Segoe UI", sans-serif;
+  --px: 4px;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--night); color: var(--tooth); font: 17px/1.55 var(--body); }
+.wrap { max-width: 920px; margin: 0 auto; padding-block: 40px 80px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 56px; }
+a { color: var(--eye); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible { outline: 3px solid var(--eye); outline-offset: 3px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; text-wrap: balance; margin: 0; line-height: 1.1; }
+h2 { font-size: 32px; color: var(--gold); }
+h3 { font-size: 20px; }
+p { margin: 0; max-width: 65ch; }
+.eyebrow { font-family: var(--label); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+section { display: flex; flex-direction: column; gap: 20px; }
+.lede { color: var(--muted); }
+code { font: 14px/1.4 ui-monospace, "SF Mono", Menlo, monospace; background: var(--panel-2); padding: 1px 6px; color: var(--tooth); }
+pre { margin: 0; overflow-x: auto; background: var(--ink); padding: 14px 16px; font: 14px/1.5 ui-monospace, "SF Mono", Menlo, monospace; color: var(--tooth); }
+
+/* notched pixel frame */
+.frame { background: var(--panel); position: relative; margin: var(--px);
+  box-shadow: 0 calc(-1*var(--px)) 0 0 var(--ink), 0 var(--px) 0 0 var(--ink),
+              calc(-1*var(--px)) 0 0 0 var(--ink), var(--px) 0 0 0 var(--ink),
+              0 calc(2*var(--px)) 0 0 rgba(0,0,0,.45); }
+.pad { padding: 20px 22px; }
+
+/* hero */
+.hero { display: grid; grid-template-columns: auto 1fr; gap: 32px; align-items: center; }
+.hero h1 { font-size: clamp(48px, 10vw, 88px); color: var(--gold); letter-spacing: .01em; text-shadow: 4px 4px 0 var(--ink); }
+.hero .sub { font-family: var(--display); font-size: 22px; color: var(--tooth); margin-top: 8px; }
+.hero p { margin-top: 14px; color: var(--muted); }
+.stage { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+#bigMimic { width: 192px; height: 198px; image-rendering: pixelated; }
+.moods { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+
+.pbtn { font-family: var(--label); font-size: 12px; text-transform: uppercase; letter-spacing: .04em;
+  background: var(--panel-2); color: var(--tooth); border: 0; padding: 8px 12px; cursor: pointer; margin: 3px;
+  box-shadow: 0 -3px 0 0 var(--ink), 0 3px 0 0 var(--ink), -3px 0 0 0 var(--ink), 3px 0 0 0 var(--ink), inset 0 -3px 0 0 rgba(0,0,0,.35); }
+.pbtn:hover { background: var(--line); }
+.pbtn[aria-pressed="true"] { background: var(--gold); color: var(--ink); box-shadow: 0 -3px 0 0 var(--ink), 0 3px 0 0 var(--ink), -3px 0 0 0 var(--ink), 3px 0 0 0 var(--ink), inset 0 -3px 0 0 var(--gold-dk); }
+.pbtn:active { transform: translateY(2px); }
+
+/* verdict list */
+.good { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
+.good .frame h3 { color: var(--eye); font-size: 18px; margin-bottom: 6px; }
+.good .frame p { font-size: 15px; color: var(--muted); }
+
+/* table */
+.tbl { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; min-width: 620px; font-size: 15px; }
+th { font-family: var(--label); font-weight: 400; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); text-align: left; padding: 10px 12px; border-bottom: 4px solid var(--ink); }
+td { padding: 12px; border-bottom: 2px solid var(--line); vertical-align: top; }
+td:first-child { font-family: var(--display); font-size: 17px; color: var(--gold); white-space: nowrap; }
+td:nth-child(2) { color: var(--muted); }
+
+/* wheel demo */
+.demo { display: grid; grid-template-columns: minmax(0, 440px) 1fr; gap: 40px; align-items: start; }
+.wheelbox { position: relative; width: 100%; max-width: 440px; aspect-ratio: 1; margin: 0 auto; transition: max-width .2s steps(3); }
+#wheel { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; cursor: pointer; }
+.seglabel { position: absolute; transform: translate(-50%, -10%); text-align: center; pointer-events: none; width: 84px; }
+.seglabel b { display: block; font-family: var(--display); font-weight: 600; font-size: 15px; line-height: 1; }
+.seglabel i { display: block; font-style: normal; font-family: var(--body); font-size: 10.5px; opacity: .65; margin-top: 5px; white-space: nowrap; }
+.seglabel.fmt b { font-size: 19px; }
+.seglabel.hot { color: var(--ink); }
+.seglabel.hot i { opacity: .8; }
+.center { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; pointer-events: none; }
+#wheelMimic { width: 64px; height: 66px; image-rendering: pixelated; }
+#caption { font-family: var(--label); font-size: 10px; color: var(--tooth); margin-top: -2px; max-width: 96px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
+.modes { display: flex; justify-content: center; gap: 14px; margin-top: 22px; flex-wrap: wrap; }
+.modes .pbtn { font-size: 11px; padding: 8px 12px; }
+.modes .key { font-family: -apple-system, "Segoe UI Symbol", sans-serif; font-weight: 700; margin-right: 6px; }
+[hidden] { display: none !important; }
+.toast { display: flex; align-items: center; gap: 14px; margin: 30px auto 4px; padding: 12px 14px; max-width: 420px; }
+.toast canvas { width: 32px; height: 33px; image-rendering: pixelated; flex: none; }
+.toast .t { font-family: var(--display); font-size: 15px; font-weight: 600; }
+.toast .d { font-size: 12.5px; color: var(--muted); }
+.toast .txt { flex: 1; min-width: 0; }
+.toast .pbtn { font-size: 10px; padding: 5px 8px; }
+.notes { display: flex; flex-direction: column; gap: 14px; font-size: 15.5px; }
+.notes p { color: var(--muted); }
+.notes strong { color: var(--tooth); }
+
+/* icons */
+.icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 14px; }
+.icon { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 16px 8px 12px; }
+.icon canvas { width: 48px; height: 48px; image-rendering: pixelated; }
+.icon span { font-family: var(--label); font-size: 11px; text-transform: uppercase; color: var(--muted); }
+
+/* type */
+.type { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.type .frame { display: flex; flex-direction: column; gap: 10px; }
+.spec { font-size: 13px; color: var(--muted); }
+.s-display { font-family: var(--display); font-size: 30px; color: var(--gold); line-height: 1; }
+.s-label { font-family: var(--label); font-size: 13px; text-transform: uppercase; letter-spacing: .06em; }
+.s-body { font-family: var(--body); font-size: 15px; }
+.bad { font-family: "Silkscreen", monospace; font-size: 11px; color: var(--tongue); }
+
+/* palette */
+.pal { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }
+.sw { display: flex; flex-direction: column; }
+.sw div { height: 56px; box-shadow: inset 0 0 0 3px var(--ink); }
+.sw b { font-family: var(--label); font-weight: 400; font-size: 11px; text-transform: uppercase; margin-top: 8px; }
+.sw span { font: 12px ui-monospace, Menlo, monospace; color: var(--muted); }
+
+/* refs */
+.refs { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.refs .frame { display: flex; flex-direction: column; gap: 8px; }
+.refs h3 { font-size: 18px; color: var(--eye); }
+.refs p { font-size: 15px; color: var(--muted); }
+.refs .steal { font-size: 14px; color: var(--tooth); }
+.refs .steal::before { content: "Take: "; font-family: var(--label); font-size: 11px; color: var(--gold); text-transform: uppercase; }
+
+/* fixes */
+.fixes { display: flex; flex-direction: column; gap: 12px; }
+.fix { display: grid; grid-template-columns: 92px 1fr; gap: 16px; align-items: start; }
+.tag { font-family: var(--label); font-size: 10px; text-transform: uppercase; text-align: center; padding: 5px 4px; color: var(--ink); }
+.tag.big { background: var(--tongue); }
+.tag.mid { background: var(--gold); }
+.tag.small { background: var(--muted); }
+.fix p { font-size: 15.5px; }
+.fix p small { display: block; color: var(--muted); font-size: 13.5px; margin-top: 2px; }
+
+/* roadmap */
+.road { display: flex; flex-direction: column; gap: 18px; }
+.stage-card { display: grid; grid-template-columns: 140px 1fr; gap: 20px; }
+.stage-card .when { font-family: var(--display); font-size: 22px; color: var(--gold); line-height: 1.1; }
+.stage-card .when small { display: block; font-family: var(--label); font-size: 11px; color: var(--muted); text-transform: uppercase; margin-top: 6px; }
+.stage-card ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 15.5px; }
+.stage-card li::marker { color: var(--gold); }
+.stage-card .body { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
+/* settings mock */
+.plain-text { --display: var(--body); --label: var(--body); }
+.settings { display: grid; grid-template-columns: 190px minmax(0, 1fr); min-height: 460px; }
+.tabs { display: flex; flex-direction: column; gap: 8px; padding: 22px 16px; background: var(--panel-2); border-right: 4px solid var(--ink); }
+.tabs .title { display: flex; align-items: center; gap: 8px; font-family: var(--display); font-size: 18px; color: var(--gold); margin-bottom: 10px; }
+.tabs .title canvas { width: 32px; height: 33px; image-rendering: pixelated; }
+.tab { font-family: var(--display); font-size: 16px; text-align: left; background: none; border: 0; color: var(--muted); padding: 9px 12px; cursor: pointer; }
+.tab:hover { color: var(--tooth); background: var(--line); }
+.tab[aria-selected="true"] { background: var(--gold); color: var(--ink); }
+.pane { padding: 26px 30px; display: flex; flex-direction: column; gap: 26px; min-width: 0; }
+.pane h3 { color: var(--tooth); font-size: 22px; }
+.row { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 20px; align-items: start; }
+.row .k { font-family: var(--display); font-size: 16px; }
+.row .k small { display: block; font-family: var(--body); font-size: 13px; color: var(--muted); margin-top: 4px; line-height: 1.35; }
+.seg { display: flex; flex-wrap: wrap; gap: 12px; }
+.seg .pbtn { font-size: 11px; padding: 7px 11px; }
+.skins { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 14px; }
+.skin { display: flex; flex-direction: column; align-items: center; gap: 6px; background: var(--panel-2); border: 0; padding: 12px 6px 10px; cursor: pointer; color: var(--tooth); box-shadow: inset 0 0 0 3px var(--ink); }
+.skin:hover { background: var(--line); }
+.skin[aria-pressed="true"] { box-shadow: inset 0 0 0 3px var(--gold), inset 0 0 0 6px var(--ink); }
+.skin canvas { width: 64px; height: 66px; image-rendering: pixelated; }
+.skin span { font-family: var(--label); font-size: 11px; text-transform: uppercase; }
+.skin em { font-style: normal; font-size: 11.5px; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.chip { font-size: 13.5px; background: var(--panel-2); padding: 5px 11px; box-shadow: inset 0 0 0 2px var(--line); border: 0; color: var(--tooth); cursor: pointer; font-family: var(--body); }
+.chip[aria-pressed="false"] { opacity: .45; text-decoration: line-through; }
+.bar { height: 14px; background: var(--ink); position: relative; max-width: 280px; }
+.bar i { position: absolute; top: 3px; bottom: 3px; left: 3px; width: 70%; background: var(--gold); }
+.packrow { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+.small { font-size: 13.5px; color: var(--muted); }
+
+/* shipping */
+.sizes { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.sizes .frame { display: flex; flex-direction: column; gap: 6px; }
+.sizes .n { font-family: var(--display); font-size: 30px; color: var(--gold); line-height: 1; }
+.sizes .what { font-family: var(--display); font-size: 17px; }
+.sizes p { font-size: 14.5px; color: var(--muted); }
+td.yes { color: var(--tooth); }
+
+@media (max-width: 720px) {
+  .settings { grid-template-columns: 1fr; }
+  .tabs { flex-direction: row; flex-wrap: wrap; border-right: 0; border-bottom: 4px solid var(--ink); padding: 14px; }
+  .tabs .title { width: 100%; margin-bottom: 4px; }
+  .pane { padding: 20px 18px; }
+  .row { grid-template-columns: 1fr; gap: 10px; }
+  .hero, .demo { grid-template-columns: 1fr; }
+  .hero .stage { order: -1; }
+  .stage-card { grid-template-columns: 1fr; gap: 10px; }
+  .fix { grid-template-columns: 1fr; gap: 6px; }
+  .tag { justify-self: start; }
+  h2 { font-size: 26px; }
+}
+@media (prefers-reduced-motion: reduce) { .pbtn:active { transform: none; } }
+</style>
+
+<div class="wrap">
+
+  <header class="hero">
+    <div class="stage">
+      <canvas id="bigMimic" width="32" height="33" aria-label="Chomp the mimic, animated"></canvas>
+      <div class="moods" role="group" aria-label="Mood">
+        <button class="pbtn" data-mood="idle" aria-pressed="true">Idle</button>
+        <button class="pbtn" data-mood="peek">Peek</button>
+        <button class="pbtn" data-mood="chomp">Chomp</button>
+        <button class="pbtn" data-mood="working">Chew</button>
+        <button class="pbtn" data-mood="happy">Happy</button>
+      </div>
+    </div>
+    <div>
+      <div class="eyebrow">Review · v0.1 · Oct 2026</div>
+      <h1>Chomp</h1>
+      <div class="sub">Pixel pass</div>
+      <p>The mimic is already great pixel art. Everything around it (the wheel, the toast, the menu panel) is smooth macOS glass with rounded system text. This page shows what it looks like when the whole app lives in the chest's world, what to fix in the code, and how to get it onto your friends' Macs.</p>
+    </div>
+  </header>
+
+  <section>
+    <div class="eyebrow">What already works</div>
+    <div class="good">
+      <div class="frame pad"><h3>The core trick</h3><p>Drag a file, tap ⇧ ⌘ or ⌃, drop on a slice. No Accessibility permission needed. That is the hard part and it's done.</p></div>
+      <div class="frame pad"><h3>The mimic</h3><p>32×33 grid, a tight oak-and-gold palette, real frame animations (peek follows the hovered slice, bite on drop). Keep all of it.</p></div>
+      <div class="frame pad"><h3>Safe by default</h3><p>Originals are never touched, outputs never overwrite, and every job has Show and Undo.</p></div>
+      <div class="frame pad"><h3>Voice</h3><p>"Couldn't chew that", "Spat it out", "nevermind". The copy already has a character. Lean into it a bit more.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div>
+      <div class="eyebrow">Where it stops looking pixel</div>
+      <h2>Eight things break the look</h2>
+    </div>
+    <div class="frame tbl">
+      <table>
+        <thead><tr><th>Part</th><th>Today</th><th>Pixel version</th></tr></thead>
+        <tbody>
+          <tr><td>Wheel</td><td>Blurred glass disc, smooth arcs, soft glow on hover</td><td>Solid dark disc drawn on a pixel grid at 2× so arcs come out stepped. Hover fills the slice gold with a 1px dark rim. No blur, no glow.</td></tr>
+          <tr><td>Icons</td><td>SF Symbols (thin vector lines)</td><td>Hand-drawn 12×12 or 16×16 icons, drawn the same way <code>Mimic.draw</code> draws the chest.</td></tr>
+          <tr><td>Names</td><td>SF Rounded everywhere</td><td>Pixel font for short words: slice names, mode pills, toast titles, "chomp."</td></tr>
+          <tr><td>Details</td><td>SF Rounded, 9.5–11pt</td><td>Keep a normal, very readable font for file names, paths, sizes and errors.</td></tr>
+          <tr><td>Mode pills</td><td>Capsules</td><td>Square keycaps with notched corners and a bottom shadow, like arcade buttons.</td></tr>
+          <tr><td>Toast</td><td>Rounded glass HUD</td><td>Notched wood-and-ink frame, mimic on the left, chunky Show / Undo buttons.</td></tr>
+          <tr><td>Motion</td><td>Springy scale and fade</td><td>Snap in 2–3 frames (scale 0.8 → 0.95 → 1) instead of a smooth spring. The mimic already animates this way.</td></tr>
+          <tr><td>Sounds</td><td>System Pop / Basso</td><td>Tiny chiptune blips: a crunch on drop, a coin on done, a low buzz on fail.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div>
+      <div class="eyebrow">Try it</div>
+      <h2>The wheel, pixelated</h2>
+    </div>
+    <div class="demo">
+      <div>
+        <div class="wheelbox" id="wheelbox">
+          <canvas id="wheel" width="220" height="220" aria-label="Pixel wheel mockup. Hover a slice, click to chomp."></canvas>
+          <div class="center"><canvas id="wheelMimic" width="32" height="33"></canvas><div id="caption">beach.heic</div></div>
+        </div>
+        <div class="modes" role="group" aria-label="Wheel mode">
+          <button class="pbtn" data-mode="convert" aria-pressed="true"><span class="key">⇧</span>Convert</button>
+          <button class="pbtn" data-mode="tools"><span class="key">⌘</span>Tools</button>
+          <button class="pbtn" data-mode="actions"><span class="key">⌃</span>Actions</button>
+        </div>
+        <div class="toast frame" id="toast" hidden>
+          <canvas id="toastMimic" width="32" height="33"></canvas>
+          <div class="txt"><div class="t" id="toastT"></div><div class="d" id="toastD"></div></div>
+          <button class="pbtn" type="button">Show</button><button class="pbtn" type="button" id="undo">Undo</button>
+        </div>
+      </div>
+      <div class="notes">
+        <p><strong>Hover a slice</strong> and the mimic's eyes follow it. <strong>Click</strong> and it bites, then the toast pops up. The middle cancels.</p>
+        <p><strong>How it's drawn:</strong> the disc is painted pixel by pixel on a 220×220 grid and shown at 2×. Each pixel checks its angle and distance from the centre to decide which slice it belongs to. In Swift this is one <code>Canvas</code> loop, the same idea as the current <code>Sector</code> shape but filling a grid instead of a smooth path.</p>
+        <p><strong>Text stays readable:</strong> the slice names use a pixel font because they're one short word ("WebP", "Zip"). The grey detail line under each name stays in a plain font, because "No EXIF / GPS" in pixels at 10pt is hard to read.</p>
+        <p><strong>Gaps between slices</strong> are a fixed 4 pixels wide instead of a fixed angle, so they look the same whether there are 4 slices or 8.</p>
+        <p><strong>Room to breathe:</strong> this version is about 15% bigger than today's wheel (440 vs 380 points), with more space between the hole and the slices and between each name and its detail line. In the app that means changing <code>Geo.size</code>, <code>outer</code> and <code>inner</code> in Wheel.swift. With 8 slices it's still the tightest mode, so the Wheel settings let people hide formats they never use.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div>
+      <div class="eyebrow">Settings &amp; appearance</div>
+      <h2>A real Settings window</h2>
+      <p class="lede" style="margin-top:8px">Today the accent colour only tints the wheel. Here it becomes a chest skin: the mimic, the menu bar panel, the toast and the wheel all change together. The menu bar panel stays quick (drop zone, recent jobs, skin switcher); everything else moves to a Settings window opened with ⌘,. <strong style="color:var(--tooth)">Try it:</strong> pick a skin and every chest and accent on this page changes.</p>
+    </div>
+    <div class="settings frame">
+      <div class="tabs" role="tablist" aria-label="Settings sections">
+        <div class="title"><canvas id="setMimic" width="32" height="33" aria-hidden="true"></canvas>Settings</div>
+        <button class="tab" role="tab" data-tab="look" aria-selected="true">Appearance</button>
+        <button class="tab" role="tab" data-tab="wheel" aria-selected="false">Wheel</button>
+        <button class="tab" role="tab" data-tab="save" aria-selected="false">Saving</button>
+        <button class="tab" role="tab" data-tab="formats" aria-selected="false">Formats</button>
+        <button class="tab" role="tab" data-tab="about" aria-selected="false">About</button>
+      </div>
+
+      <div class="pane" data-pane="look" role="tabpanel">
+        <h3>Appearance</h3>
+        <div class="row"><div class="k">Chest skin<small>Recolours Chomp and the accent everywhere.</small></div>
+          <div class="skins" id="skins"></div></div>
+        <div class="row"><div class="k">Pixel text<small>Turn off if pixel fonts are hard to read. Icons and the chest stay pixel.</small></div>
+          <div class="seg" data-group="pixeltext"><button class="pbtn" aria-pressed="true" data-v="on">On</button><button class="pbtn" aria-pressed="false" data-v="off">Off</button></div></div>
+        <div class="row"><div class="k">Wheel size<small>Whole-number pixel scales so it stays sharp.</small></div>
+          <div class="seg" data-group="size"><button class="pbtn" aria-pressed="false" data-v="360">Small</button><button class="pbtn" aria-pressed="true" data-v="440">Medium</button><button class="pbtn" aria-pressed="false" data-v="500">Large</button></div></div>
+        <div class="row"><div class="k">Menu bar chest</div>
+          <div class="seg" data-group="menubar"><button class="pbtn" aria-pressed="true">Blinks</button><button class="pbtn" aria-pressed="false">Still</button></div></div>
+        <div class="row"><div class="k">Sounds</div>
+          <div class="seg" data-group="sounds"><button class="pbtn" aria-pressed="true">Chiptune</button><button class="pbtn" aria-pressed="false">Mac sounds</button><button class="pbtn" aria-pressed="false">Off</button></div></div>
+      </div>
+
+      <div class="pane" data-pane="wheel" role="tabpanel" hidden>
+        <h3>Wheel</h3>
+        <div class="row"><div class="k">Open with<small>Mid-drag, tap a key.</small></div>
+          <div class="seg" data-group="tap"><button class="pbtn" aria-pressed="true">One tap</button><button class="pbtn" aria-pressed="false">Double tap</button></div></div>
+        <div class="row"><div class="k">Keys<small>Change if one clashes with another app.</small></div>
+          <div class="small">⇧ Convert · ⌘ Tools · ⌃ Actions · ⌥ (unused)</div></div>
+        <div class="row"><div class="k">Image formats<small>Click to hide ones you never use. Fewer slices, more space.</small></div>
+          <div class="chips"><button class="chip" aria-pressed="true">JPG</button><button class="chip" aria-pressed="true">PNG</button><button class="chip" aria-pressed="true">WebP</button><button class="chip" aria-pressed="true">HEIC</button><button class="chip" aria-pressed="false">AVIF</button><button class="chip" aria-pressed="true">PDF</button><button class="chip" aria-pressed="false">TIFF</button><button class="chip" aria-pressed="true">GIF</button></div></div>
+        <div class="row"><div class="k">Actions</div>
+          <div class="chips"><button class="chip" aria-pressed="true">AirDrop</button><button class="chip" aria-pressed="true">Copy</button><button class="chip" aria-pressed="true">Path</button><button class="chip" aria-pressed="true">Zip</button><button class="chip" aria-pressed="false">Terminal</button><button class="chip" aria-pressed="true">Desktop</button></div></div>
+      </div>
+
+      <div class="pane" data-pane="save" role="tabpanel" hidden>
+        <h3>Saving</h3>
+        <div class="row"><div class="k">Save to</div>
+          <div class="seg" data-group="where"><button class="pbtn" aria-pressed="true">Next to original</button><button class="pbtn" aria-pressed="false">Downloads/Chomp</button><button class="pbtn" aria-pressed="false">Ask</button></div></div>
+        <div class="row"><div class="k">File names<small>How a compressed copy is named.</small></div>
+          <div class="seg" data-group="names"><button class="pbtn" aria-pressed="true">beach (small).jpg</button><button class="pbtn" aria-pressed="false">beach-small.jpg</button></div></div>
+        <div class="row"><div class="k">Quality<small>For JPG, HEIC, WebP. 85 by default.</small></div>
+          <div class="bar" aria-label="Quality 85"><i></i></div></div>
+        <div class="row"><div class="k">"Send-able" video<small>The size the video tool aims for.</small></div>
+          <div class="seg" data-group="mb"><button class="pbtn" aria-pressed="true">10 MB · Discord</button><button class="pbtn" aria-pressed="false">25 MB · Email</button><button class="pbtn" aria-pressed="false">50 MB</button></div></div>
+        <div class="row"><div class="k">Photo location<small>GPS data inside photos.</small></div>
+          <div class="seg" data-group="gps"><button class="pbtn" aria-pressed="true">Keep</button><button class="pbtn" aria-pressed="false">Always remove</button></div></div>
+        <div class="row"><div class="k">When done</div>
+          <div class="seg" data-group="done"><button class="pbtn" aria-pressed="true">Show toast</button><button class="pbtn" aria-pressed="false">Open folder</button><button class="pbtn" aria-pressed="false">Copy result</button></div></div>
+      </div>
+
+      <div class="pane" data-pane="formats" role="tabpanel" hidden>
+        <h3>Formats</h3>
+        <div class="row"><div class="k">Built in<small>Uses what's already in macOS. Nothing to download.</small></div>
+          <div class="small">JPG · PNG · HEIC · TIFF · GIF · PDF · Word · RTF · TXT · MP4 · MOV · M4A · WAV · AIFF</div></div>
+        <div class="row"><div class="k">Extra formats pack<small>WebP, AVIF, MP3, OGG, Opus, WebM, MKV, GIF from video, loudness.</small></div>
+          <div class="packrow"><button class="pbtn" id="packBtn">Download · about 20 MB</button><span class="small" id="packNote">Slices that need it show a small lock until then.</span></div></div>
+      </div>
+
+      <div class="pane" data-pane="about" role="tabpanel" hidden>
+        <h3>About</h3>
+        <div class="row"><div class="k">Version</div><div class="packrow"><span>0.2</span><button class="pbtn">Check for updates</button></div></div>
+        <div class="row"><div class="k">Open at login</div><div class="seg" data-group="login"><button class="pbtn" aria-pressed="true">On</button><button class="pbtn" aria-pressed="false">Off</button></div></div>
+        <div class="row"><div class="k">Haptics</div><div class="seg" data-group="hap"><button class="pbtn" aria-pressed="true">On</button><button class="pbtn" aria-pressed="false">Off</button></div></div>
+        <div class="row"><div class="k">Stats<small>Fun, and unlocks the Royal skin.</small></div><div class="small">142 files chomped · 1.3 GB saved</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div>
+      <div class="eyebrow">Icons</div>
+      <h2>A first pixel icon set</h2>
+      <p class="lede" style="margin-top:8px">Rough 12×12 drafts to replace the SF Symbols. Final ones are worth redrawing in Aseprite at 16×16 so they have room for one shading colour.</p>
+    </div>
+    <div class="icons" id="icons"></div>
+  </section>
+
+  <section>
+    <div>
+      <div class="eyebrow">Type</div>
+      <h2>Pixels for names, plain text for details</h2>
+    </div>
+    <div class="type">
+      <div class="frame pad">
+        <div class="s-display">Couldn't chew that</div>
+        <div class="spec"><b>Titles · Pixelify Sans</b> · free (OFL). Readable at 13pt and up. Use for slice names, toast titles, the panel header.</div>
+      </div>
+      <div class="frame pad">
+        <div class="s-label">Convert · Tools · Recent</div>
+        <div class="spec"><b>Tiny labels · Silkscreen</b> · free (OFL). Capitals only, for keycaps and section labels. Never for sentences.</div>
+      </div>
+      <div class="frame pad">
+        <div class="s-body">IMG_4402 (small).jpg · 2.1 MB saved (63%)</div>
+        <div class="spec"><b>Details · system font</b>. File names, paths, numbers and errors stay plain so nobody has to squint.</div>
+      </div>
+    </div>
+    <div class="frame pad" style="display:flex;flex-direction:column;gap:8px">
+      <div class="bad">/Users/aki/Downloads/Screenshot 2026-10-30 at 14.02.11 (small).png</div>
+      <div class="spec">This is what a long file path looks like in a pixel font at small size. That's the line not to cross. Two more rules: only use pixel fonts at whole multiples of their design size (so they stay sharp), and bundle the font file inside the app (macOS loads it with <code>ATSApplicationFontsPath</code> in Info.plist).</div>
+    </div>
+  </section>
+
+  <section>
+    <div>
+      <div class="eyebrow">Palette</div>
+      <h2>Lock the colours</h2>
+      <p class="lede" style="margin-top:8px">The Oak skin, which is the chest's current colours. Every skin swaps the wood, trim and eye colours and keeps the same ink, mouth, teeth and tongue, so the text colours never change and stay readable.</p>
+    </div>
+    <div class="pal" id="pal"></div>
+  </section>
+
+  <section>
+    <div>
+      <div class="eyebrow">References</div>
+      <h2>What to look at</h2>
+    </div>
+    <div class="refs">
+      <div class="frame pad"><h3>Playdate system UI</h3><p>Panic's handheld. Crisp pixel menus that still read like a real operating system.</p><div class="steal">Bold pixel titles over clear body text; crank-style wheel menus.</div><a href="https://play.date">play.date</a></div>
+      <div class="frame pad"><h3>Stardew Valley menus</h3><p>Wooden frames with gold corners. The closest match to a treasure chest you'll find.</p><div class="steal">9-slice wood frames for the toast and menu panel.</div><a href="https://www.stardewvalley.net">stardewvalley.net</a></div>
+      <div class="frame pad"><h3>Balatro</h3><p>Chunky pixel UI with very readable numbers and juicy feedback on every action.</p><div class="steal">Buttons that drop 2px when pressed; a little shake on the result.</div><a href="https://www.playbalatro.com">playbalatro.com</a></div>
+      <div class="frame pad"><h3>Lospec</h3><p>The pixel-art palette library, plus tutorials on shading small sprites.</p><div class="steal">A tested 16–32 colour palette instead of picking hex values by hand.</div><a href="https://lospec.com/palette-list">lospec.com/palette-list</a></div>
+      <div class="frame pad"><h3>Aseprite</h3><p>The standard tool for drawing and animating pixel art. Exports sprite sheets.</p><div class="steal">Draw icons and new mimic frames here, then export PNGs into the app.</div><a href="https://www.aseprite.org">aseprite.org</a></div>
+      <div class="frame pad"><h3>Pixel fonts</h3><p>Pixelify Sans and Silkscreen (Google Fonts), Departure Mono, and Daniel Linssen's m5x7 / m6x11.</p><div class="steal">Check each licence before bundling. The two Google ones are OFL and safe to ship.</div><a href="https://fonts.google.com/specimen/Pixelify+Sans">Pixelify Sans</a></div>
+    </div>
+  </section>
+
+  <section>
+    <div>
+      <div class="eyebrow">Code review</div>
+      <h2>Fix before friends use it</h2>
+    </div>
+    <div class="fixes">
+      <div class="fix frame pad"><span class="tag big">Blocker</span><p>Video, audio, WebP and AVIF need Homebrew's ffmpeg.<small>Your friends won't have it, so half the wheel fails for them. The plan below fixes this without Homebrew and without a big download.</small></p></div>
+      <div class="fix frame pad"><span class="tag big">Blocker</span><p>macOS warns the first time someone opens it.<small><code>build.sh</code> signs with <code>--sign -</code>, which is free but not trusted by Apple. Without the paid Apple program this warning can't be removed, only made painless. See the shipping plan below.</small></p></div>
+      <div class="fix frame pad"><span class="tag mid">Bug</span><p>Zip silently drops items from other folders.<small>Converters.swift:548 keeps only items whose parent is the first item's folder. Drag files from two folders (say, from a search window) and some are missing from the zip with no warning.</small></p></div>
+      <div class="fix frame pad"><span class="tag mid">UX</span><p>No progress or cancel on long jobs.<small>Compressing a 2 GB video shows "Converting…" with no end in sight. ffmpeg can report progress (<code>-progress pipe:1</code>); show a pixel progress bar in the toast and add a Stop button.</small></p></div>
+      <div class="fix frame pad"><span class="tag small">Small</span><p>The toast always opens on the main screen.<small>HUD.swift:30 uses <code>NSScreen.main</code>. With two monitors it can pop up on the screen you're not looking at. Use the screen under the cursor, like the wheel does.</small></p></div>
+      <div class="fix frame pad"><span class="tag small">Small</span><p>Recent history is lost on quit, and the version is typed twice.<small>History lives only in memory (Support.swift:232). "v0.1" is hard-coded in MenuPanel.swift:40 and in Info.plist; read it from the bundle instead so they never drift.</small></p></div>
+    </div>
+  </section>
+
+  <section>
+    <div>
+      <div class="eyebrow">Shipping · free</div>
+      <h2>GitHub, a landing page, one small download</h2>
+      <p class="lede" style="margin-top:8px">No Apple Developer Program, no Homebrew. Friends download one small app, and only people who need the extra formats download more, from inside Chomp.</p>
+    </div>
+    <div class="sizes">
+      <div class="frame pad"><div class="n">≈ 3 MB</div><div class="what">Chomp.zip</div><p>The app itself. Today's binary is 1.1 MB. Does everything macOS can do on its own: photos, PDFs, documents, MP4/MOV/M4A.</p></div>
+      <div class="frame pad"><div class="n">≈ 20 MB</div><div class="what">Extra formats pack</div><p>A trimmed ffmpeg, downloaded only when someone first picks WebP, MP3, WebM and so on. Rough estimate until it's built.</p></div>
+      <div class="frame pad"><div class="n">0</div><div class="what">Things to install first</div><p>No Homebrew, no Terminal, no Xcode tools. The pack installs itself into Chomp's own folder.</p></div>
+    </div>
+
+    <div class="frame tbl">
+      <table>
+        <thead><tr><th>Job</th><th>Built into macOS</th><th>Needs the pack</th></tr></thead>
+        <tbody>
+          <tr><td>Images</td><td class="yes">JPG, PNG, HEIC, TIFF, GIF, PDF; compress, resize, clean, rotate, cut out, combine</td><td>Saving as WebP or AVIF</td></tr>
+          <tr><td>PDFs &amp; docs</td><td class="yes">Everything on the wheel today</td><td>Nothing</td></tr>
+          <tr><td>Video</td><td class="yes">MP4, MOV, M4A; compress, half size, mute, still frame, 10 MB, 2× speed</td><td>WebM, MKV, GIF from video, MP3 from video</td></tr>
+          <tr><td>Audio</td><td class="yes">M4A, WAV, AIFF; mono</td><td>MP3, OGG, Opus, FLAC; loudness, trim silence</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small">The "built in" column is the goal, not today's code: right now every video and audio job calls ffmpeg. Moving the common ones to Apple's own video framework (AVFoundation) is the biggest coding job in this plan, and it's what lets most people never need the pack.</p>
+
+    <div class="road">
+      <div class="stage-card frame pad">
+        <div class="when">1. The repo<small>Free</small></div>
+        <div class="body">
+          <ul>
+            <li>A public GitHub repo with an MIT licence. Public repos get free Mac build machines on GitHub Actions.</li>
+            <li>A workflow that, every time you tag a version, builds <code>Chomp.zip</code> and attaches it to a GitHub Release. You never upload by hand.</li>
+            <li>A second workflow builds the formats pack from ffmpeg's source with only the parts Chomp uses. It uses Apple's built-in H.264 encoder instead of x264, so the pack stays under the LGPL licence and Chomp can stay MIT.</li>
+            <li>The landing page lives in the same repo, in <code>/docs</code>, served free by GitHub Pages at <i>yourname.github.io/chomp</i>.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="stage-card frame pad">
+        <div class="when">2. First open<small>The one annoying step</small></div>
+        <div class="body">
+          <p>Without the paid Apple program, macOS blocks the first open of any downloaded app. Give friends two ways in and explain both on the landing page with pixel screenshots:</p>
+          <ul>
+            <li><b>Download:</b> unzip, drag to Applications, open it, click Done on the warning, then System Settings → Privacy &amp; Security → "Open Anyway". Only once. On current macOS, right-click → Open no longer skips this.</li>
+            <li><b>One line in Terminal:</b> downloads and installs it with no warning at all, because files fetched by <code>curl</code> aren't flagged the way browser downloads are. Only suggest this to people who trust you, and keep the script short and readable in the repo.</li>
+          </ul>
+          <pre>curl -fsSL https://yourname.github.io/chomp/install.sh | bash</pre>
+        </div>
+      </div>
+      <div class="stage-card frame pad">
+        <div class="when">3. The pack<small>Inside the app</small></div>
+        <div class="body">
+          <ul>
+            <li>Slices that need the pack show a small lock. Dropping on one asks "Grab the extra formats? (about 20 MB)".</li>
+            <li>Chomp downloads the right file for the Mac's chip (Apple Silicon or Intel) from your GitHub Release, checks its fingerprint (SHA-256) so a broken or swapped file is refused, and saves it in Application Support.</li>
+            <li>No second warning: files Chomp downloads itself aren't flagged by macOS. The code already looks for a bundled ffmpeg in Support.swift, so this means one more place to look.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="stage-card frame pad">
+        <div class="when">4. Updates<small>Free</small></div>
+        <div class="body">
+          <ul>
+            <li>Once a day Chomp asks GitHub for the latest release. If it's newer, the menu bar panel shows "New version" with a download link.</li>
+            <li>Later, Sparkle can install updates by itself. It's free and uses its own signing key, not Apple's.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="stage-card frame pad">
+        <div class="when">5. Landing page<small>GitHub Pages</small></div>
+        <div class="body">
+          <ul>
+            <li><b>Top:</b> the animated chest, "Drag. Tap. Chomp.", and a big "Download for Mac · 3 MB" button that always points at the latest release.</li>
+            <li><b>Show it:</b> a 10-second recording of drag → ⇧ → drop, then the three keys explained with the pixel icons.</li>
+            <li><b>First open:</b> the steps above, with screenshots and the Terminal line.</li>
+            <li><b>Questions:</b> "Why the warning?" (it's free and open source; Apple charges $99 a year to remove it), "Does it upload my files?" (no, everything happens on your Mac), macOS 13 or newer, Apple Silicon and Intel.</li>
+            <li>Check the name first: several apps are already called Chomp. A custom domain is optional, about $10–15 a year.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="stage-card frame pad">
+        <div class="when">Later<small>If it grows</small></div>
+        <div class="body">
+          <ul>
+            <li>The $99 Apple program removes the first-open warning. Nothing else in this plan changes.</li>
+            <li>A Homebrew cask, so people who use Homebrew can install it with one command.</li>
+            <li>Skip the Mac App Store. Its sandbox blocks the drag-anywhere trick and running ffmpeg.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(() => {
+  // ---------- Mimic: ported from Mimic.swift ----------
+  const C = { ink:"#140A08", woodDark:"#5E3820", wood:"#7F512D", woodLight:"#A06A3A", woodHi:"#C48A50", woodShadow:"#43281A",
+    gold:"#FFD45C", goldDark:"#C48D2A", mouth:"#24101C", tooth:"#F6F1E6", tongue:"#EA4F86", tongueDark:"#A3285A", eye:"#8FF6FF",
+    shadow:"rgba(0,0,0,.35)", paper:"#FFFFFF" };
+  const F = (o) => Object.assign({ open:0, eyes:"none", look:0, tongue:false, dx:0, bits:[] }, o);
+  const B = (x,y,w=1,h=1,c=C.tooth) => ({x,y,w,h,c});
+  const idleO = [0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0], idleD = [0,0,0,1,1,0,0,-1,0,0,0,0,0,0,0,0,0,0];
+  const idle = idleO.map((o,i) => F({ open:o, eyes:"glow", dx:idleD[i] }));
+  const chomp = [
+    F({ bits:[B(14,2,3,4,C.paper)] }), F({ bits:[B(14,5,3,4,C.paper)] }),
+    F({ open:3, eyes:"glow", bits:[B(14,6,3,4,C.paper)] }), F({ open:6, eyes:"glow" }),
+    F({ open:8, eyes:"glow", tongue:true }), F({ open:8, eyes:"glow", tongue:true }), F({ open:3, eyes:"glow" }),
+    F({ dx:1, bits:[B(3,16),B(28,15),B(2,13,1,1,C.gold)] }), F({ dx:-1, bits:[B(1,13),B(30,12),B(0,10,1,1,C.gold)] }),
+    F({ bits:[B(0,10),B(31,9)] }) ];
+  const working = [0,2,4,4,2,0,0,0].map(o => F({ open:o, eyes:"glow", dx: o===0?0:(o===4?1:-1) }));
+  const happy = [...Array(8)].map((_,i) => F({ open: i===4||i===5 ? 6 : 5, eyes:"happy", tongue:true,
+    bits: i%4<2 ? [B(2,6,1,1,C.gold),B(1,7,3,1,C.gold),B(2,8,1,1,C.gold),B(28,2,1,1,C.gold)]
+                : [B(29,5,1,1,C.gold),B(28,6,3,1,C.gold),B(29,7,1,1,C.gold),B(3,3,1,1,C.gold)] }));
+  const TICK = 110;
+  function frame(m, now) {
+    const n = Math.floor(now / TICK);
+    switch (m.mood) {
+      case "idle": return idle[n % idle.length];
+      case "closed": return F({});
+      case "peek": return F({ open: n % 30 === 0 ? 1 : 2, eyes:"glow", look: m.look || 0 });
+      case "chomp": { const i = Math.max(0, Math.floor((now - m.since) / 75)); return i < chomp.length ? chomp[i] : F({}); }
+      case "working": return working[n % working.length];
+      case "happy": return happy[n % happy.length];
+    }
+    return F({});
+  }
+  function draw(ctx, f) {
+    ctx.clearRect(0, 0, 32, 33);
+    const px = (x,y,w,h,c) => { ctx.fillStyle = c; ctx.fillRect(x,y,w,h); };
+    const open = Math.min(Math.max(f.open,0),9), bx = 4 + f.dx, bw = 24, by = 19, bh = 11;
+    px(6,30,20,2,C.shadow);
+    px(bx,by,bw,bh,C.ink); px(bx+1,by+1,bw-2,bh-2,C.wood);
+    for (let x = bx+5; x < bx+bw-2; x += 5) px(x,by+1,1,bh-2,C.woodDark);
+    px(bx+1,by+bh-2,bw-2,1,C.woodShadow);
+    px(bx+1,by+1,2,bh-2,C.goldDark); px(bx+bw-3,by+1,2,bh-2,C.goldDark);
+    px(bx+1,by+1,2,1,C.gold); px(bx+bw-3,by+1,2,1,C.gold);
+    if (open > 0) { px(bx,by-open,bw,open,C.ink); px(bx+1,by-open,bw-2,open,C.mouth); }
+    if (open >= 3) for (let x = bx+3; x < bx+bw-4; x += 3) { px(x,by-1,2,1,C.tooth); if (open >= 6) px(x,by-2,1,1,C.tooth); }
+    const ly = by - open - 9;
+    px(bx+1,ly,bw-2,1,C.ink); px(bx,ly+1,bw,8,C.ink); px(bx+1,ly+1,bw-2,7,C.woodLight); px(bx+2,ly+1,bw-4,1,C.woodHi);
+    for (let x = bx+5; x < bx+bw-2; x += 5) px(x,ly+2,1,4,C.wood);
+    px(bx+1,ly+6,bw-2,2,C.goldDark); px(bx+1,ly+6,bw-2,1,C.gold);
+    px(bx+1,ly+1,2,5,C.goldDark); px(bx+bw-3,ly+1,2,5,C.goldDark); px(bx+1,ly+1,2,1,C.gold); px(bx+bw-3,ly+1,2,1,C.gold);
+    if (open >= 3) for (let x = bx+2; x < bx+bw-3; x += 3) { px(x,ly+9,2,1,C.tooth); if (open >= 6) px(x+1,ly+10,1,1,C.tooth); }
+    px(bx+10,by,4,4,C.ink); px(bx+10,by,4,3,C.gold); px(bx+11,by+1,2,1,C.goldDark); px(bx+11,by+2,2,1,C.ink);
+    if (f.eyes !== "none" && open >= 1) {
+      const h = open >= 3 ? 2 : 1, ey = open >= 3 ? by - open + Math.max(1, Math.floor(open/2) - 1) : by - 1;
+      if (f.eyes === "happy" && open >= 3) for (const [ex,e2] of [[6,1],[7,0],[8,1],[16,1],[17,0],[18,1]]) px(bx+ex,ey+e2,1,1,C.eye);
+      else { px(bx+6+f.look,ey,2,h,C.eye); px(bx+16+f.look,ey,2,h,C.eye); }
+    }
+    if (f.tongue && open >= 4) { px(bx+15,by-1,4,7,C.ink); px(bx+16,by-1,2,6,C.tongue); px(bx+16,by+4,2,1,C.tongueDark); }
+    for (const b of f.bits) px(b.x,b.y,b.w,b.h,b.c);
+  }
+
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const sprites = [];
+  const sprite = (id, mood) => { const c = document.getElementById(id); const s = { ctx: c.getContext("2d"), m: { mood, since: 0, look: 0 } }; sprites.push(s); return s; };
+  const big = sprite("bigMimic", "idle"), wm = sprite("wheelMimic", "idle"), tm = sprite("toastMimic", "working");
+  const hex = h => [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)];
+  function loop(now) { for (const s of sprites) draw(s.ctx, frame(s.m, reduce ? 0 : now)); requestAnimationFrame(loop); }
+  requestAnimationFrame(loop);
+
+  document.querySelectorAll("[data-mood]").forEach(b => b.addEventListener("click", () => {
+    document.querySelectorAll("[data-mood]").forEach(o => o.setAttribute("aria-pressed", o === b));
+    big.m = { mood: b.dataset.mood, since: performance.now(), look: 1 };
+    if (b.dataset.mood === "chomp") setTimeout(() => { if (big.m.mood === "chomp") big.m = { mood: "happy", since: 0 }; }, 900);
+  }));
+
+  // ---------- Pixel icons (12×12 drafts) ----------
+  const ICONS = {
+    compress: ["#..........#",".#........#.","..#.#..#.#..","...##..##...","..###..###..","............","............","..###..###..","...##..##...","..#.#..#.#..",".#........#.","#..........#"],
+    "1080": ["............",".###....###.",".#........#.",".#........#.","............","....####....","....####....","............",".#........#.",".#........#.",".###....###.","............"],
+    half: ["............","...####.....","..#....#....",".#......#...",".#.####.#...",".#......#...","..#....#....","...####.#...",".........#..","..........#.","...........#","............"],
+    cutout: ["#.#.#..#.#.#","............","#....##....#","....####....","#...####...#",".....##.....","#...####...#","...######...","#..######..#","............","#.#.#..#.#.#","............"],
+    clean: ["...........#","..........#.","...#####.#..","..#.....#...",".#..##.#.#..","#..###.#..#.",".#..#.#..#..","..#..#..#...","...##.##....","....#.......","...#........","..#........."],
+    rotate: ["............","....####.#..","...#....##..","..#....###..","..#.........","..#.........","..#......#..","..#......#..","...#....#...","....####....","............","............"],
+    combine: [".######.....",".#....#.....",".#.######...",".#.#....#...",".#.#.##.#...",".###....#...","...#.##.#...","...#....#...","...######...","............","............","............"],
+    airdrop: ["............","...######...","..#......#..",".#..####..#.","#..#....#..#","#.#..##..#.#","...#.##.#...",".....##.....",".....##.....","....####....","............","............"],
+    copy: ["....####....",".###.##.###.",".#........#.",".#.######.#.",".#........#.",".#.######.#.",".#........#.",".#.####...#.",".#........#.",".##########.","............","............"],
+    path: ["............",".......###..","......#...#.",".....#..#.#.","....#..#..#.","...#..#..#..","..#..#..#...",".#..#..#....",".#.#..#.....",".#...#......","..###.......","............"],
+    zip: ["............",".##########.",".#........#.",".##########.",".#...##...#.",".#...##...#.",".#........#.",".#........#.",".##########.","............","............","............"],
+    terminal: ["############","#..........#","#.#........#","#..#.......#","#...#......#","#..#.......#","#.#..####..#","#..........#","############","............","............","............"],
+    desktop: ["############","#..........#","#..........#","#..........#","#..........#","############",".....##.....","...######...","............","............","............","............"],
+  };
+  function drawIcon(ctx, rows, ox, oy, color) {
+    ctx.fillStyle = color;
+    rows.forEach((r, y) => [...r].forEach((ch, x) => { if (ch === "#") ctx.fillRect(ox + x, oy + y, 1, 1); }));
+  }
+  const iconWrap = document.getElementById("icons");
+  const iconNames = { compress:"Compress", "1080":"1080", half:"Half", cutout:"Cut out", clean:"Clean", rotate:"Rotate", combine:"Combine", airdrop:"AirDrop", copy:"Copy", path:"Path", zip:"Zip", terminal:"Terminal", desktop:"Desktop" };
+  for (const [k, rows] of Object.entries(ICONS)) {
+    const d = document.createElement("div"); d.className = "icon frame";
+    const c = document.createElement("canvas"); c.width = 12; c.height = 12; c.setAttribute("aria-hidden", "true");
+    drawIcon(c.getContext("2d"), rows, 0, 0, C.tooth);
+    const s = document.createElement("span"); s.textContent = iconNames[k];
+    d.append(c, s); iconWrap.append(d);
+  }
+
+  // ---------- Palette ----------
+  const PAL = [["Ink","#140A08","outlines, text on gold"],["Mouth","#24101C","wheel disc"],["Wood","#7F512D","frames"],["Wood light","#A06A3A","raised edges"],["Gold","#FFD45C","hover, accent"],["Gold dark","#C48D2A","pressed, rims"],["Tooth","#F6F1E6","main text"],["Eye","#8FF6FF","links, focus"],["Tongue","#EA4F86","errors"]];
+  const palWrap = document.getElementById("pal");
+  for (const [n, h, role] of PAL) {
+    const d = document.createElement("div"); d.className = "sw";
+    d.innerHTML = `<div style="background:${h}"></div><b>${n}</b><span>${h} · ${role}</span>`;
+    palWrap.append(d);
+  }
+
+  // ---------- Pixel wheel ----------
+  const OPS = {
+    convert: [["JPG","Universal"],["PNG","Lossless"],["WebP","For web"],["HEIC","Tiny, Apple"],["AVIF","Smallest"],["PDF","Document"],["TIFF","Print"],["GIF","Old school"]],
+    tools: [["Compress","Smaller file","compress"],["1080","Web / Insta","1080"],["Half","50% size","half"],["Cut out","Remove BG","cutout"],["Clean","No EXIF / GPS","clean"],["Rotate","90° right","rotate"],["Combine","One PDF","combine"]],
+    actions: [["AirDrop","Send nearby","airdrop"],["Copy","To clipboard","copy"],["Path","Copy path","path"],["Zip","Archive","zip"],["Terminal","Open here","terminal"],["Desktop","Copy there","desktop"]],
+  };
+  const S = 220, CX = 110, OUTER = 102, INNER = 40, DISC = 108;
+  const wheel = document.getElementById("wheel"), wctx = wheel.getContext("2d");
+  const box = document.getElementById("wheelbox"), cap = document.getElementById("caption");
+  let mode = "convert", hover = null, labels = [], busy = false;
+  const COL = { disc: hex("#1d1420"), rim: hex("#140A08"), seg: hex("#2f2231"), segHi: hex("#3d2d3f"), gold: hex("#FFD45C"), goldDk: hex("#C48D2A"), hole: hex("#120c14") };
+
+  function segAt(dx, dy) {
+    const n = OPS[mode].length, w = 2 * Math.PI / n;
+    let a = Math.atan2(dx, -dy); if (a < 0) a += 2 * Math.PI;
+    const t = (a + w / 2) % (2 * Math.PI);
+    return { i: Math.floor(t / w) % n, off: Math.min(t % w, w - (t % w)) };
+  }
+  function paint() {
+    const img = wctx.createImageData(S, S), d = img.data;
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+      const dx = x + .5 - CX, dy = y + .5 - CX, r = Math.hypot(dx, dy);
+      let c = null;
+      if (r <= DISC) c = r > DISC - 2 ? COL.rim : COL.disc;
+      if (r < INNER) c = r > INNER - 2 ? COL.rim : COL.hole;
+      if (r >= INNER + 5) {
+        const { i, off } = segAt(dx, dy);
+        const hot = hover === i, out = hot ? OUTER : OUTER - 5;
+        if (r <= out && off * r > 2) {
+          if (hot) c = (r > out - 1 || r < INNER + 6 || off * r < 3) ? COL.goldDk : COL.gold;
+          else c = r > out - 1 ? COL.segHi : COL.seg;
+        }
+      }
+      if (c) { const k = (y * S + x) * 4; d[k] = c[0]; d[k+1] = c[1]; d[k+2] = c[2]; d[k+3] = 255; }
+    }
+    wctx.putImageData(img, 0, 0);
+    const n = OPS[mode].length, w = 2 * Math.PI / n, R = (INNER + OUTER) / 2 + 2;
+    OPS[mode].forEach((op, i) => {
+      if (!op[2]) return;
+      const a = i * w, x = Math.round(CX + R * Math.sin(a) - 6), y = Math.round(CX - R * Math.cos(a) - 17);
+      drawIcon(wctx, ICONS[op[2]], x, y, hover === i ? C.ink : C.tooth);
+    });
+    labels.forEach((l, i) => l.classList.toggle("hot", hover === i));
+  }
+  function build() {
+    labels.forEach(l => l.remove()); labels = [];
+    const n = OPS[mode].length, w = 2 * Math.PI / n, R = (INNER + OUTER) / 2 + 2;
+    OPS[mode].forEach((op, i) => {
+      const a = i * w, x = (CX + R * Math.sin(a)) / S * 100, y = (CX - R * Math.cos(a)) / S * 100;
+      const el = document.createElement("div");
+      el.className = "seglabel" + (op[2] ? "" : " fmt");
+      el.style.left = x + "%"; el.style.top = (op[2] ? y + 0.5 : y - 6) + "%";
+      el.innerHTML = `<b>${op[0]}</b><i>${op[1]}</i>`;
+      box.append(el); labels.push(el);
+    });
+    paint();
+  }
+  function setHover(h) {
+    if (h === hover || busy) return;
+    hover = h; paint();
+    if (h === null) { wm.m = { mood: "idle" }; cap.textContent = "beach.heic"; return; }
+    if (h < 0) { wm.m = { mood: "closed" }; cap.textContent = "nevermind"; return; }
+    const s = Math.sin(2 * Math.PI * h / OPS[mode].length);
+    wm.m = { mood: "peek", look: s > .35 ? 1 : (s < -.35 ? -1 : 0) };
+    cap.textContent = "beach.heic";
+  }
+  function zone(e) {
+    const r = wheel.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width * S, y = (e.clientY - r.top) / r.height * S;
+    const dx = x - CX, dy = y - CX, d = Math.hypot(dx, dy);
+    if (d < INNER) return -1;
+    if (d > OUTER + 4) return null;
+    return segAt(dx, dy).i;
+  }
+  wheel.addEventListener("pointermove", e => setHover(zone(e)));
+  wheel.addEventListener("pointerleave", () => setHover(null));
+  const toast = document.getElementById("toast"), tT = document.getElementById("toastT"), tD = document.getElementById("toastD");
+  wheel.addEventListener("click", e => {
+    const z = zone(e); if (busy) return;
+    if (z === null || z < 0) { setHover(null); return; }
+    const op = OPS[mode][z]; busy = true; hover = null; paint();
+    wm.m = { mood: "chomp", since: performance.now() }; cap.textContent = "chomp.";
+    toast.hidden = false; tm.m = { mood: "working" };
+    tT.textContent = mode === "convert" ? `Converting to ${op[0]}…` : `${op[0]}…`; tD.textContent = "beach.heic";
+    setTimeout(() => {
+      busy = false; wm.m = { mood: "idle" }; cap.textContent = "beach.heic";
+      tm.m = { mood: "happy" };
+      if (mode === "convert") { tT.textContent = `1 file → ${op[0]}`; tD.textContent = op[0] === "PNG" || op[0] === "TIFF" ? "+3.4 MB" : "1.8 MB saved (41%)"; }
+      else if (mode === "tools") { tT.textContent = `${op[0]} · 1 file`; tD.textContent = "beach (" + op[0].toLowerCase() + ").heic"; }
+      else { tT.textContent = op[0]; tD.textContent = op[1] + " · beach.heic"; }
+    }, 1300);
+  });
+  document.getElementById("undo").addEventListener("click", () => { tm.m = { mood: "closed" }; tT.textContent = "Spat it out"; tD.textContent = "Moved 1 file to the Trash"; });
+  document.querySelectorAll("[data-mode]").forEach(b => b.addEventListener("click", () => {
+    document.querySelectorAll("[data-mode]").forEach(o => o.setAttribute("aria-pressed", o === b));
+    mode = b.dataset.mode; hover = null; build();
+  }));
+  build();
+
+  // ---------- Settings: skins ----------
+  const SKINS = {
+    oak:   { name: "Oak",   note: "Default",       woodDark:"#5E3820", wood:"#7F512D", woodLight:"#A06A3A", woodHi:"#C48A50", woodShadow:"#43281A", gold:"#FFD45C", goldDark:"#C48D2A", eye:"#8FF6FF", accent:"#FFD45C", accentDk:"#C48D2A" },
+    frost: { name: "Frost", note: "Icy blue",      woodDark:"#2B4A6B", wood:"#3E6A94", woodLight:"#5A8FBF", woodHi:"#8FC0E8", woodShadow:"#1F334D", gold:"#E8F6FF", goldDark:"#9CC4DE", eye:"#FFD45C", accent:"#8FD8FF", accentDk:"#4F9CC8" },
+    slime: { name: "Slime", note: "Swamp green",   woodDark:"#2B5A2A", wood:"#3F7A3A", woodLight:"#5FA34F", woodHi:"#8CCB6A", woodShadow:"#1E3F1E", gold:"#D9F27A", goldDark:"#9BB83A", eye:"#FF7AD9", accent:"#B6F05A", accentDk:"#7FB02E" },
+    void:  { name: "Void",  note: "Dungeon purple",woodDark:"#352050", wood:"#4B2F6B", woodLight:"#6A4A94", woodHi:"#9273C0", woodShadow:"#24163A", gold:"#C9A6FF", goldDark:"#8A6AC8", eye:"#8FF6FF", accent:"#B894FF", accentDk:"#7E5CC4" },
+    bone:  { name: "Bone",  note: "Greyscale",     woodDark:"#4A4A50", wood:"#6B6B70", woodLight:"#8E8E95", woodHi:"#B8B8C0", woodShadow:"#333338", gold:"#F2F2F2", goldDark:"#A8A8B0", eye:"#FF5A5A", accent:"#EDEDED", accentDk:"#A8A8B0" },
+    royal: { name: "Royal", note: "100 chomps",    woodDark:"#8F6118", wood:"#C48D2A", woodLight:"#E0AE45", woodHi:"#FFD45C", woodShadow:"#6B4510", gold:"#FFF3B0", goldDark:"#E8C25A", eye:"#EA4F86", accent:"#FFE27A", accentDk:"#C9A23A" },
+  };
+  const skinKeys = ["woodDark","wood","woodLight","woodHi","woodShadow","gold","goldDark","eye"];
+  const pick = s => Object.fromEntries(skinKeys.map(k => [k, s[k]]));
+  sprite("setMimic", "idle");
+  const skinWrap = document.getElementById("skins");
+  for (const [id, s] of Object.entries(SKINS)) {
+    const b = document.createElement("button");
+    b.className = "skin"; b.dataset.skin = id; b.setAttribute("aria-pressed", id === "oak");
+    const c = document.createElement("canvas"); c.width = 32; c.height = 33; c.setAttribute("aria-hidden", "true");
+    const saved = pick(C); Object.assign(C, pick(s)); draw(c.getContext("2d"), F({ open: 2, eyes: "glow" })); Object.assign(C, saved);
+    b.append(c);
+    b.insertAdjacentHTML("beforeend", `<span>${s.name}</span><em>${s.note}</em>`);
+    b.addEventListener("click", () => applySkin(id));
+    skinWrap.append(b);
+  }
+  function applySkin(id) {
+    const s = SKINS[id]; if (!s) return;
+    Object.assign(C, pick(s));
+    COL.gold = hex(s.accent); COL.goldDk = hex(s.accentDk);
+    document.documentElement.style.setProperty("--gold", s.accent);
+    document.documentElement.style.setProperty("--gold-dk", s.accentDk);
+    skinWrap.querySelectorAll(".skin").forEach(b => b.setAttribute("aria-pressed", b.dataset.skin === id));
+    paint();
+    try { localStorage.setItem("chomp-skin", id); } catch (e) {}
+  }
+  try { const saved = localStorage.getItem("chomp-skin"); if (saved && saved !== "oak") applySkin(saved); } catch (e) {}
+
+  // ---------- Settings: tabs, toggles ----------
+  document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(o => o.setAttribute("aria-selected", o === t));
+    document.querySelectorAll(".pane").forEach(p => p.hidden = p.dataset.pane !== t.dataset.tab);
+  }));
+  document.querySelectorAll(".seg").forEach(g => g.addEventListener("click", e => {
+    const b = e.target.closest(".pbtn"); if (!b) return;
+    g.querySelectorAll(".pbtn").forEach(o => o.setAttribute("aria-pressed", o === b));
+    if (g.dataset.group === "pixeltext") document.body.classList.toggle("plain-text", b.dataset.v === "off");
+    if (g.dataset.group === "size") box.style.maxWidth = b.dataset.v + "px";
+  }));
+  document.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => c.setAttribute("aria-pressed", c.getAttribute("aria-pressed") !== "true")));
+  const packBtn = document.getElementById("packBtn"), packNote = document.getElementById("packNote");
+  packBtn.addEventListener("click", () => { packBtn.textContent = "Installed"; packBtn.setAttribute("aria-pressed", "true"); packNote.textContent = "Saved in Application Support. Remove any time."; });
+})();
+</script>
