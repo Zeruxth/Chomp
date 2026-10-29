@@ -25,6 +25,20 @@ enum Snapshot {
             save(WheelRoot(model: m).background(Color(white: 0.55)), "wheel-\(mode.title.lowercased())", dir)
         }
 
+        for (name, stage) in [("working", WheelModel.Stage.working), ("done", .done(ok: true)), ("failed", .done(ok: false))] {
+            let m = WheelModel()
+            m.load(files: sample, mode: .convert)
+            m.chompAt = .distantPast
+            m.stage = stage
+            m.pop = 2
+            switch stage {
+            case .working: m.jobTitle = "Converting to WebP…"; m.jobDetail = "beach.heic"
+            case .done(true): m.jobTitle = "1 file → WebP"; m.jobDetail = "1.8 MB saved (41%)"; m.outputs = sample; m.pillHover = 0
+            default: m.jobTitle = "Couldn't chew that"; m.jobDetail = "beach.heic: Couldn't save AVIF"
+            }
+            save(WheelRoot(model: m).background(Color(white: 0.55)), "wheel-\(name)", dir)
+        }
+
         let hud = HUD.shared
         hud.phase = .done
         hud.title = "1 file → WebP"
@@ -34,6 +48,25 @@ enum Snapshot {
         save(MenuPanel(), "menu", dir)
         UserDefaults.standard.set(savedSkin, forKey: "skin")
         exit(0)
+    }
+
+    /// `Chomp --run <op id> <file>...` runs one wheel choice from the terminal and prints what happened.
+    /// e.g. `Chomp --run to.avif photo.jpg`. Used for testing conversions without dragging.
+    static func runOpIfAsked() {
+        let args = CommandLine.arguments
+        guard let i = args.firstIndex(of: "--run"), i + 2 < args.count else { return }
+        let id = args[i + 1]
+        let files = args[(i + 2)...].map { URL(fileURLWithPath: $0) }
+        let all = Mode.allCases.flatMap { m in [Kind.image, .video, .audio, .pdf, .document].flatMap { Catalog.ops(m, $0) } }
+        guard let op = all.first(where: { $0.id == id }) else { print("No such op: \(id)"); exit(2) }
+        Task {
+            let r = await Engine.run(op, items: files)
+            print("outputs:", r.outputs.map(\.path))
+            print("failures:", r.failures)
+            if let note = r.note { print("note:", note) }
+            print("bytes:", r.bytesIn, "→", r.bytesOut, "skipped:", r.skipped)
+            exit(r.failures.isEmpty ? 0 : 1)
+        }
     }
 
     private static func save<V: View>(_ v: V, _ name: String, _ dir: URL) {

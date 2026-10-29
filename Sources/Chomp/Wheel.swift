@@ -37,9 +37,24 @@ final class WheelModel: ObservableObject {
     @Published var icon: NSImage? = nil
     @Published var chompAt: Date? = nil   // set on drop; Chomp plays its bite
 
+    /// After a drop the wheel turns into the toast: it chews, then shows the result in the ring.
+    enum Stage: Equatable { case pick, eating, working, done(ok: Bool), spat }
+    @Published var stage: Stage = .pick
+    @Published var jobTitle = ""
+    @Published var jobDetail = ""
+    @Published var outputs: [URL] = []
+    @Published var pillHover: Int? = nil  // Show / Undo / Close under the wheel
+    var jobID = 0
+
     /// Chomp follows the hovered segment with its eyes.
     var mood: MimicMood {
-        if chompAt != nil { return .chomp }
+        switch stage {
+        case .eating: return .chomp
+        case .working: return .working
+        case .done(let ok): return ok ? .happy : .closed
+        case .spat: return .closed
+        case .pick: break
+        }
         guard let h = hover else { return .idle }
         if h < 0 { return .closed }
         let n = max(ops.count, 1)
@@ -49,6 +64,9 @@ final class WheelModel: ObservableObject {
 
     func load(files: [URL], mode: Mode) {
         chompAt = nil
+        stage = .pick
+        outputs = []
+        pillHover = nil
         self.files = files
         let s = Catalog.summary(files)
         kind = s.kind
@@ -76,10 +94,12 @@ final class WheelModel: ObservableObject {
 final class WheelController {
     static let shared = WheelController()
     let model = WheelModel()
-    var onRun: ((Op, [URL]) -> Void)?
+    var onRun: ((Op, [URL], Int) -> Void)?
 
     private let panel: WheelPanel
     private var token = 0
+    private var jobs = 0
+    private var hideItem: DispatchWorkItem?
 
     private init() {
         panel = WheelPanel(contentRect: NSRect(origin: .zero, size: Geo.windowSize),
@@ -122,6 +142,7 @@ final class WheelController {
 
     func show(files: [URL], mode: Mode, interactive: Bool, at p: NSPoint) {
         guard !files.isEmpty else { return }
+        hideItem?.cancel()
         token += 1
         model.interactive = interactive
         model.load(files: files, mode: mode)
@@ -150,7 +171,10 @@ final class WheelController {
     }
 
     func hide() {
+        hideItem?.cancel()
         guard panel.isVisible else { return }
+        // A job still running reports to the bottom toast instead.
+        model.stage = .pick
         token += 1
         let t = token
         model.pop = 1
@@ -193,19 +217,90 @@ final class WheelController {
         let op = model.ops[index]
         let f: [URL]
         if let files, !files.isEmpty { f = files } else { f = model.files }
-        // Let Chomp take its bite before the wheel goes away.
+        // The wheel stays: Chomp bites, chews while the job runs, then shows the result in the ring.
         model.hover = nil
         model.chompAt = Date()
+        model.stage = .eating
+        model.jobTitle = ""
+        model.jobDetail = ""
+        model.outputs = []
+        jobs += 1
+        model.jobID = jobs
         let t = token
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
-            guard let self, self.token == t else { return }
-            self.hide()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) { [weak self] in
+            guard let self, self.token == t, self.model.stage == .eating else { return }
+            self.model.stage = .working
         }
-        onRun?(op, f)
+        onRun?(op, f, jobs)
+    }
+
+    private func showing(_ job: Int) -> Bool {
+        panel.isVisible && model.jobID == job && (model.stage == .eating || model.stage == .working)
+    }
+
+    /// Returns false when the wheel isn't showing this job any more (closed, or a new drag took over).
+    func jobStarted(_ job: Int, title: String, detail: String) -> Bool {
+        guard showing(job) else { return false }
+        model.jobTitle = title
+        model.jobDetail = detail
+        return true
+    }
+
+    func jobFinished(_ job: Int, ok: Bool, title: String, detail: String, outputs: [URL]) -> Bool {
+        guard showing(job) else { return false }
+        // Let the bite finish before the result lands.
+        let bitten = Date().timeIntervalSince(model.chompAt ?? .distantPast)
+        let t = token
+        DispatchQueue.main.asyncAfter(deadline: .now() + max(0, 0.75 - bitten)) { [weak self] in
+            guard let self, self.token == t else { return }
+            self.model.stage = .done(ok: ok)
+            self.model.jobTitle = title
+            self.model.jobDetail = detail
+            self.model.outputs = outputs
+            self.scheduleHide(ok ? 4.5 : 7)
+        }
+        return true
+    }
+
+    /// Fades out after a while, but never from under the pointer.
+    private func scheduleHide(_ secs: Double) {
+        hideItem?.cancel()
+        let item = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            if NSMouseInRect(NSEvent.mouseLocation, self.panel.frame, false) { self.scheduleHide(1.5) } else { self.hide() }
+        }
+        hideItem = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + secs, execute: item)
+    }
+
+    /// The keys under the wheel once it shows a job: 0 Show, 1 Undo, 2 Close (Hide while working).
+    func resultAction(_ i: Int) {
+        switch i {
+        case 0:
+            guard !model.outputs.isEmpty else { return }
+            NSWorkspace.shared.activateFileViewerSelecting(model.outputs)
+            hide()
+        case 1:
+            let o = model.outputs
+            guard !o.isEmpty else { return }
+            NSWorkspace.shared.recycle(o)
+            History.shared.remove(o)
+            model.outputs = []
+            model.stage = .spat
+            model.jobTitle = "Spat it out"
+            model.jobDetail = "Moved \(o.count) file\(o.count == 1 ? "" : "s") to the Trash"
+            scheduleHide(2.5)
+        default:
+            hide()
+        }
     }
 
     /// Keyboard, when the wheel was opened by click (Open With / menu bar).
     private func key(_ e: NSEvent) -> Bool {
+        if model.stage != .pick {
+            if e.keyCode == 53 { hide() }
+            return true
+        }
         switch e.keyCode {
         case 53: hide(); return true                                   // esc
         case 48: switchMode(model.mode.next); return true              // tab
@@ -252,7 +347,7 @@ final class DropOverlay: NSView {
     weak var controller: WheelController?
     private var tracking: NSTrackingArea?
 
-    enum Zone: Equatable { case segment(Int), center, pill(Mode), none }
+    enum Zone: Equatable { case segment(Int), center, pill(Int), none }
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -276,7 +371,7 @@ final class DropOverlay: NSView {
     func zone(_ p: NSPoint) -> Zone {
         if p.y < Geo.pillsH {
             for i in 0..<3 where Geo.pillRect(i).insetBy(dx: -3, dy: -6).contains(p) {
-                return .pill(Mode(rawValue: i)!)
+                return .pill(i)
             }
             return .none
         }
@@ -295,31 +390,48 @@ final class DropOverlay: NSView {
 
     private func apply(_ z: Zone, dragging: Bool) {
         guard let c = controller else { return }
+        if c.model.stage != .pick {
+            var h: Int? = nil
+            if case .pill(let i) = z { h = i }
+            if c.model.pillHover != h { c.model.pillHover = h }
+            return
+        }
         switch z {
         case .segment(let i): c.setHover(i)
         case .center: c.setHover(-1)
-        case .pill(let m):
+        case .pill(let i):
             c.setHover(nil)
-            if dragging { c.switchMode(m) }      // hover a pill mid-drag to switch, no keys needed
+            if dragging { c.switchMode(Mode(rawValue: i)!) }   // hover a pill mid-drag to switch, no keys needed
         case .none: c.setHover(nil)
         }
     }
 
-    // Click mode
+    // Click mode, and the result keys after a drop
     override func mouseMoved(with e: NSEvent) {
-        guard controller?.model.interactive == true else { return }
+        guard let m = controller?.model, m.interactive || m.stage != .pick else { return }
         apply(zone(convert(e.locationInWindow, from: nil)), dragging: false)
     }
 
     override func mouseExited(with event: NSEvent) {
         if controller?.model.interactive == true { controller?.setHover(nil) }
+        if controller?.model.pillHover != nil { controller?.model.pillHover = nil }
     }
 
     override func mouseDown(with e: NSEvent) {
-        guard let c = controller, c.model.chompAt == nil else { return }
-        switch zone(convert(e.locationInWindow, from: nil)) {
+        guard let c = controller else { return }
+        let z = zone(convert(e.locationInWindow, from: nil))
+        if c.model.stage != .pick {
+            switch z {
+            case .pill(let i): c.resultAction(i)
+            case .center: c.hide()
+            default: break
+            }
+            return
+        }
+        guard c.model.chompAt == nil else { return }
+        switch z {
         case .segment(let i): c.fire(i)
-        case .pill(let m): c.switchMode(m)
+        case .pill(let i): c.switchMode(Mode(rawValue: i)!)
         case .center, .none: c.hide()
         }
     }
@@ -332,6 +444,7 @@ final class DropOverlay: NSView {
     }
 
     private func updated(_ s: NSDraggingInfo) -> NSDragOperation {
+        guard controller?.model.stage == .pick else { return [] }
         let z = zone(convert(s.draggingLocation, from: nil))
         apply(z, dragging: true)
         if case .segment = z { return dragOp(s) }
@@ -344,7 +457,7 @@ final class DropOverlay: NSView {
     override func prepareForDragOperation(_ sender: NSDraggingInfo) -> Bool { true }
 
     override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
-        guard case .segment(let i) = zone(convert(sender.draggingLocation, from: nil)) else { return false }
+        guard controller?.model.stage == .pick, case .segment(let i) = zone(convert(sender.draggingLocation, from: nil)) else { return false }
         let urls = sender.draggingPasteboard.readObjects(forClasses: [NSURL.self],
                                                          options: [.urlReadingFileURLsOnly: true]) as? [URL]
         controller?.fire(i, files: urls)
@@ -364,7 +477,7 @@ struct WheelRoot: View {
         VStack(spacing: 0) {
             ZStack {
                 disc
-                labels
+                if model.stage == .pick { labels } else { jobText }
                 center
             }
             .frame(width: Geo.size, height: Geo.size)
@@ -385,12 +498,54 @@ struct WheelRoot: View {
     }
 
     @ViewBuilder private var disc: some View {
-        if let img = WheelArt.image(count: model.ops.count, hover: model.hover, skin: skin) {
+        switch model.stage {
+        case .pick:
+            art(WheelArt.image(count: model.ops.count, hover: model.hover, skin: skin))
+        case .eating, .working:
+            // A short gold arc runs round the rim while Chomp chews.
+            TimelineView(.periodic(from: .now, by: 0.08)) { t in
+                art(WheelArt.image(count: 0, hover: nil, skin: skin,
+                                   ring: .spin(Int(t.date.timeIntervalSinceReferenceDate / 0.08) % WheelArt.spinSteps)))
+            }
+        case .done(let ok):
+            art(WheelArt.image(count: 0, hover: nil, skin: skin, ring: .full(ok ? skin.accentHex : Pal.tongue)))
+        case .spat:
+            art(WheelArt.image(count: 0, hover: nil, skin: skin, ring: .full(Pal.segmentRim)))
+        }
+    }
+
+    @ViewBuilder private func art(_ img: CGImage?) -> some View {
+        if let img {
             Image(decorative: img, scale: 1)
                 .resizable()
                 .interpolation(.none)
                 .frame(width: Geo.size, height: Geo.size)
         }
+    }
+
+    /// What used to be the bottom toast, inside the ring: title above Chomp, details below.
+    private var jobText: some View {
+        let mid = (Geo.inner + Geo.outer) / 2
+        let failed = model.stage == .done(ok: false)
+        return ZStack {
+            Text(model.jobTitle)
+                .font(Fonts.display(20))
+                .foregroundStyle(failed ? Pal.tongueC : Pal.toothC)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .minimumScaleFactor(0.8)
+                .frame(width: 250)
+                .position(x: Geo.size / 2, y: Geo.size / 2 - mid + 4)
+            Text(model.jobDetail)
+                .font(Fonts.body(14))
+                .foregroundStyle(Pal.mutedC)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .truncationMode(.middle)
+                .frame(width: 250)
+                .position(x: Geo.size / 2, y: Geo.size / 2 + mid - 4)
+        }
+        .frame(width: Geo.size, height: Geo.size)
     }
 
     private var labels: some View {
@@ -408,7 +563,13 @@ struct WheelRoot: View {
     }
 
     private var caption: String {
-        if model.chompAt != nil { return "chomp." }
+        switch model.stage {
+        case .eating: return "chomp."
+        case .working: return "chewing…"
+        case .done(let ok): return ok ? "yum." : "blegh."
+        case .spat: return "ptooey."
+        case .pick: break
+        }
         if model.hover == -1 { return "nevermind" }
         if model.ops.isEmpty { return "can't eat that" }
         return model.label
@@ -428,19 +589,36 @@ struct WheelRoot: View {
         .offset(y: -4)
     }
 
-    private var pills: some View {
-        HStack(spacing: Geo.pillGap) {
-            ForEach(Mode.allCases) { m in
-                Keycap(on: model.mode == m, skin: skin) {
-                    HStack(spacing: 6) {
-                        Text(m.key).font(.system(size: 12, weight: .heavy))
-                        Text(m.title).font(Fonts.label(10))
+    @ViewBuilder private var pills: some View {
+        if model.stage == .pick {
+            HStack(spacing: Geo.pillGap) {
+                ForEach(Mode.allCases) { m in
+                    Keycap(on: model.mode == m, skin: skin) {
+                        HStack(spacing: 6) {
+                            Text(m.key).font(.system(size: 12, weight: .heavy))
+                            Text(m.title).font(Fonts.label(10))
+                        }
+                        .frame(width: Geo.pillW - 4, height: Geo.pillH - 4)
                     }
-                    .frame(width: Geo.pillW - 4, height: Geo.pillH - 4)
                 }
             }
+            .offset(y: -2)
+        } else {
+            // Same three keys become Show / Undo / Close.
+            let busy = model.stage == .eating || model.stage == .working
+            let keys = [("Show", !model.outputs.isEmpty), ("Undo", !model.outputs.isEmpty), (busy ? "Hide" : "Close", true)]
+            HStack(spacing: Geo.pillGap) {
+                ForEach(0..<3, id: \.self) { i in
+                    Keycap(on: keys[i].1 && model.pillHover == i, skin: skin) {
+                        Text(keys[i].0)
+                            .font(Fonts.label(10))
+                            .frame(width: Geo.pillW - 4, height: Geo.pillH - 4)
+                    }
+                    .opacity(keys[i].1 ? 1 : 0.35)
+                }
+            }
+            .offset(y: -2)
         }
-        .offset(y: -2)
     }
 }
 

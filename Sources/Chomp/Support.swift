@@ -48,6 +48,21 @@ enum Bin {
         }
         return paths.first { FileManager.default.isExecutableFile(atPath: $0) }
     }
+
+    /// Which AV1 encoder this ffmpeg was built with, if any. Builds differ: Homebrew's has SVT-AV1 but not libaom.
+    static let av1Encoder: String? = {
+        guard let ff = ffmpeg else { return nil }
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: ff)
+        p.arguments = ["-hide_banner", "-encoders"]
+        let pipe = Pipe()
+        p.standardOutput = pipe
+        p.standardError = FileHandle.nullDevice
+        guard (try? p.run()) != nil else { return nil }
+        let out = String(decoding: pipe.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
+        p.waitUntilExit()
+        return ["libsvtav1", "libaom-av1"].first { out.contains(" \($0) ") }
+    }()
 }
 
 // MARK: - Shell

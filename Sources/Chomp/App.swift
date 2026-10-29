@@ -21,8 +21,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         Snapshot.runIfAsked()
+        Snapshot.runOpIfAsked()
+        if CommandLine.arguments.contains("--run") { return }
 
-        WheelController.shared.onRun = { [weak self] op, files in self?.run(op, files) }
+        WheelController.shared.onRun = { [weak self] op, files, job in self?.run(op, files, job) }
         watcher.onTrigger = { mode, files in WheelController.shared.trigger(mode, files: files) }
         watcher.onEnd = { WheelController.shared.dragEnded() }
         watcher.start()
@@ -40,20 +42,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         WheelController.shared.show(files: urls, mode: .convert, interactive: true, at: NSEvent.mouseLocation)
     }
 
-    private func run(_ op: Op, _ files: [URL]) {
+    private func run(_ op: Op, _ files: [URL], _ job: Int) {
         let isConvert = op.id.hasPrefix("to.")
         let isAction = op.id.hasPrefix("act.")
-        if !isAction {
-            let what = files.count == 1 ? files[0].lastPathComponent : "\(files.count) items"
-            HUD.shared.show(.working, title: isConvert ? "Converting to \(op.title)…" : "\(op.title)…", detail: what)
+        let what = files.count == 1 ? files[0].lastPathComponent : "\(files.count) items"
+        let title = isConvert ? "Converting to \(op.title)…" : "\(op.title)…"
+        // The wheel shows progress in its ring; the bottom toast is only for when the wheel has gone.
+        if !WheelController.shared.jobStarted(job, title: title, detail: what) && !isAction {
+            HUD.shared.show(.working, title: title, detail: what)
         }
         Task {
             let r = await Engine.run(op, items: files)
-            await MainActor.run { self.finish(op, r) }
+            await MainActor.run { self.finish(op, r, job) }
         }
     }
 
-    private func finish(_ op: Op, _ r: RunResult) {
+    private func finish(_ op: Op, _ r: RunResult, _ job: Int) {
         let isConvert = op.id.hasPrefix("to.")
         let n = r.outputs.count
         var parts: [String] = []
@@ -88,7 +92,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         let detail = parts.joined(separator: " · ")
 
-        HUD.shared.show(ok ? .done : .failed, title: title, detail: detail, outputs: r.outputs)
+        if !WheelController.shared.jobFinished(job, ok: ok, title: title, detail: detail, outputs: r.outputs) {
+            HUD.shared.show(ok ? .done : .failed, title: title, detail: detail, outputs: r.outputs)
+        }
         if ok && !r.outputs.isEmpty { History.shared.add(title, detail, r.outputs) }
         if ok { Stats.addChomp() }
         if Prefs.sounds { NSSound(named: ok ? "Pop" : "Basso")?.play() }

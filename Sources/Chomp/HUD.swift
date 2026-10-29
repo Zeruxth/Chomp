@@ -6,7 +6,7 @@ final class HUD: ObservableObject {
     enum Phase { case working, done, failed }
 
     static let shared = HUD()
-    static let size = NSSize(width: 420, height: 68)
+    static let size = NSSize(width: 500, height: 96)
 
     @Published var phase: Phase = .working
     @Published var title = ""
@@ -106,18 +106,18 @@ struct HUDView: View {
     private var skin: Skin { Skin(rawValue: skinRaw) ?? .oak }
 
     var body: some View {
-        HStack(spacing: 14) {
-            MimicView(mood: hud.phase == .working ? .working : (hud.phase == .done ? .happy : .closed), scale: 1)
-                .offset(y: 1)
+        HStack(spacing: 16) {
+            MimicView(mood: hud.phase == .working ? .working : (hud.phase == .done ? .happy : .closed), scale: 2)
+                .offset(y: 2)
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text(hud.title)
-                    .font(Fonts.display(15))
+                    .font(Fonts.display(19))
                     .foregroundStyle(hud.phase == .failed ? Pal.tongueC : Pal.toothC)
                     .lineLimit(1)
                 if !hud.detail.isEmpty {
                     Text(hud.detail)
-                        .font(Fonts.body(11.5))
+                        .font(Fonts.body(13.5))
                         .foregroundStyle(Pal.mutedC)
                         .lineLimit(1)
                         .truncationMode(.middle)
@@ -131,7 +131,7 @@ struct HUDView: View {
                 chip("Undo") { hud.undo() }
             }
         }
-        .padding(.horizontal, 18)
+        .padding(.horizontal, 16)
         .frame(width: HUD.size.width - 8, height: HUD.size.height - 10)
         .pixelBox(Pal.panelC, px: 3)
         .frame(width: HUD.size.width, height: HUD.size.height, alignment: .top)
@@ -143,9 +143,9 @@ struct HUDView: View {
         Button(action: action) {
             Keycap(on: false, skin: skin) {
                 Text(t)
-                    .font(Fonts.label(9))
-                    .padding(.horizontal, 10)
-                    .frame(height: 24)
+                    .font(Fonts.label(10))
+                    .padding(.horizontal, 12)
+                    .frame(height: 30)
             }
             .contentShape(Rectangle())
         }

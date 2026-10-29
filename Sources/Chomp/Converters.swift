@@ -5,7 +5,7 @@ import ImageIO
 import PDFKit
 import Vision
 
-// MARK: - Images (ImageIO, ffmpeg for WebP/AVIF when macOS can't write them)
+// MARK: - Images (ImageIO, built-in libwebp for WebP, ffmpeg for AVIF only on Macs that can't write it)
 
 enum Images {
     static let utis: [String: String] = [
@@ -21,7 +21,7 @@ enum Images {
     }
 
     static func canSave(_ ext: String) -> Bool {
-        canWrite(ext) || (["webp", "avif"].contains(ext) && Bin.ffmpeg != nil)
+        canWrite(ext) || ext == "webp" || (ext == "avif" && Bin.av1Encoder != nil)
     }
 
     /// Same format if we can write it, otherwise PNG.
@@ -33,7 +33,7 @@ enum Images {
         switch ext {
         case "jpg", "heic": return ext
         case "webp", "avif": return canSave(ext) ? ext : "jpg"
-        case "png": return hasAlpha(src) ? (Bin.ffmpeg != nil ? "webp" : "png") : "jpg"
+        case "png": return hasAlpha(src) ? "webp" : "jpg"
         default: return "jpg"
         }
     }
@@ -115,26 +115,26 @@ enum Images {
             throw ChompError.msg("Can't write \(ext.uppercased())")
         }
         var p = meta
-        p[kCGImageDestinationLossyCompressionQuality] = quality
+        // macOS can't write lossless AVIF: at quality 1.0 it fails outright, so top out just below.
+        p[kCGImageDestinationLossyCompressionQuality] = ext == "avif" ? min(quality, 0.99) : quality
         CGImageDestinationAddImage(d, image, p as CFDictionary)
         guard CGImageDestinationFinalize(d) else { throw ChompError.msg("Couldn't save \(ext.uppercased())") }
     }
 
     /// Writes with ImageIO, or via a temp PNG + ffmpeg for WebP/AVIF.
     static func save(_ img: CGImage, to out: URL, ext: String, quality: Double, meta: [CFString: Any]) async throws {
+        if ext == "webp" { try WebP.write(img, to: out, quality: quality); return }
         if canWrite(ext) { try write(img, to: out, ext: ext, quality: quality, meta: meta); return }
-        guard ext == "webp" || ext == "avif" else { throw ChompError.msg("Can't write \(ext.uppercased())") }
+        guard ext == "avif" else { throw ChompError.msg("Can't write \(ext.uppercased())") }
+        // Only Macs whose ImageIO can't write AVIF get here.
         guard let ff = Bin.ffmpeg else { throw ChompError.needsFFmpeg }
+        guard let enc = Bin.av1Encoder else { throw ChompError.msg("This Mac can't make AVIF yet") }
         let tmp = Files.tempURL("png")
         try write(img, to: tmp, ext: "png", quality: 1, meta: [:])
         defer { try? FileManager.default.removeItem(at: tmp) }
-        var args = ["-y", "-nostdin", "-loglevel", "error", "-i", tmp.path]
-        if ext == "webp" {
-            args += ["-c:v", "libwebp", "-quality", String(Int(quality * 100)), "-compression_level", "6"]
-        } else {
-            args += ["-c:v", "libaom-av1", "-still-picture", "1", "-crf", String(Int((1 - quality) * 50) + 12),
-                     "-cpu-used", "6", "-pix_fmt", "yuv420p"]
-        }
+        let crf = String(Int((1 - quality) * 50) + 12)
+        var args = ["-y", "-nostdin", "-loglevel", "error", "-i", tmp.path, "-c:v", enc, "-crf", crf, "-pix_fmt", "yuv420p"]
+        args += enc == "libaom-av1" ? ["-still-picture", "1", "-cpu-used", "6"] : ["-preset", "8"]
         do { try await Shell.run(ff, args + [out.path]) } catch {
             try? FileManager.default.removeItem(at: out)
             throw error

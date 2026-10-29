@@ -5,6 +5,13 @@ let package = Package(
     name: "Chomp",
     platforms: [.macOS(.v13)],
     targets: [
-        .executableTarget(name: "Chomp", path: "Sources/Chomp")
+        // Google's libwebp, built in so WebP works without ffmpeg.
+        .target(
+            name: "CWebP",
+            path: "Sources/CWebP",
+            exclude: ["COPYING", "PATENTS", "README.md"],
+            cSettings: [.headerSearchPath(".")]
+        ),
+        .executableTarget(name: "Chomp", dependencies: ["CWebP"], path: "Sources/Chomp"),
     ]
 )

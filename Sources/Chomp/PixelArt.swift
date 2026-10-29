@@ -276,8 +276,12 @@ enum WheelArt {
 
     private static var cache: [String: CGImage] = [:]
 
-    static func image(count n: Int, hover: Int?, skin: Skin) -> CGImage? {
-        let key = "\(n)-\(hover ?? -9)-\(skin.rawValue)"
+    /// After a drop the slices give way to a plain ring: a spinner while working, then a solid rim.
+    enum Ring: Hashable { case spin(Int), full(UInt32) }
+    static let spinSteps = 24
+
+    static func image(count n: Int, hover: Int?, skin: Skin, ring: Ring? = nil) -> CGImage? {
+        let key = "\(n)-\(hover ?? -9)-\(skin.rawValue)-\(String(describing: ring))"
         if let hit = cache[key] { return hit }
         if cache.count > 64 { cache.removeAll() }
 
@@ -292,7 +296,21 @@ enum WheelArt {
                 var c: UInt32? = nil
                 if r <= disc { c = r > disc - 2 ? Pal.ink : Pal.disc }
                 if r < inner { c = r > inner - 2 ? Pal.ink : (hover == -1 ? Pal.mouth : Pal.hole) }
-                if n > 0, r >= inner + 5 {
+                if let ring, r >= inner + 5, r <= outer - 5 {
+                    // Band for the text, with a 4-pixel rim on its outer edge.
+                    c = r > outer - 6 ? Pal.segmentRim : Pal.segment
+                    if r > outer - 10 {
+                        switch ring {
+                        case .full(let col): c = col
+                        case .spin(let step):
+                            var a = atan2(dx, -dy)
+                            if a < 0 { a += 2 * .pi }
+                            let head = 2 * Double.pi * Double(step) / Double(spinSteps)
+                            let behind = (head - a + 4 * .pi).truncatingRemainder(dividingBy: 2 * .pi)
+                            if behind < .pi / 3 { c = behind < .pi / 9 ? accent : accentDark }
+                        }
+                    }
+                } else if n > 0, r >= inner + 5 {
                     var a = atan2(dx, -dy)
                     if a < 0 { a += 2 * .pi }
                     let t = (a + w / 2).truncatingRemainder(dividingBy: 2 * .pi)
