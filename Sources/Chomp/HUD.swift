@@ -6,7 +6,7 @@ final class HUD: ObservableObject {
     enum Phase { case working, done, failed }
 
     static let shared = HUD()
-    static let size = NSSize(width: 400, height: 62)
+    static let size = NSSize(width: 420, height: 68)
 
     @Published var phase: Phase = .working
     @Published var title = ""
@@ -38,7 +38,6 @@ final class HUD: ObservableObject {
                 p.animator().alphaValue = 1
             }
         }
-        p.invalidateShadow()
         switch phase {
         case .working: scheduleHide(nil)
         case .done: scheduleHide(4.5)
@@ -87,45 +86,39 @@ final class HUD: ObservableObject {
         p.level = .statusBar
         p.backgroundColor = .clear
         p.isOpaque = false
-        p.hasShadow = true
+        p.hasShadow = false       // the pixel frame draws its own hard shadow
         p.hidesOnDeactivate = false
         p.isReleasedWhenClosed = false
         p.becomesKeyOnlyIfNeeded = true
         p.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
 
-        let fx = NSVisualEffectView(frame: NSRect(origin: .zero, size: Self.size))
-        fx.material = .hudWindow
-        fx.blendingMode = .behindWindow
-        fx.state = .active
-        fx.maskImage = Masks.rounded(20)
-
         let host = FirstMouseHostingView(rootView: HUDView(hud: self))
-        host.frame = fx.bounds
-        host.autoresizingMask = [.width, .height]
-        fx.addSubview(host)
-        p.contentView = fx
+        host.frame = NSRect(origin: .zero, size: Self.size)
+        p.contentView = host
         return p
     }
 }
 
 struct HUDView: View {
     @ObservedObject var hud: HUD
-    @AppStorage("accent") private var accentRaw = Accent.oak.rawValue
-    private var accent: Color { (Accent(rawValue: accentRaw) ?? .oak).color }
+    @AppStorage("skin") private var skinRaw = Skin.current.rawValue
+    @AppStorage("pixelText") private var pixelText = true
+    private var skin: Skin { Skin(rawValue: skinRaw) ?? .oak }
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 14) {
             MimicView(mood: hud.phase == .working ? .working : (hud.phase == .done ? .happy : .closed), scale: 1)
-                .offset(x: -2, y: 1)
+                .offset(y: 1)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(hud.title)
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(Fonts.display(15))
+                    .foregroundStyle(hud.phase == .failed ? Pal.tongueC : Pal.toothC)
                     .lineLimit(1)
                 if !hud.detail.isEmpty {
                     Text(hud.detail)
-                        .font(.system(size: 11, weight: .medium, design: .rounded))
-                        .foregroundStyle(Color.white.opacity(0.6))
+                        .font(Fonts.body(11.5))
+                        .foregroundStyle(Pal.mutedC)
                         .lineLimit(1)
                         .truncationMode(.middle)
                 }
@@ -138,21 +131,23 @@ struct HUDView: View {
                 chip("Undo") { hud.undo() }
             }
         }
-        .padding(.horizontal, 14)
-        .frame(width: HUD.size.width, height: HUD.size.height)
-        .foregroundStyle(Color.white)
+        .padding(.horizontal, 18)
+        .frame(width: HUD.size.width - 8, height: HUD.size.height - 10)
+        .pixelBox(Pal.panelC, px: 3)
+        .frame(width: HUD.size.width, height: HUD.size.height, alignment: .top)
         .environment(\.colorScheme, .dark)
         .onHover { hud.hovering = $0 }
     }
 
     private func chip(_ t: String, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(t)
-                .font(.system(size: 11.5, weight: .semibold, design: .rounded))
-                .padding(.horizontal, 10)
-                .frame(height: 24)
-                .background(Capsule().fill(Color.white.opacity(0.12)))
-                .contentShape(Capsule())
+            Keycap(on: false, skin: skin) {
+                Text(t)
+                    .font(Fonts.label(9))
+                    .padding(.horizontal, 10)
+                    .frame(height: 24)
+            }
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }

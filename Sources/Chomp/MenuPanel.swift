@@ -7,21 +7,23 @@ struct MenuPanel: View {
     @ObservedObject private var history = History.shared
     @AppStorage("quality") private var quality = 0.85
     @AppStorage("outputBeside") private var beside = true
-    @AppStorage("accent") private var accentRaw = Accent.oak.rawValue
+    @AppStorage("skin") private var skinRaw = Skin.current.rawValue
+    @AppStorage("pixelText") private var pixelText = true
     @AppStorage("haptics") private var haptics = true
     @AppStorage("sounds") private var sounds = true
     @State private var loginItem = SMAppService.mainApp.status == .enabled
     @State private var targeted = false
 
-    private var accent: Color { (Accent(rawValue: accentRaw) ?? .oak).color }
+    private var skin: Skin { Skin(rawValue: skinRaw) ?? .oak }
+    private var accent: Color { skin.accent }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 10) {
-                MimicView(mood: .idle, scale: 1)
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("Chomp").font(.system(size: 16, weight: .bold, design: .rounded))
-                    Text("Drag a file, tap ⇧ ⌘ or ⌃. I'll eat it.").font(.system(size: 11)).foregroundStyle(Color.secondary)
+                MimicView(mood: .idle, scale: 2)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Chomp").font(Fonts.display(22, .bold)).foregroundStyle(accent)
+                    Text("Drag a file, tap ⇧ ⌘ or ⌃. I'll eat it.").font(Fonts.body(11)).foregroundStyle(Pal.mutedC)
                 }
                 Spacer()
             }
@@ -37,16 +39,20 @@ struct MenuPanel: View {
             Divider()
 
             HStack {
-                Text("v0.1").font(.system(size: 11)).foregroundStyle(Color.secondary.opacity(0.6))
+                Text("v\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev") · \(Stats.chomps) chomps")
+                    .font(Fonts.body(11)).foregroundStyle(Pal.mutedC.opacity(0.7))
                 Spacer()
                 Button("Quit") { NSApp.terminate(nil) }
                     .buttonStyle(.plain)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(Color.secondary)
+                    .font(Fonts.label(10))
+                    .foregroundStyle(Pal.mutedC)
             }
         }
-        .padding(16)
-        .frame(width: 300)
+        .padding(18)
+        .frame(width: 320)
+        .foregroundStyle(Pal.toothC)
+        .background(Pal.panelC)
+        .environment(\.colorScheme, .dark)
     }
 
     // MARK: Sections
@@ -54,24 +60,19 @@ struct MenuPanel: View {
     private var dropZone: some View {
         Button(action: pick) {
             VStack(spacing: 6) {
-                Image(systemName: targeted ? "arrow.down.circle.fill" : "plus.circle")
-                    .font(.system(size: 20, weight: .medium))
+                PixelIcon(name: targeted ? "combine" : "copy", color: targeted ? accent : Pal.mutedC)
                 Text(targeted ? "Let go" : "Drop files here or click to pick")
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .font(Fonts.display(14, .regular))
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 78)
-            .foregroundStyle(targeted ? accent : Color.secondary)
-            .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(targeted ? accent.opacity(0.08) : Color.clear)
-            )
+            .frame(height: 84)
+            .foregroundStyle(targeted ? accent : Pal.mutedC)
+            .background(Rectangle().fill(targeted ? accent.opacity(0.1) : Color.clear))
             .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .strokeBorder(targeted ? accent : Color.secondary.opacity(0.45),
-                                  style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
+                Notched(px: 2)
+                    .stroke(targeted ? accent : Pal.mutedC.opacity(0.5), style: StrokeStyle(lineWidth: 2, dash: [4, 4]))
             )
-            .contentShape(RoundedRectangle(cornerRadius: 14))
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .onDrop(of: [UTType.fileURL], isTargeted: $targeted) { providers in
@@ -82,7 +83,7 @@ struct MenuPanel: View {
 
     private var ffmpegNote: some View {
         HStack(alignment: .top, spacing: 8) {
-            Image(systemName: "exclamationmark.circle.fill").foregroundStyle(accent)
+            PixelIcon(name: "lock", color: accent)
             VStack(alignment: .leading, spacing: 4) {
                 Text("Video, audio, WebP and AVIF need ffmpeg")
                     .font(.system(size: 11.5, weight: .semibold))
@@ -98,25 +99,24 @@ struct MenuPanel: View {
         }
         .padding(10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 10).fill(accent.opacity(0.1)))
+        .pixelBox(Pal.raisedC, shadow: false)
     }
 
     private var recent: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("RECENT")
-                .font(.system(size: 10, weight: .bold, design: .rounded))
-                .kerning(1)
-                .foregroundStyle(Color.secondary)
+                .font(Fonts.label(9))
+                .foregroundStyle(Pal.mutedC)
             ForEach(history.items.prefix(5)) { item in
                 Button {
                     if !item.outputs.isEmpty { NSWorkspace.shared.activateFileViewerSelecting(item.outputs) }
                 } label: {
                     HStack(spacing: 8) {
-                        Circle().fill(accent).frame(width: 6, height: 6)
+                        Rectangle().fill(accent).frame(width: 6, height: 6)
                         VStack(alignment: .leading, spacing: 1) {
                             Text(item.title).font(.system(size: 12, weight: .semibold)).lineLimit(1)
                             if !item.detail.isEmpty {
-                                Text(item.detail).font(.system(size: 10.5)).foregroundStyle(Color.secondary).lineLimit(1)
+                                Text(item.detail).font(.system(size: 10.5)).foregroundStyle(Pal.mutedC).lineLimit(1)
                             }
                         }
                         Spacer()
@@ -136,7 +136,7 @@ struct MenuPanel: View {
                     Spacer()
                     Text("\(Int(quality * 100))")
                         .font(.system(size: 11, weight: .medium, design: .monospaced))
-                        .foregroundStyle(Color.secondary)
+                        .foregroundStyle(Pal.mutedC)
                 }
                 Slider(value: $quality, in: 0.5...1.0).tint(accent).controlSize(.small)
             }
@@ -151,23 +151,9 @@ struct MenuPanel: View {
                 .labelsHidden()
             }
 
-            HStack {
-                Text("Accent").font(label)
-                Spacer()
-                ForEach(Accent.allCases) { a in
-                    Circle()
-                        .fill(a.color)
-                        .frame(width: 16, height: 16)
-                        .overlay(
-                            Circle()
-                                .strokeBorder(Color.primary.opacity(accentRaw == a.rawValue ? 0.9 : 0), lineWidth: 2)
-                                .padding(-3)
-                        )
-                        .contentShape(Circle())
-                        .onTapGesture { accentRaw = a.rawValue }
-                }
-            }
+            skins
 
+            row("Pixel text", $pixelText)
             row("Haptics", $haptics)
             row("Sounds", $sounds)
             row("Open at login", $loginItem)
@@ -181,7 +167,41 @@ struct MenuPanel: View {
         }
     }
 
-    private var label: Font { .system(size: 12, weight: .medium) }
+    private var label: Font { Fonts.display(14, .regular) }
+
+    private var skins: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Chest skin").font(label)
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
+                ForEach(Skin.allCases) { k in
+                    let on = skin == k
+                    Button {
+                        if !k.locked { skinRaw = k.rawValue }
+                    } label: {
+                        VStack(spacing: 3) {
+                            ZStack(alignment: .topTrailing) {
+                                MimicPortrait(skin: k, scale: 1)
+                                    .opacity(k.locked ? 0.35 : 1)
+                                if k.locked { PixelIcon(name: "lock", scale: 1, color: Pal.mutedC) }
+                            }
+                            Text(k.title).font(Fonts.label(8))
+                            Text(k.locked ? "\(Stats.chomps)/\(Skin.royalAt)" : k.note)
+                                .font(Fonts.body(9))
+                                .foregroundStyle(Pal.mutedC)
+                                .lineLimit(1)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 7)
+                        .background(Rectangle().fill(on ? k.accent.opacity(0.18) : Pal.raisedC))
+                        .overlay(Rectangle().strokeBorder(on ? k.accent : Pal.inkC, lineWidth: 2))
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .help(k.locked ? "Unlocks after \(Skin.royalAt) chomps" : k.title)
+                }
+            }
+        }
+    }
 
     private func row(_ title: String, _ value: Binding<Bool>) -> some View {
         HStack {

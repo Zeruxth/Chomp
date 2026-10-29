@@ -29,7 +29,7 @@ struct Op: Identifiable, Equatable {
     let id: String
     let title: String
     let detail: String
-    let symbol: String?
+    let icon: String?          // name in PixelIcons, nil for plain format slices
     let kinds: Set<Kind>
     let batch: Bool
 }
@@ -109,7 +109,7 @@ enum Catalog {
     // MARK: Operations
 
     private static func o(_ id: String, _ t: String, _ d: String, _ s: String?, _ k: Set<Kind>, batch: Bool = false) -> Op {
-        Op(id: id, title: t, detail: d, symbol: s, kinds: k, batch: batch)
+        Op(id: id, title: t, detail: d, icon: s, kinds: k, batch: batch)
     }
 
     private static let everything: Set<Kind> = [.image, .video, .audio, .pdf, .document, .folder, .other]
@@ -184,55 +184,54 @@ enum Catalog {
     }
 
     private static func tools(_ kind: Kind) -> [Op] {
-        let squeeze = "arrow.down.right.and.arrow.up.left"
         switch kind {
         case .image:
             let K: Set<Kind> = [.image]
             var l = [
-                o("img.compress", "Compress", "Smaller file", squeeze, K),
-                o("img.1080", "1080", "Web / Insta", "aspectratio", K),
-                o("img.half", "Half", "50% size", "minus.magnifyingglass", K),
+                o("img.compress", "Compress", "Smaller file", "compress", K),
+                o("img.1080", "1080", "Web / Insta", "1080", K),
+                o("img.half", "Half", "50% size", "half", K),
             ]
             if #available(macOS 14.0, *) {
-                l.append(o("img.cutout", "Cut out", "Remove BG", "person.crop.square", K))
+                l.append(o("img.cutout", "Cut out", "Remove BG", "cutout", K))
             }
             l += [
-                o("img.strip", "Clean", "No EXIF / GPS", "eye.slash", K),
-                o("img.rotate", "Rotate", "90° right", "rotate.right", K),
-                o("img.pdf", "Combine", "One PDF", "doc.on.doc", K, batch: true),
+                o("img.strip", "Clean", "No EXIF / GPS", "clean", K),
+                o("img.rotate", "Rotate", "90° right", "rotate", K),
+                o("img.pdf", "Combine", "One PDF", "combine", K, batch: true),
             ]
             return l
         case .video:
             let K: Set<Kind> = [.video]
             return [
-                o("vid.compress", "Compress", "Smaller MP4", squeeze, K),
-                o("vid.10mb", "10 MB", "Send-able", "paperplane", K),
-                o("vid.half", "Half", "50% size", "minus.magnifyingglass", K),
-                o("vid.frame", "Frame", "Best still", "photo", K),
-                o("vid.mute", "Mute", "No audio", "speaker.slash", K),
-                o("vid.x2", "2×", "Speed up", "hare", K),
+                o("vid.compress", "Compress", "Smaller MP4", "compress", K),
+                o("vid.10mb", "10 MB", "Send-able", "send", K),
+                o("vid.half", "Half", "50% size", "half", K),
+                o("vid.frame", "Frame", "Best still", "frame", K),
+                o("vid.mute", "Mute", "No audio", "mute", K),
+                o("vid.x2", "2×", "Speed up", "speed", K),
             ]
         case .audio:
             let K: Set<Kind> = [.audio]
             return [
-                o("aud.compress", "Compress", "128k MP3", squeeze, K),
-                o("aud.loud", "Loudness", "−14 LUFS", "waveform", K),
-                o("aud.trim", "Trim", "Silent ends", "scissors", K),
-                o("aud.mono", "Mono", "One channel", "circle.lefthalf.filled", K),
+                o("aud.compress", "Compress", "128k MP3", "compress", K),
+                o("aud.loud", "Loudness", "−14 LUFS", "wave", K),
+                o("aud.trim", "Trim", "Silent ends", "trim", K),
+                o("aud.mono", "Mono", "One channel", "mono", K),
             ]
         case .pdf:
             let K: Set<Kind> = [.pdf]
             return [
-                o("pdf.compress", "Compress", "Screen quality", squeeze, K),
-                o("pdf.merge", "Merge", "One PDF", "doc.on.doc", K, batch: true),
-                o("pdf.split", "Split", "Page files", "square.split.2x1", K),
-                o("pdf.rotate", "Rotate", "90° right", "rotate.right", K),
+                o("pdf.compress", "Compress", "Screen quality", "compress", K),
+                o("pdf.merge", "Merge", "One PDF", "combine", K, batch: true),
+                o("pdf.split", "Split", "Page files", "split", K),
+                o("pdf.rotate", "Rotate", "90° right", "rotate", K),
             ]
         case .document:
             return [
-                o("doc.count", "Count", "Words", "number", [.document, .pdf]),
-                o("doc.merge", "Combine", "One PDF", "doc.on.doc", [.document, .pdf], batch: true),
-                o("doc.clean", "Clean", "Plain text", "textformat", [.document]),
+                o("doc.count", "Count", "Words", "count", [.document, .pdf]),
+                o("doc.merge", "Combine", "One PDF", "combine", [.document, .pdf], batch: true),
+                o("doc.clean", "Clean", "Plain text", "text", [.document]),
             ]
         default:
             return []
@@ -242,12 +241,12 @@ enum Catalog {
     private static var actions: [Op] {
         let K = everything
         return [
-            o("act.airdrop", "AirDrop", "Send nearby", "wave.3.right", K),
-            o("act.copy", "Copy", "To clipboard", "doc.on.clipboard", K),
-            o("act.path", "Path", "Copy path", "link", K),
-            o("act.zip", "Zip", "Archive", "archivebox", K),
+            o("act.airdrop", "AirDrop", "Send nearby", "airdrop", K),
+            o("act.copy", "Copy", "To clipboard", "copy", K),
+            o("act.path", "Path", "Copy path", "path", K),
+            o("act.zip", "Zip", "Archive", "zip", K),
             o("act.terminal", "Terminal", "Open here", "terminal", K),
-            o("act.desktop", "Desktop", "Copy there", "menubar.dock.rectangle", K),
+            o("act.desktop", "Desktop", "Copy there", "desktop", K),
         ]
     }
 }

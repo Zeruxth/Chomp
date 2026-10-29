@@ -29,7 +29,12 @@ Requires macOS 13+. Cut out needs macOS 14+.
 ## Files
 
 - `DragWatcher.swift`: spots file drags anywhere and catches the key taps. No Accessibility permission needed.
-- `Wheel.swift`: the wheel window, hit-testing, drawing.
+- `Wheel.swift`: the wheel window, hit-testing, layout.
+- `PixelArt.swift`: chest skins, pixel icons, pixel fonts, frames, and the pixel-by-pixel wheel disc.
+- `Mimic.swift`: Chomp himself, frame by frame.
 - `Catalog.swift`: which options show for which file type.
 - `Engine.swift`, `Converters.swift`: the actual work (ImageIO, PDFKit, textutil, ffmpeg).
 - `HUD.swift`: the toast. `MenuPanel.swift`: menu bar panel and settings.
+- `Snapshot.swift`: `Chomp.app/Contents/MacOS/Chomp --snapshot <folder> [--skin slime]` saves PNGs of the wheel, toast and panel.
+
+Fonts: Pixelify Sans and Silkscreen, both SIL Open Font License, in `Resources/Fonts`.

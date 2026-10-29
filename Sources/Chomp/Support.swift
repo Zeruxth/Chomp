@@ -23,20 +23,7 @@ enum Prefs {
     static var beside: Bool { UserDefaults.standard.object(forKey: "outputBeside") as? Bool ?? true }
     static var haptics: Bool { UserDefaults.standard.object(forKey: "haptics") as? Bool ?? true }
     static var sounds: Bool { UserDefaults.standard.object(forKey: "sounds") as? Bool ?? true }
-}
-
-enum Accent: String, CaseIterable, Identifiable {
-    case oak, lime, grape, ice, mono
-    var id: String { rawValue }
-    var color: Color {
-        switch self {
-        case .oak: return Color(red: 1.0, green: 0.83, blue: 0.36)
-        case .lime: return Color(red: 0.76, green: 0.94, blue: 0.32)
-        case .grape: return Color(red: 0.72, green: 0.58, blue: 1.0)
-        case .ice: return Color(red: 0.48, green: 0.86, blue: 1.0)
-        case .mono: return Color(white: 0.94)
-        }
-    }
+    static var pixelText: Bool { UserDefaults.standard.object(forKey: "pixelText") as? Bool ?? true }
 }
 
 // MARK: - Binaries
@@ -128,35 +115,7 @@ enum Files {
     }
 }
 
-// MARK: - Masks & icons
-
-enum Masks {
-    static func rounded(_ r: CGFloat) -> NSImage {
-        let s = NSSize(width: r * 2 + 1, height: r * 2 + 1)
-        let img = NSImage(size: s, flipped: false) { rect in
-            NSColor.black.setFill()
-            NSBezierPath(roundedRect: rect, xRadius: r, yRadius: r).fill()
-            return true
-        }
-        img.capInsets = NSEdgeInsets(top: r, left: r, bottom: r, right: r)
-        img.resizingMode = .stretch
-        return img
-    }
-
-    /// Blur shape behind the wheel: the disc plus the mode capsule under it.
-    static func wheel() -> NSImage {
-        NSImage(size: Geo.windowSize, flipped: false) { _ in
-            NSColor.black.setFill()
-            let c = Geo.center
-            let r = Geo.outer + 8
-            NSBezierPath(ovalIn: NSRect(x: c.x - r, y: c.y - r, width: r * 2, height: r * 2)).fill()
-            let a = Geo.pillRect(0), b = Geo.pillRect(2)
-            let rr = NSRect(x: a.minX - 5, y: a.minY - 5, width: b.maxX - a.minX + 10, height: a.height + 10)
-            NSBezierPath(roundedRect: rr, xRadius: rr.height / 2, yRadius: rr.height / 2).fill()
-            return true
-        }
-    }
-}
+// MARK: - Icons
 
 /// Menu bar icon: a tiny closed chest with a glint of teeth, drawn pixel by pixel.
 enum MenuIcon {
@@ -183,39 +142,6 @@ enum MenuIcon {
 /// Hosting view that takes the first click, so buttons work in non-activating panels.
 final class FirstMouseHostingView<V: View>: NSHostingView<V> {
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
-}
-
-// MARK: - Shapes
-
-/// A ring segment. Angles are radians, 0 = 12 o'clock, clockwise.
-struct Sector: Shape {
-    var start: Double
-    var end: Double
-    var inner: CGFloat
-    var outer: CGFloat
-
-    var animatableData: AnimatablePair<CGFloat, CGFloat> {
-        get { AnimatablePair(inner, outer) }
-        set { inner = newValue.first; outer = newValue.second }
-    }
-
-    func path(in rect: CGRect) -> Path {
-        let c = CGPoint(x: rect.midX, y: rect.midY)
-        func pt(_ a: Double, _ r: CGFloat) -> CGPoint {
-            CGPoint(x: c.x + r * CGFloat(sin(a)), y: c.y - r * CGFloat(cos(a)))
-        }
-        let steps = max(8, Int((end - start) * 48))
-        var p = Path()
-        for s in 0...steps {
-            let a = start + (end - start) * Double(s) / Double(steps)
-            if s == 0 { p.move(to: pt(a, outer)) } else { p.addLine(to: pt(a, outer)) }
-        }
-        for s in stride(from: steps, through: 0, by: -1) {
-            p.addLine(to: pt(start + (end - start) * Double(s) / Double(steps), inner))
-        }
-        p.closeSubpath()
-        return p
-    }
 }
 
 // MARK: - History

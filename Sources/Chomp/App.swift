@@ -20,6 +20,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        Snapshot.runIfAsked()
 
         WheelController.shared.onRun = { [weak self] op, files in self?.run(op, files) }
         watcher.onTrigger = { mode, files in WheelController.shared.trigger(mode, files: files) }
@@ -89,6 +90,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         HUD.shared.show(ok ? .done : .failed, title: title, detail: detail, outputs: r.outputs)
         if ok && !r.outputs.isEmpty { History.shared.add(title, detail, r.outputs) }
+        if ok { Stats.addChomp() }
         if Prefs.sounds { NSSound(named: ok ? "Pop" : "Basso")?.play() }
     }
 }

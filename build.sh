@@ -18,6 +18,7 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/Chomp"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
+cp -R Resources/Fonts "$APP/Contents/Resources/Fonts"
 iconutil -c icns Resources/AppIcon.iconset -o "$APP/Contents/Resources/AppIcon.icns"
 codesign --force --deep --sign - "$APP" >/dev/null 2>&1 || true
 

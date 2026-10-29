@@ -4,12 +4,13 @@ import SwiftUI
 // MARK: - Geometry (shared by drawing and hit-testing)
 
 enum Geo {
-    static let size: CGFloat = 380        // wheel area (square)
-    static let pillsH: CGFloat = 44       // mode capsule row under it
-    static let outer: CGFloat = 170
-    static let inner: CGFloat = 62
-    static let pillW: CGFloat = 96
-    static let pillGap: CGFloat = 6
+    static let size: CGFloat = CGFloat(WheelArt.grid) * WheelArt.scale   // wheel area (square), 440
+    static let pillsH: CGFloat = 58       // keycap row under it
+    static let outer: CGFloat = CGFloat(WheelArt.outer) * WheelArt.scale
+    static let inner: CGFloat = CGFloat(WheelArt.inner) * WheelArt.scale
+    static let pillW: CGFloat = 112
+    static let pillH: CGFloat = 30
+    static let pillGap: CGFloat = 14
 
     static var windowSize: NSSize { NSSize(width: size, height: size + pillsH) }
     /// Wheel centre in window coordinates (AppKit, y-up).
@@ -18,7 +19,7 @@ enum Geo {
     static func pillRect(_ i: Int) -> NSRect {
         let total = pillW * 3 + pillGap * 2
         let x0 = (size - total) / 2
-        return NSRect(x: x0 + CGFloat(i) * (pillW + pillGap), y: (pillsH - 26) / 2, width: pillW, height: 26)
+        return NSRect(x: x0 + CGFloat(i) * (pillW + pillGap), y: (pillsH - pillH) / 2 - 2, width: pillW, height: pillH)
     }
 }
 
@@ -31,7 +32,7 @@ final class WheelModel: ObservableObject {
     @Published var count = 0
     @Published var ops: [Op] = []
     @Published var hover: Int? = nil      // segment index, -1 = centre (cancel)
-    @Published var visible = false
+    @Published var pop = 0                // 0 hidden, 1 nearly there, 2 shown: snaps in, no spring
     @Published var interactive = false
     @Published var icon: NSImage? = nil
     @Published var chompAt: Date? = nil   // set on drop; Chomp plays its bite
@@ -95,14 +96,6 @@ final class WheelController {
 
         let root = NSView(frame: NSRect(origin: .zero, size: Geo.windowSize))
 
-        let fx = NSVisualEffectView(frame: root.bounds)
-        fx.material = .hudWindow
-        fx.blendingMode = .behindWindow
-        fx.state = .active
-        fx.maskImage = Masks.wheel()
-        fx.autoresizingMask = [.width, .height]
-        root.addSubview(fx)
-
         let host = NSHostingView(rootView: WheelRoot(model: model))
         host.frame = root.bounds
         host.autoresizingMask = [.width, .height]
@@ -142,16 +135,17 @@ final class WheelController {
         }
         panel.interactive = interactive
         panel.setFrame(NSRect(origin: origin, size: size), display: true)
-        model.visible = false
-        panel.alphaValue = 0
+        model.pop = 0
+        panel.alphaValue = 1
         panel.orderFrontRegardless()
         if interactive { panel.makeKey() }
-        NSAnimationContext.runAnimationGroup { ctx in
-            ctx.duration = 0.12
-            self.panel.animator().alphaValue = 1
-        }
-        DispatchQueue.main.async {
-            withAnimation(.spring(response: 0.32, dampingFraction: 0.72)) { self.model.visible = true }
+        // Two hard steps instead of a spring, like a sprite popping in.
+        let t = token
+        for (stage, delay) in [(1, 0.0), (2, 0.05)] {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                guard let self, self.token == t else { return }
+                self.model.pop = stage
+            }
         }
     }
 
@@ -159,9 +153,9 @@ final class WheelController {
         guard panel.isVisible else { return }
         token += 1
         let t = token
-        withAnimation(.easeIn(duration: 0.1)) { model.visible = false }
+        model.pop = 1
         NSAnimationContext.runAnimationGroup({ ctx in
-            ctx.duration = 0.1
+            ctx.duration = 0.08
             self.panel.animator().alphaValue = 0
         }, completionHandler: { [weak self] in
             guard let self, self.token == t else { return }
@@ -188,7 +182,7 @@ final class WheelController {
 
     func switchMode(_ m: Mode) {
         guard model.mode != m else { return }
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { model.setMode(m) }
+        model.setMode(m)
         if Prefs.haptics {
             NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .now)
         }
@@ -362,65 +356,55 @@ final class DropOverlay: NSView {
 
 struct WheelRoot: View {
     @ObservedObject var model: WheelModel
-    @AppStorage("accent") private var accentRaw = Accent.oak.rawValue
-    private var accent: Color { (Accent(rawValue: accentRaw) ?? .oak).color }
+    @AppStorage("skin") private var skinRaw = Skin.current.rawValue
+    @AppStorage("pixelText") private var pixelText = true
+    private var skin: Skin { Skin(rawValue: skinRaw) ?? .oak }
 
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
-                ring
-                    .id(model.mode)
-                    .transition(.asymmetric(insertion: .scale(scale: 0.86).combined(with: .opacity),
-                                            removal: .opacity))
+                disc
+                labels
                 center
             }
             .frame(width: Geo.size, height: Geo.size)
             pills
                 .frame(width: Geo.size, height: Geo.pillsH)
         }
-        .scaleEffect(model.visible ? 1 : 0.7,
+        .scaleEffect(model.pop == 2 ? 1 : (model.pop == 1 ? 0.94 : 0.8),
                      anchor: UnitPoint(x: 0.5, y: (Geo.size / 2) / (Geo.size + Geo.pillsH)))
-        .opacity(model.visible ? 1 : 0)
+        .opacity(model.pop == 0 ? 0 : 1)
         .frame(width: Geo.windowSize.width, height: Geo.windowSize.height)
         .environment(\.colorScheme, .dark)
     }
 
+    /// Snapped to the 2-point wheel grid so icons line up with the disc's pixels.
     private func point(_ a: Double, _ r: CGFloat) -> CGPoint {
-        CGPoint(x: Geo.size / 2 + r * CGFloat(sin(a)), y: Geo.size / 2 - r * CGFloat(cos(a)))
+        func snap(_ v: CGFloat) -> CGFloat { (v / WheelArt.scale).rounded() * WheelArt.scale }
+        return CGPoint(x: snap(Geo.size / 2 + r * CGFloat(sin(a))), y: snap(Geo.size / 2 - r * CGFloat(cos(a))))
     }
 
-    private var ring: some View {
+    @ViewBuilder private var disc: some View {
+        if let img = WheelArt.image(count: model.ops.count, hover: model.hover, skin: skin) {
+            Image(decorative: img, scale: 1)
+                .resizable()
+                .interpolation(.none)
+                .frame(width: Geo.size, height: Geo.size)
+        }
+    }
+
+    private var labels: some View {
         let n = model.ops.count
         let w = n > 0 ? 2 * Double.pi / Double(n) : 0
-        let gap = 0.05
-        let labelW = min(108, CGFloat(w) * 118 * 0.9)
+        let r = (Geo.inner + Geo.outer) / 2 + 4
         return ZStack {
-            Circle()
-                .strokeBorder(Color.white.opacity(0.07), lineWidth: 1)
-                .frame(width: Geo.outer * 2 + 12, height: Geo.outer * 2 + 12)
             ForEach(Array(model.ops.enumerated()), id: \.element.id) { i, op in
-                let hot = model.hover == i
-                let shape = Sector(start: Double(i) * w - w / 2 + gap,
-                                   end: Double(i) * w + w / 2 - gap,
-                                   inner: Geo.inner + 8,
-                                   outer: hot ? Geo.outer : Geo.outer - 10)
-                let style: AnyShapeStyle = hot
-                    ? AnyShapeStyle(LinearGradient(colors: [accent, accent.opacity(0.8)], startPoint: .top, endPoint: .bottom))
-                    : AnyShapeStyle(Color.white)
-                ZStack {
-                    shape.fill(style)
-                    shape.stroke(style, style: StrokeStyle(lineWidth: 4, lineJoin: .round))
-                }
-                .compositingGroup()
-                .opacity(hot ? 1 : 0.075)
-                .shadow(color: hot ? accent.opacity(0.55) : .clear, radius: 16)
-
-                SegmentLabel(op: op, hot: hot, width: labelW, index: i + 1, interactive: model.interactive)
-                    .position(point(Double(i) * w, (Geo.inner + Geo.outer) / 2 + 2))
+                SegmentLabel(op: op, hot: model.hover == i, index: i + 1, interactive: model.interactive,
+                             width: min(104, CGFloat(w) * r * 0.86))
+                    .position(point(Double(i) * w, r))
             }
         }
         .frame(width: Geo.size, height: Geo.size)
-        .animation(.spring(response: 0.22, dampingFraction: 0.7), value: model.hover)
     }
 
     private var caption: String {
@@ -431,78 +415,70 @@ struct WheelRoot: View {
     }
 
     private var center: some View {
-        let hot = model.hover == -1
-        let d = Geo.inner * 2 - 6
-        return ZStack {
-            Circle().fill(Color.black.opacity(hot ? 0.45 : 0.28)).frame(width: d, height: d)
-            Circle().strokeBorder(Color.white.opacity(0.1), lineWidth: 1).frame(width: d, height: d)
-            VStack(spacing: 0) {
-                MimicView(mood: model.mood, since: model.chompAt ?? .distantPast, scale: 2)
-                    .offset(y: 4)
-                Text(caption)
-                    .font(.system(size: 10.5, weight: .semibold, design: .rounded))
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                    .frame(maxWidth: Geo.inner * 2 - 30)
-                    .foregroundStyle(hot ? accent : Color.white.opacity(0.85))
-            }
-            .offset(y: -2)
+        VStack(spacing: 2) {
+            MimicView(mood: model.mood, since: model.chompAt ?? .distantPast, scale: 2)
+                .offset(y: 2)
+            Text(caption)
+                .font(Fonts.label(8))
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .frame(maxWidth: Geo.inner * 2 - 40)
+                .foregroundStyle(model.hover == -1 ? skin.accent : Pal.toothC)
         }
-        .animation(.easeOut(duration: 0.12), value: hot)
+        .offset(y: -4)
     }
 
     private var pills: some View {
         HStack(spacing: Geo.pillGap) {
             ForEach(Mode.allCases) { m in
-                let on = model.mode == m
-                HStack(spacing: 5) {
-                    Text(m.key)
-                        .font(.system(size: 12, weight: .heavy, design: .rounded))
-                        .opacity(on ? 0.8 : 0.45)
-                    Text(m.title)
-                        .font(.system(size: 11.5, weight: .semibold, design: .rounded))
+                Keycap(on: model.mode == m, skin: skin) {
+                    HStack(spacing: 6) {
+                        Text(m.key).font(.system(size: 12, weight: .heavy))
+                        Text(m.title).font(Fonts.label(10))
+                    }
+                    .frame(width: Geo.pillW - 4, height: Geo.pillH - 4)
                 }
-                .foregroundStyle(on ? Color.black.opacity(0.85) : Color.white)
-                .frame(width: Geo.pillW, height: 26)
-                .background(Capsule().fill(on ? accent : Color.white.opacity(0.08)))
             }
         }
-        .animation(.easeOut(duration: 0.15), value: model.mode)
+        .offset(y: -2)
     }
 }
 
 struct SegmentLabel: View {
     let op: Op
     let hot: Bool
-    let width: CGFloat
     let index: Int
     let interactive: Bool
+    let width: CGFloat
 
     var body: some View {
-        VStack(spacing: 3) {
-            if let s = op.symbol {
-                Image(systemName: s).font(.system(size: 15, weight: .semibold))
+        VStack(spacing: 0) {
+            if let icon = op.icon {
+                PixelIcon(name: icon, color: hot ? Pal.inkC : Pal.toothC)
+                    .padding(.bottom, 6)
             }
             Text(op.title)
-                .font(.system(size: op.symbol == nil ? 17 : 13, weight: .bold, design: .rounded))
+                .font(Fonts.display(op.icon == nil ? 20 : 15))
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
             if !op.detail.isEmpty {
                 Text(op.detail)
-                    .font(.system(size: 9.5, weight: .medium, design: .rounded))
-                    .opacity(hot ? 0.75 : 0.5)
+                    .font(Fonts.body(10))
+                    .opacity(hot ? 0.8 : 0.6)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
+                    .padding(.top, 4)
             }
             if interactive && index <= 9 {
                 Text("\(index)")
-                    .font(.system(size: 8, weight: .bold, design: .monospaced))
-                    .opacity(0.35)
+                    .font(Fonts.label(8))
+                    .opacity(0.4)
+                    .padding(.top, 3)
             }
         }
-        .foregroundStyle(hot ? Color.black.opacity(0.85) : Color.white)
+        .foregroundStyle(hot ? Pal.inkC : Pal.toothC)
         .multilineTextAlignment(.center)
         .frame(width: width)
-        .scaleEffect(hot ? 1.1 : 1)
+        .offset(y: op.icon == nil ? 0 : -4)
     }
 }
