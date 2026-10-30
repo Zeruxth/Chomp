@@ -71,8 +71,8 @@ public sealed class EditorWindow : Window
 
         var row = new DockPanel { Margin = new Thickness(0, 16, 0, 0) };
         var buttons = new StackPanel { Orientation = Orientation.Horizontal };
-        buttons.Children.Add(Key(L("Cancel"), false, 84, () => Close()));
-        buttons.Children.Add(Key(L("Save"), true, 84, Save));
+        buttons.Children.Add(Cap(L("Cancel"), false, 84, () => Close()));
+        buttons.Children.Add(Cap(L("Save"), true, 84, Save));
         DockPanel.SetDock(buttons, Dock.Right);
         row.Children.Add(buttons);
         var label = Fonts.Display(L("Shape"), 14, Pal.Muted);
@@ -138,7 +138,7 @@ public sealed class EditorWindow : Window
 
     void Seek(double t) => video.Position = TimeSpan.FromSeconds(Math.Max(0, t));
 
-    Grid Key(string text, bool on, double w, Action click)
+    Grid Cap(string text, bool on, double w, Action click)
     {
         var holder = new Grid { Margin = new Thickness(8, 0, 0, 0), Cursor = Cursors.Hand, Background = Brushes.Transparent };
         holder.Children.Add(PixelUI.Keycap(text, on, k, w, 30));
@@ -152,7 +152,7 @@ public sealed class EditorWindow : Window
         foreach (var (title, r) in EditPlan.Shapes)
         {
             var on = ratio == r;
-            var key = Key(title, on, 64, () =>
+            var key = Cap(title, on, 64, () =>
             {
                 ratio = r;
                 offset = 0.5;
