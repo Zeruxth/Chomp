@@ -85,6 +85,7 @@ p { margin: 0; }
 .hero .lede { margin-top: 24px; font-size: 18px; max-width: 46ch; text-shadow: 2px 2px 0 var(--ink); }
 .hero .ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; margin-left: -4px; }
 .hero .meta { margin-top: 18px; }
+.hero .meta a { color: var(--tooth); text-decoration-color: var(--accent); text-underline-offset: 4px; }
 .hint { position: absolute; z-index: 2; right: var(--gutter); bottom: 22px; font-family: var(--label); font-size: 11px; text-transform: uppercase; color: var(--muted); letter-spacing: .06em; }
 .bubble { position: absolute; z-index: 3; transform: translate(-50%, -100%); max-width: min(360px, 90vw); padding: 10px 14px; font-size: 14px; line-height: 1.4; text-align: center;
   background: var(--tooth); color: var(--ink); box-shadow: 0 -3px 0 0 var(--ink), 0 3px 0 0 var(--ink), -3px 0 0 0 var(--ink), 3px 0 0 0 var(--ink); pointer-events: none; }
@@ -216,9 +217,8 @@ section.room-sec { padding-block: 96px; }
       <div class="ctas">
         <a class="btn gold" id="get-mac" href="https://github.com/Zeruxth/Chomp/releases/latest/download/Chomp.zip"><canvas data-icon="down" width="12" height="12" aria-hidden="true"></canvas>Download for Mac</a>
         <a class="btn" id="get-win" href="https://github.com/Zeruxth/Chomp/releases/latest/download/Chomp-Windows.zip"><canvas data-icon="down" width="12" height="12" aria-hidden="true"></canvas>Download for Windows</a>
-        <a class="btn" href="https://github.com/Zeruxth/Chomp"><canvas data-icon="code" width="12" height="12" aria-hidden="true"></canvas>GitHub</a>
       </div>
-      <p class="meta small">Free · Mac: 1.3 MB, macOS 13 or newer · Windows (early): 170 MB, Windows 10 or 11</p>
+      <p class="meta small">Free and <a href="https://github.com/Zeruxth/Chomp">open source</a> · macOS 13 or newer · Windows 10 or 11 (early)</p>
     </div>
   </div>
   <p class="hint">Click to feed it · It'll also pretend to eat files you drop here</p>
@@ -431,12 +431,6 @@ section.room-sec { padding-block: 96px; }
     window: ["","############","#..........#","############","#..........#","#..........#","#..........#","#..........#","#..........#","############"],
     code: ["","...#....#...","..#......#..",".#...#...#..","#...#.....#.",".#.#.....#..","..#......#...","...#....#...."],
   };
-  // Windows visitors get the Windows download up front.
-  if (/Windows/.test(navigator.userAgent)) {
-    const mac = document.getElementById("get-mac"), win = document.getElementById("get-win");
-    mac.classList.remove("gold"); win.classList.add("gold");
-    mac.before(win);
-  }
   document.querySelectorAll("canvas[data-icon]").forEach(c => {
     const color = c.closest(".btn.gold") ? P.ink : (c.closest(".sign") ? "#FFD45C" : P.tooth);
     sprite(c.getContext("2d"), ICONS[c.dataset.icon], 0, 0, { "#": color });
