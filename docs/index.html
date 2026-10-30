@@ -76,7 +76,7 @@ p { margin: 0; }
 .brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-size: 22px; text-decoration: none; }
 .brand canvas { width: 32px; height: 33px; }
 .top nav { display: flex; gap: 26px; font-family: var(--label); font-size: 12px; text-transform: uppercase; }
-.top nav a { text-decoration: none; color: var(--muted); }
+.top nav a { text-decoration: none; color: var(--muted); text-shadow: 2px 2px 0 var(--ink), -2px -2px 0 var(--ink), 2px -2px 0 var(--ink), -2px 2px 0 var(--ink); }
 .top nav a:hover { color: var(--accent); }
 .hero-copy { position: relative; z-index: 2; flex: 1; display: flex; align-items: center; pointer-events: none; padding-block: 20px 90px; }
 .hero-copy > div { max-width: 600px; pointer-events: auto; }
@@ -177,6 +177,7 @@ section.room-sec { padding-block: 96px; }
   .top { order: 0; }
   .hero-copy { order: 2; padding-block: 28px 56px; }
   .hint { display: none; }
+  .hero .ctas .btn { flex: 1 1 auto; justify-content: center; }
   .top nav .hide-sm { display: none; }
   .how { height: 300vh; }
   .how-grid { grid-template-columns: 1fr; gap: 18px; }
@@ -307,7 +308,7 @@ section.room-sec { padding-block: 96px; }
 <footer class="floor">
   <div class="wrap">
     <span class="made">Made by <a class="maker" href="https://akiwip.work" aria-label="Aki Yamin, akiwip.work"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 39.3 30.1" fill="none" aria-hidden="true"><g data-part="head"><path d="M15.2354 27.3783L8.05012 24.897L4.89687 22.1056L3.50116 14.145L4.98075 10.9464L5.79145 9.1939L7.01627 6.54613L8.75867 5.19849L10.9406 3.51087L13.6329 1.42854H23.8164L26.1535 3.52746L28.5702 5.69789L31.9322 8.71722L32.0161 9.02009L32.5636 10.9958L34.31 17.2982L31.1051 23.7081L28.8532 24.627L22.1105 27.3783H15.2354Z" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/></g><g data-part="earRight"><path d="M28.5702 5.69789L30.4848 4.32334L33.2245 5.3572V7.4766L32.0161 9.0201" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/><path d="M30.4848 4.32334L33.2245 5.3572V7.4766L32.0161 9.0201L31.9322 8.71723L28.5702 5.69789L30.4848 4.32334Z" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/><path d="M28.5701 5.69792L26.1534 3.52749L29.4508 1.06673L34.31 1.73873L36.5328 6.02923L35.2404 10.0096L32.5635 10.9958L32.016 9.02012L33.2244 7.47663V5.35723L30.4847 4.32337L28.5701 5.69792Z" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/></g><g data-part="earLeft"><path d="M7.32654 4.53008L4.43174 5.25378V7.9418L5.79156 9.19387L4.98086 10.9464L3.13942 10.5781L0.761559 7.42487L1.58864 3.03099L6.8613 0.808203L10.9408 3.51084L8.75878 5.19846L7.32654 4.53008Z" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/><path d="M7.0163 6.54616L5.79148 9.19393L4.43166 7.94186V5.25384L7.32646 4.53014L8.7587 5.19852L7.0163 6.54616Z" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/></g><g data-part="eyes"><path d="M7.09871 14.8448L9.08403 19.6117L14.7185 18.4872L16.1659 13.7314L13.633 10.1129L9.08403 10.7849L7.09871 14.8448Z" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/><path d="M21.5419 12.4391V17.1432L26.0391 20.9167L30.4847 18.2804L29.761 12.4391L25.1604 10.1129L21.5419 12.4391Z" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/></g><g data-part="pupilLeft"><path d="M9.43881 15.1764L10.7524 12.9355L12.1047 12.5105L13.7274 13.8627L13.1865 16.2582L9.82517 17.1854L9.43881 15.1764Z" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/></g><g data-part="pupilRight"><path d="M23.8257 16.4449L24.1035 13.2511H26.7418L28.1304 15.2877L26.2326 17.1855L23.8257 16.4449Z" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/></g><g data-part="nose"><path d="M16.4243 18.4871L17.9234 16.9881H19.7843L20.6114 18.4871L19.4225 20.0379H17.9234L16.4243 18.4871Z" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/><path d="M17.9234 16.9881L16.4243 18.4871L17.9234 20.0379H19.4225L20.6114 18.4871L19.7843 16.9881H17.9234Z" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/></g><g data-part="mouth"><path d="M22.3691 20.9167L20.9734 22.1056H18.936L18.526 20.6779L17.5403 22.1056H15.2355L14.6152 20.9167" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/></g><g data-part="marks"><path d="M23.1444 7.42489L25.2638 6.59781L27.3832 7.42489" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/><path d="M13.5295 7.26982L11.3067 6.90797L9.75594 8.45876" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/><path d="M25.9875 3.65133L26.1535 3.52746M32.5636 10.9958L32.294 11.0951" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/><path d="M10.9966 3.54796L10.9407 3.51088M4.98076 10.9465L5.20704 10.9917" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/><path d="M28.4687 5.77072L28.5702 5.69787" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/><path d="M5.79146 9.1939L5.85351 9.25104" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/></g></svg><span class="wip">AKI_WIP</span></a> · Free and open source</span>
-    <span class="links"><a href="https://github.com/Zeruxth/Chomp">GitHub</a><a href="https://github.com/Zeruxth/Chomp/releases/latest">All downloads</a><a href="https://github.com/Zeruxth/Chomp/blob/main/LICENSE">MIT licence</a></span>
+    <span class="links"><a href="https://github.com/Zeruxth/Chomp">GitHub</a><a href="https://github.com/Zeruxth/Chomp/releases/latest">All downloads</a><a href="https://github.com/Zeruxth/Chomp/blob/main/LICENSE">MIT licence</a><a href="privacy.html">Privacy</a></span>
   </div>
 </footer>
 <div class="toast frame" id="toast" role="status" hidden></div>
@@ -462,8 +463,11 @@ section.room-sec { padding-block: 96px; }
       // Chomp sits in the middle of the free space right of the headline, as big as fits.
       const copy = document.querySelector(".hero-copy > div").getBoundingClientRect(), sr = scene.getBoundingClientRect();
       const left = (copy.right - sr.left + 48) * dpr / H.u, free = H.aw - left;
-      H.cs = [4, 3, 2].find(cs => 30 * cs <= free && 54 * cs <= H.floor - 22) || 2;
-      H.cx = Math.round(left + free / 2 - 16 * H.cs);
+      // The alcove plus a torch and its glow on each side is 22*cs + 46 units wide.
+      H.cs = [4, 3, 2].find(cs => 22 * cs + 46 <= free && 54 * cs <= H.floor - 22) || 2;
+      // When even the smallest size doesn't fit, slide left rather than clip the right torch.
+      const ac = Math.min(left + free / 2, H.aw - 11 * H.cs - 26);
+      H.cx = Math.round(ac - 16 * H.cs);
     }
     H.cy = H.floor - 31 * H.cs;
     H.bg = paintRoomBackground();
@@ -553,6 +557,7 @@ section.room-sec { padding-block: 96px; }
   }
 
   function drawHero(now) {
+    if (!H.bg.width || !H.bg.height) return; // laid out at zero size; the next resize repaints it
     const u = H.u, g = sx;
     g.drawImage(H.bg, 0, 0);
     // torches either side of the alcove, flames flicker
