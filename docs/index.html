@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Chomp</title>
-<meta name="description" content="A file converter for Mac that happens to be a treasure chest. Drag a file, tap Shift, pick what it becomes.">
+<meta name="description" content="A file converter for Mac and Windows that happens to be a treasure chest. Drag a file, tap Shift, pick what it becomes.">
 <meta property="og:title" content="Chomp">
-<meta property="og:description" content="A file converter for Mac that happens to be a treasure chest.">
+<meta property="og:description" content="A file converter for Mac and Windows that happens to be a treasure chest.">
 <meta property="og:image" content="https://zeruxth.github.io/Chomp/screens/wheel-convert.png">
 <meta name="theme-color" content="#120c14">
 <link rel="icon" href="favicon.png">
@@ -140,6 +140,7 @@ section.room-sec { padding-block: 96px; }
   background: #5e3820; box-shadow: 0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink), -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink), inset 0 4px 0 0 #7f512d, inset 0 -4px 0 0 #43281a, 0 8px 0 0 rgba(0,0,0,.45); }
 .sign canvas { width: 36px; height: 36px; flex: none; }
 .first { margin-top: 56px; padding: 26px 28px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 22px; align-items: center; }
+.first + .first { margin-top: 24px; }
 .first canvas { width: 48px; height: 48px; }
 .first h3 { font-size: 24px; margin-bottom: 8px; }
 .first p { color: var(--muted); font-size: 15px; }
@@ -210,13 +211,14 @@ section.room-sec { padding-block: 96px; }
   </div>
   <div class="wrap hero-copy">
     <div>
-      <h1>A file converter for Mac that happens to be a <em>treasure chest.</em></h1>
+      <h1>A file converter for Mac and Windows that happens to be a <em>treasure chest.</em></h1>
       <p class="lede">Drag a file, tap Shift, and pick what you want it to become: a JPG, a PDF, or a video small enough for Discord. Chomp makes it and puts it next to the original.</p>
       <div class="ctas">
-        <a class="btn gold" href="https://github.com/Zeruxth/Chomp/releases/latest/download/Chomp.zip"><canvas data-icon="down" width="12" height="12" aria-hidden="true"></canvas>Download for Mac</a>
+        <a class="btn gold" id="get-mac" href="https://github.com/Zeruxth/Chomp/releases/latest/download/Chomp.zip"><canvas data-icon="down" width="12" height="12" aria-hidden="true"></canvas>Download for Mac</a>
+        <a class="btn" id="get-win" href="https://github.com/Zeruxth/Chomp/releases/latest/download/Chomp-Windows.zip"><canvas data-icon="down" width="12" height="12" aria-hidden="true"></canvas>Download for Windows</a>
         <a class="btn" href="https://github.com/Zeruxth/Chomp"><canvas data-icon="code" width="12" height="12" aria-hidden="true"></canvas>GitHub</a>
       </div>
-      <p class="meta small">Free · 1.3 MB · macOS 13 or newer</p>
+      <p class="meta small">Free · Mac: 1.3 MB, macOS 13 or newer · Windows (early): 170 MB, Windows 10 or 11</p>
     </div>
   </div>
   <p class="hint">Click to feed it · It'll also pretend to eat files you drop here</p>
@@ -287,15 +289,22 @@ section.room-sec { padding-block: 96px; }
       <h2>Good to know</h2>
     </div>
     <div class="signs">
-      <div class="sign"><canvas data-icon="home" width="12" height="12" aria-hidden="true"></canvas>Works offline. Your files never leave your Mac.</div>
+      <div class="sign"><canvas data-icon="home" width="12" height="12" aria-hidden="true"></canvas>Works offline. Your files never leave your computer.</div>
       <div class="sign"><canvas data-icon="copy" width="12" height="12" aria-hidden="true"></canvas>Your original file stays untouched.</div>
       <div class="sign"><canvas data-icon="undo" width="12" height="12" aria-hidden="true"></canvas>Made a mistake? There's an Undo button.</div>
     </div>
     <div class="first frame">
       <canvas data-icon="key" width="12" height="12" aria-hidden="true"></canvas>
       <div>
-        <h3>Opening it the first time</h3>
+        <h3>Opening it the first time on a Mac</h3>
         <p>Chomp is free, so Apple grumbles the first time you open it. Click <b>Done</b>, go to <b>System Settings → Privacy &amp; Security</b>, and click <b>Open Anyway</b>.</p>
+      </div>
+    </div>
+    <div class="first frame" id="on-windows">
+      <canvas data-icon="window" width="12" height="12" aria-hidden="true"></canvas>
+      <div>
+        <h3>On Windows (early)</h3>
+        <p>Unzip it and open <b>Chomp.exe</b>. Windows may say it protected your PC, because Chomp isn't paid-signed: click <b>More info</b>, then <b>Run anyway</b>. Chomp lives in the tray by the clock. Click the chest and drop files on it, or right-click a file and choose <b>Send to → Chomp</b>. Dragging anywhere and tapping Shift, cutting out backgrounds, HEIC and AirDrop are Mac only for now.</p>
       </div>
     </div>
   </section>
@@ -419,8 +428,15 @@ section.room-sec { padding-block: 96px; }
     undo: ["","....#.......","...##.......","..#########.","...##.....#.","....#.....#.","..........#.","..........#.","....#######."],
     key: ["","..####......",".#....#.....",".#....#.....",".#....######",".#....#.#.#.","..####..#.#."],
     down: [".....##.....",".....##.....",".....##.....",".....##.....","..########..","...######...","....####....",".....##.....","","############","############"],
+    window: ["","############","#..........#","############","#..........#","#..........#","#..........#","#..........#","#..........#","############"],
     code: ["","...#....#...","..#......#..",".#...#...#..","#...#.....#.",".#.#.....#..","..#......#...","...#....#...."],
   };
+  // Windows visitors get the Windows download up front.
+  if (/Windows/.test(navigator.userAgent)) {
+    const mac = document.getElementById("get-mac"), win = document.getElementById("get-win");
+    mac.classList.remove("gold"); win.classList.add("gold");
+    mac.before(win);
+  }
   document.querySelectorAll("canvas[data-icon]").forEach(c => {
     const color = c.closest(".btn.gold") ? P.ink : (c.closest(".sign") ? "#FFD45C" : P.tooth);
     sprite(c.getContext("2d"), ICONS[c.dataset.icon], 0, 0, { "#": color });
