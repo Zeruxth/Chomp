@@ -24,7 +24,7 @@ public sealed class Toast : Window
     Phase phase;
     string title = "", detail = "";
     List<string> outputs = new();
-    bool hovering;
+    int holds;
     int token;
 
     readonly Grid root = new() { Width = W, Height = H };
@@ -51,8 +51,6 @@ public sealed class Toast : Window
 
         anim.Tick += (_, _) => Animate();
         SourceInitialized += (_, _) => Native.NoActivate(new WindowInteropHelper(this).Handle, true);
-        MouseEnter += (_, _) => hovering = true;
-        MouseLeave += (_, _) => hovering = false;
         Prefs.Changed += () => { if (IsVisible) Render(); };
     }
 
@@ -90,7 +88,11 @@ public sealed class Toast : Window
         t.Tick += (_, _) =>
         {
             t.Stop();
-            if (hovering) ScheduleHide(1.5); else HideNow();
+            // Where the pointer is now, not a remembered hover: this window never activates and can miss MouseLeave.
+            var c = Native.Cursor();
+            var p = root.PointFromScreen(new Point(c.X, c.Y));
+            var over = p.X >= 0 && p.Y >= 0 && p.X <= root.ActualWidth && p.Y <= root.ActualHeight;
+            if (over && holds++ < 6) ScheduleHide(1.5); else { holds = 0; HideNow(); }
         };
         hideTimer = t;
         t.Start();

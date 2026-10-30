@@ -262,6 +262,12 @@ final class WheelController {
         return true
     }
 
+    private func pointerOnKeys() -> Bool {
+        guard panel.isVisible else { return false }
+        let p = panel.convertFromScreen(NSRect(origin: NSEvent.mouseLocation, size: .zero)).origin
+        return (0..<3).contains { Geo.pillRect($0).insetBy(dx: -3, dy: -6).contains(p) }
+    }
+
     /// The pointer left the wheel after the result showed: you've seen it, so it goes.
     func pointerLeft() {
         switch model.stage {
@@ -270,13 +276,14 @@ final class WheelController {
         }
     }
 
-    /// Fades out by itself. The pointer is usually still on Chomp after a drop, so only
-    /// hovering one of the Show / Undo / Close keys holds it open.
-    private func scheduleHide(_ secs: Double) {
+    /// Fades out by itself. The pointer is usually still on Chomp after a drop, so only the pointer
+    /// really resting on one of the Show / Undo / Close keys holds it open, and never for more than ~10 s.
+    /// (It asks where the pointer is now: a remembered hover can go stale when macOS skips the "left" event.)
+    private func scheduleHide(_ secs: Double, waited: Double = 0) {
         hideItem?.cancel()
         let item = DispatchWorkItem { [weak self] in
             guard let self else { return }
-            if self.model.pillHover != nil { self.scheduleHide(1.5) } else { self.hide() }
+            if self.pointerOnKeys() && waited < 10 { self.scheduleHide(1.5, waited: waited + secs) } else { self.hide() }
         }
         hideItem = item
         DispatchQueue.main.asyncAfter(deadline: .now() + secs, execute: item)
