@@ -89,6 +89,15 @@ enum Bin {
 // MARK: - Shell
 
 enum Shell {
+    /// The line that says what went wrong. ffmpeg ends with a summary ("Error opening output files: Invalid
+    /// argument", "Conversion failed!") that hides the cause one line above it.
+    static func reason(_ err: String) -> String? {
+        let lines = err.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        let generic = ["Error opening output file", "Conversion failed", "Error while filtering", "Error initializing output stream"]
+        let useful = lines.filter { l in !generic.contains { l.contains($0) } }
+        return (useful.last ?? lines.last).map { $0.replacingOccurrences(of: #"^\[[^\]]+\]\s*"#, with: "", options: .regularExpression) }
+    }
+
     @discardableResult
     static func run(_ exe: String, _ args: [String], cwd: URL? = nil) async throws -> String {
         try await withCheckedThrowingContinuation { (cont: CheckedContinuation<String, Error>) in
@@ -109,8 +118,7 @@ enum Shell {
                 if proc.terminationStatus == 0 {
                     cont.resume(returning: err)
                 } else {
-                    let line = err.split(separator: "\n").last.map(String.init) ?? "Exit \(proc.terminationStatus)"
-                    cont.resume(throwing: ChompError.msg(line))
+                    cont.resume(throwing: ChompError.msg(Shell.reason(err) ?? "Exit \(proc.terminationStatus)"))
                 }
             }
             do { try p.run() } catch { cont.resume(throwing: error) }

@@ -214,11 +214,24 @@ enum Media {
         }
     }
 
+    /// Which streams go into the new file: the main picture (never embedded cover art) and the first sound track.
+    /// Left to itself ffmpeg takes the sound with the most channels, and on newer iPhones that's a spatial audio
+    /// track it can't decode. GIFs and stills get no sound, audio files no picture.
+    static func streams(_ ext: String) -> [String] {
+        let pick: [String]
+        switch ext {
+        case "gif", "png", "jpg", "webp": pick = ["-map", "0:V:0"]
+        case "mp3", "m4a", "wav", "flac", "aiff", "ogg", "opus": pick = ["-map", "0:a:0"]
+        default: pick = ["-map", "0:V:0?", "-map", "0:a:0?"]
+        }
+        return pick + ["-sn", "-dn"]
+    }
+
     static func ff(_ src: URL, ext: String, suffix: String?, _ args: [String]) async throws -> URL {
         guard let ff = Bin.ffmpeg else { throw ChompError.needsFFmpeg }
         let out = try Files.dest(src, ext: ext, suffix: suffix)
         do {
-            try await Shell.run(ff, ["-y", "-nostdin", "-loglevel", "error", "-i", src.path] + args + [out.path])
+            try await Shell.run(ff, ["-y", "-nostdin", "-loglevel", "error", "-i", src.path] + streams(ext) + args + [out.path])
         } catch {
             try? FileManager.default.removeItem(at: out)
             throw error

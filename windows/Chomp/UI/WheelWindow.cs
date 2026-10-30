@@ -111,6 +111,8 @@ public sealed class WheelWindow : Window
         {
             if (interactive) SetHover(null);
             if (pillHover != null) { pillHover = null; Render(); }
+            // The result has been seen once the pointer moves off it.
+            if (stage is Stage.Done or Stage.Failed or Stage.Spat) ScheduleHide(0.5);
         };
         MouseLeftButtonDown += (_, e) => Click(ZoneAt(e.GetPosition(root)));
         KeyDown += (_, e) => e.Handled = Key_(e.Key);
@@ -337,7 +339,7 @@ public sealed class WheelWindow : Window
             jobDetail = detail;
             outputs = outs.ToList();
             Render();
-            ScheduleHide(ok ? 3 : 6);
+            ScheduleHide(ok ? 2 : 4);
         });
         return true;
     }
