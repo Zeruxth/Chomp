@@ -134,6 +134,29 @@ public sealed class WheelWindow : Window
     public void Open(IReadOnlyList<string> items, Mode m, bool interactive)
     {
         if (items.Count == 0) return;
+        Present(items, m, interactive);
+    }
+
+    /// <summary>Shift, Ctrl or Alt was tapped mid-drag somewhere in Windows. If the wheel is already up for this drag it
+    /// switches mode; otherwise it pops up empty under the cursor, and the drag fills it in as soon as it crosses into the
+    /// window (Windows only says what's being dragged to the window it's over).</summary>
+    public void Trigger(Mode m)
+    {
+        if (IsVisible && !interactive && stage == Stage.Pick)
+        {
+            if (files.Count > 0) SwitchMode(m);
+            else { mode = m; Render(); }
+            return;
+        }
+        if (IsVisible && interactive) return;   // the wheel is busy with a click-opened pick
+        Present(Array.Empty<string>(), m, interactive: false);
+        // Nothing crossed in: it wasn't a drag Windows could hand over (a window being moved, text being selected…).
+        var t = token;
+        After(1.2, () => { if (token == t && files.Count == 0 && IsVisible) Close_(); });
+    }
+
+    void Present(IReadOnlyList<string> items, Mode m, bool interactive)
+    {
         hideTimer?.Stop();
         token++;
         this.interactive = interactive;
@@ -428,6 +451,12 @@ public sealed class WheelWindow : Window
     {
         e.Handled = true;
         e.Effects = DragDropEffects.None;
+        if (stage == Stage.Pick && files.Count == 0)
+        {
+            // Opened by a key mid-drag: now we know what's being carried.
+            if (e.Data.GetData(DataFormats.FileDrop) is string[] { Length: > 0 } got) { Load(got, mode); Render(); }
+            else { Close_(); return; }
+        }
         if (stage != Stage.Pick || !e.Data.GetDataPresent(DataFormats.FileDrop)) return;
         var z = ZoneAt(e.GetPosition(root));
         Apply(z, dragging: true);
@@ -498,6 +527,13 @@ public sealed class WheelWindow : Window
         foreach (var e in new UIElement[] { mimic, ring })
             if (VisualTreeHelper.GetParent(e) is Panel p) p.Children.Remove(e);
         layer.Children.Clear();
+        // Nearly invisible, but it makes the whole wheel a drop target: a see-through window lets drags fall through
+        // its fully transparent pixels to whatever is underneath.
+        if (stage == Stage.Pick)
+        {
+            var hit = Geo.Outer * 2 + 20;
+            Put(layer, new System.Windows.Shapes.Ellipse { Fill = Pal.B(0x000000, 1) }, Geo.Center.X, Geo.Center.Y, hit, hit);
+        }
         if (stage == Stage.Pick) RenderPick(k); else RenderCompact(k);
         RenderPills(k);
         Animate();
@@ -518,7 +554,7 @@ public sealed class WheelWindow : Window
         }
 
         // Centre: Chomp and a caption.
-        var caption = hover == -1 ? "nevermind" : (ops.Count == 0 ? "can't eat that" : Label_());
+        var caption = files.Count == 0 ? "sniff sniff" : (hover == -1 ? "nevermind" : (ops.Count == 0 ? "can't eat that" : Label_()));
         var stack = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
         mimic.Margin = new Thickness(0, 2, 0, 0);
         mimic.HorizontalAlignment = HorizontalAlignment.Center;

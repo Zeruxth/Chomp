@@ -65,6 +65,10 @@ jobs:
         shell: pwsh
         run: windows/fetch-ffmpeg.ps1 Chomp
 
+      - name: Bundle the cut-out model
+        shell: pwsh
+        run: windows/fetch-model.ps1 Chomp
+
       - name: Smoke test
         shell: pwsh
         run: windows/smoke-test.ps1 Chomp/Chomp.exe

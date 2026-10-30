@@ -99,12 +99,30 @@ public sealed class Pixels(int w, int h, byte[] data)
     }
 }
 
-/// <summary>Images: Windows Imaging Component (WIC) to read and for JPG/PNG/TIFF/GIF/BMP, libwebp for WebP, ffmpeg for AVIF.</summary>
+/// <summary>Images: Windows Imaging Component (WIC) to read and for JPG/PNG/TIFF/GIF/BMP/HEIC, libwebp for WebP, ffmpeg for AVIF.</summary>
 public static class Images
 {
     static readonly HashSet<string> Native = new() { "jpg", "png", "tiff", "gif", "bmp" };
 
-    public static bool CanSave(string ext) => Native.Contains(ext) || ext == "webp" || (ext == "avif" && Bin.Av1Encoder.Value != null);
+    public static bool CanSave(string ext) => Native.Contains(ext) || ext == "webp" || (ext == "avif" && Bin.Av1Encoder.Value != null) || (ext == "heic" && HeifEncoder.Value);
+
+    static readonly Guid HeifContainer = new("e1e62521-6787-405b-a339-500715b5763f");   // GUID_ContainerFormatHeif
+
+    /// <summary>Windows writes HEIC only with Microsoft's HEIF and HEVC extensions installed. Try a 2×2 to find out.</summary>
+    static readonly Lazy<bool> HeifEncoder = new(() =>
+    {
+        try
+        {
+            var enc = BitmapEncoder.Create(HeifContainer);
+            enc.Frames.Add(BitmapFrame.Create(BitmapSource.Create(2, 2, 96, 96, PixelFormats.Bgr24, null, new byte[12], 6)));
+            using var ms = new MemoryStream();
+            enc.Save(ms);
+            return ms.Length > 0;
+        }
+        catch { return false; }
+    });
+
+    const string HeifHelp = "Windows needs the HEIF Image Extensions and HEVC Video Extensions from the Microsoft Store to make HEIC";
 
     /// <summary>Same format if we can write it, otherwise PNG.</summary>
     public static string KeepTarget(string ext) => CanSave(ext) ? ext : "png";
@@ -175,7 +193,7 @@ public static class Images
         }
         catch (Exception e) when (e is NotSupportedException or FileFormatException or ArgumentException or System.Runtime.InteropServices.COMException)
         {
-            using var b = SKBitmap.Decode(src);
+            using var b = SKBitmap.Decode(src) ?? ViaFFmpeg(src);
             if (b == null)
             {
                 var ext = Catalog.Ext(src);
@@ -186,6 +204,20 @@ public static class Images
             p = Pixels.FromSkia(b);
         }
         return maxPixel is int m ? p.Fit(m) : p;
+    }
+
+    /// <summary>HEIC and AVIF without Microsoft's extensions: the bundled ffmpeg can still read them.</summary>
+    static SKBitmap? ViaFFmpeg(string src)
+    {
+        if (Catalog.Ext(src) is not ("heic" or "avif") || Bin.FFmpeg is not string ff) return null;
+        var tmp = Files.Temp("png");
+        try
+        {
+            Shell.Run(ff, new List<string> { "-y", "-nostdin", "-loglevel", "error", "-i", src, "-frames:v", "1", tmp }).GetAwaiter().GetResult();
+            return SKBitmap.Decode(tmp);
+        }
+        catch { return null; }
+        finally { Files.TryDelete(tmp); }
     }
 
     /// <summary>Source metadata minus orientation, when the target keeps the same kind of metadata block.</summary>
@@ -205,8 +237,10 @@ public static class Images
     public static void Write(Pixels img, string o, string ext, double quality, BitmapMetadata? meta = null)
     {
         if (ext == "webp") { WriteWebP(img, o, quality); return; }
+        if (ext == "heic" && !HeifEncoder.Value) throw new ChompException(HeifHelp);
         BitmapEncoder enc = ext switch
         {
+            "heic" => BitmapEncoder.Create(HeifContainer),
             "jpg" => new JpegBitmapEncoder { QualityLevel = Math.Clamp((int)Math.Round(quality * 100), 1, 100) },
             "png" => new PngBitmapEncoder(),
             "tiff" => new TiffBitmapEncoder { Compression = TiffCompressOption.Lzw },
@@ -214,9 +248,9 @@ public static class Images
             "bmp" => new BmpBitmapEncoder(),
             _ => throw new ChompException($"Can't write {ext.ToUpperInvariant()}"),
         };
-        var src = ext is "jpg" or "bmp" && img.HasAlpha() ? img.Flatten() : img;
+        var src = ext is "jpg" or "bmp" or "heic" && img.HasAlpha() ? img.Flatten() : img;
         BitmapSource bmp = src.ToBitmap();
-        if (ext is "jpg" or "bmp") bmp = new FormatConvertedBitmap(bmp, PixelFormats.Bgr24, null, 0);
+        if (ext is "jpg" or "bmp" or "heic") bmp = new FormatConvertedBitmap(bmp, PixelFormats.Bgr24, null, 0);
         try { enc.Frames.Add(BitmapFrame.Create(bmp, null, meta, null)); }
         catch { enc.Frames.Clear(); enc.Frames.Add(BitmapFrame.Create(bmp)); }   // metadata the encoder won't take
         try

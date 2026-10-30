@@ -68,7 +68,7 @@ public sealed class MenuWindow : Window
         var name = Fonts.Display("Chomp", 22, k.Accent, bold: true);
         name.TextAlignment = TextAlignment.Left;
         titles.Children.Add(name);
-        var tag = Fonts.BodyText("Drop a file on me. I'll eat it.", 11);
+        var tag = Fonts.BodyText("Drag a file, tap Shift. I'll eat it.", 11);
         tag.TextAlignment = TextAlignment.Left;
         titles.Children.Add(tag);
         head.Children.Add(titles);
