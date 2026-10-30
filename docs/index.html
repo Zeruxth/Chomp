@@ -31,16 +31,17 @@
   --tongue: #ea4f86;
   --display: "Pixelify Sans", "Silkscreen", ui-monospace, monospace;
   --label: "Silkscreen", "Pixelify Sans", ui-monospace, monospace;
-  --body: "Google Sans Code", ui-monospace, "SF Mono", Menlo, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --body: "Google Sans Code", ui-monospace, "SF Mono", Menlo, monospace;
   --px: 4px;
+  --gutter: max(24px, env(safe-area-inset-left, 0px));
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
 html { background: var(--night); }
 body {
-  margin: 0; color: var(--tooth); font: 18px/1.55 var(--body);
+  margin: 0; color: var(--tooth); font: 17px/1.6 var(--body);
   background-color: var(--stone);
-  background-image: linear-gradient(to bottom, rgba(18,12,20,.2), rgba(18,12,20,.55) 60%, rgba(18,12,20,.9)), var(--bricks, none);
+  background-image: linear-gradient(to bottom, rgba(18,12,20,.25), rgba(18,12,20,.6) 60%, rgba(18,12,20,.92)), var(--bricks, none);
   background-size: auto, 64px 32px;
   image-rendering: pixelated;
   -webkit-font-smoothing: antialiased;
@@ -48,118 +49,110 @@ body {
 a { color: inherit; }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 canvas { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
-h1, h2, h3 { font-family: var(--display); font-weight: 600; font-variant-ligatures: none; margin: 0; line-height: 1.1; text-wrap: balance; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; font-variant-ligatures: none; margin: 0; line-height: 1.08; text-wrap: balance; }
 p { margin: 0; }
-.wrap { max-width: 1060px; margin: 0 auto; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width: 1280px; margin: 0 auto; padding-left: var(--gutter); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
 .label { font-family: var(--label); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
-.small { font-size: 15px; color: var(--muted); }
+.small { font-size: 14px; color: var(--muted); }
 
-/* notched pixel frame */
 .frame { background: var(--panel);
   box-shadow: 0 calc(-1*var(--px)) 0 0 var(--ink), 0 var(--px) 0 0 var(--ink), calc(-1*var(--px)) 0 0 0 var(--ink), var(--px) 0 0 0 var(--ink), 0 calc(2*var(--px)) 0 0 rgba(0,0,0,.5); }
 .btn { display: inline-flex; align-items: center; gap: 10px; font-family: var(--label); font-size: 14px; text-transform: uppercase; letter-spacing: .04em;
-  text-decoration: none; color: var(--tooth); background: var(--raised); padding: 14px 20px; margin: 4px; border: 0; cursor: pointer;
+  text-decoration: none; color: var(--tooth); background: var(--raised); padding: 15px 22px; margin: 4px; border: 0; cursor: pointer;
   box-shadow: 0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink), -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink), inset 0 -4px 0 0 rgba(0,0,0,.35), 0 8px 0 0 rgba(0,0,0,.45); }
 .btn:hover { background: var(--rim); }
-.btn:active { transform: translateY(3px); box-shadow: 0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink), -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink), inset 0 -2px 0 0 rgba(0,0,0,.35), 0 4px 0 0 rgba(0,0,0,.45); }
+.btn:active { transform: translateY(3px); }
 .btn.gold { background: var(--accent); color: var(--ink); box-shadow: 0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink), -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink), inset 0 -4px 0 0 var(--accent-dk), 0 8px 0 0 rgba(0,0,0,.45); }
 .btn.gold:hover { filter: brightness(1.06); }
 .btn canvas { width: 24px; height: 24px; }
-.key { display: inline-block; font-family: var(--body); font-weight: 700; font-size: .9em; color: var(--ink); background: var(--tooth); padding: 0 .45em; margin: 0 .1em;
+.key { display: inline-block; font-family: var(--body); font-weight: 700; font-size: .9em; line-height: 1.3; color: var(--ink); background: var(--tooth); padding: 0 .45em; margin: 0 .15em;
   box-shadow: 0 -2px 0 0 var(--ink), 0 2px 0 0 var(--ink), -2px 0 0 0 var(--ink), 2px 0 0 0 var(--ink), inset 0 -3px 0 0 #c9bfd0; }
 
-/* top bar */
-.top { display: flex; align-items: center; justify-content: space-between; padding-block: 18px; }
+/* ---------- hero: the whole first screen is Chomp's room ---------- */
+.hero { position: relative; min-height: min(100svh, 980px); display: flex; flex-direction: column; overflow: hidden; background: var(--night); }
+#scene { position: absolute; inset: 0; width: 100%; height: 100%; cursor: pointer; }
+.hero > .wrap { width: 100%; }
+.top { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; padding-block: 22px; }
 .brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-size: 22px; text-decoration: none; }
 .brand canvas { width: 32px; height: 33px; }
-.top nav { display: flex; gap: 22px; font-family: var(--label); font-size: 12px; text-transform: uppercase; }
+.top nav { display: flex; gap: 26px; font-family: var(--label); font-size: 12px; text-transform: uppercase; }
 .top nav a { text-decoration: none; color: var(--muted); }
 .top nav a:hover { color: var(--accent); }
-
-/* hero */
-.hero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 40px; align-items: center; padding-block: 40px 90px; }
-.hero h1 { font-size: clamp(38px, 5.4vw, 62px); text-shadow: 4px 4px 0 var(--ink); }
+.hero-copy { position: relative; z-index: 2; flex: 1; display: flex; align-items: center; pointer-events: none; padding-block: 20px 90px; }
+.hero-copy > div { max-width: 600px; pointer-events: auto; }
+.hero h1 { font-size: clamp(40px, 5.2vw, 76px); text-shadow: 4px 4px 0 var(--ink); }
 .hero h1 em { font-style: normal; color: var(--accent); }
-.hero .lede { margin-top: 22px; font-size: 20px; color: var(--tooth); max-width: 34ch; }
-.hero .ctas { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 30px; margin-left: -4px; }
+.hero .lede { margin-top: 24px; font-size: 18px; max-width: 46ch; text-shadow: 2px 2px 0 var(--ink); }
+.hero .ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; margin-left: -4px; }
 .hero .meta { margin-top: 18px; }
-.stage { position: relative; display: flex; flex-direction: column; align-items: center; gap: 14px; }
-.room { position: relative; width: min(100%, 420px); aspect-ratio: 1; display: grid; place-items: center; }
-#roomCanvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-#heroChest { position: relative; width: 61%; height: auto; aspect-ratio: 32 / 36; }
-.bubble { position: absolute; left: 50%; top: 2%; transform: translateX(-50%); max-width: 92%; padding: 10px 14px; font-size: 15px; line-height: 1.35; text-align: center;
-  background: var(--tooth); color: var(--ink); box-shadow: 0 -3px 0 0 var(--ink), 0 3px 0 0 var(--ink), -3px 0 0 0 var(--ink), 3px 0 0 0 var(--ink); }
-.bubble b { font-weight: 700; word-break: break-all; }
-.caption { font-size: 14px; color: var(--muted); text-align: center; }
-body.dragging .room { outline: 4px dashed var(--accent); outline-offset: -4px; }
+.hint { position: absolute; z-index: 2; right: var(--gutter); bottom: 22px; font-family: var(--label); font-size: 11px; text-transform: uppercase; color: var(--muted); letter-spacing: .06em; }
+.bubble { position: absolute; z-index: 3; transform: translate(-50%, -100%); max-width: min(360px, 90vw); padding: 10px 14px; font-size: 14px; line-height: 1.4; text-align: center;
+  background: var(--tooth); color: var(--ink); box-shadow: 0 -3px 0 0 var(--ink), 0 3px 0 0 var(--ink), -3px 0 0 0 var(--ink), 3px 0 0 0 var(--ink); pointer-events: none; }
+.bubble[hidden] { display: none; }
+.bubble b { word-break: break-all; }
+body.dragging #scene { outline: 6px dashed var(--accent); outline-offset: -12px; }
 
-/* sections */
-section.room-sec { padding-block: 70px; }
-.sec-head { display: flex; flex-direction: column; gap: 10px; margin-bottom: 34px; }
-.sec-head h2 { font-size: clamp(30px, 4vw, 42px); color: var(--accent); text-shadow: 3px 3px 0 var(--ink); }
-.sec-head p { color: var(--muted); max-width: 52ch; }
-.ledge { height: 12px; margin-block: 0; background:
+.ledge { height: 16px; background:
   linear-gradient(var(--ink) 0 4px, transparent 4px),
   repeating-linear-gradient(90deg, var(--rim) 0 28px, var(--raised) 28px 32px); box-shadow: 0 4px 0 var(--ink); }
 
-/* how it works */
-.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px; }
-.step { padding: 24px 22px 26px; display: flex; flex-direction: column; gap: 14px; }
-.step .num { font-family: var(--label); font-size: 12px; color: var(--accent); }
-.step h3 { font-size: 24px; }
-.step p { color: var(--muted); font-size: 16.5px; }
-.step .art { height: 150px; display: grid; place-items: center; background: var(--stone); box-shadow: inset 0 0 0 4px var(--ink); position: relative; overflow: hidden; }
-.drag-art canvas { width: 96px; height: 96px; animation: drift 2.4s steps(6) infinite; }
-@keyframes drift { 0% { transform: translate(-30px, 18px); } 50% { transform: translate(24px, -10px); } 100% { transform: translate(-30px, 18px); } }
-.cap { font-family: var(--body); font-weight: 800; font-size: 46px; width: 96px; height: 92px; display: grid; place-items: center; color: var(--ink); background: var(--tooth);
-  box-shadow: 0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink), -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink), inset 0 -10px 0 0 #c9bfd0, 0 10px 0 0 rgba(0,0,0,.5); animation: tap 1.6s steps(1) infinite; }
-@keyframes tap { 0%, 60% { transform: translateY(0); } 61%, 80% { transform: translateY(6px); box-shadow: 0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink), -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink), inset 0 -4px 0 0 #c9bfd0, 0 4px 0 0 rgba(0,0,0,.5); background: var(--accent); } 81%, 100% { transform: translateY(0); } }
-.cap-row { display: flex; gap: 10px; margin-top: 8px; }
-.cap-row .key { font-size: 13px; }
-.wheel-art { width: 150px; height: 150px; position: relative; }
-.wheel-art canvas { width: 100%; height: 100%; }
-.tip { margin-top: 26px; display: flex; gap: 12px; align-items: center; color: var(--muted); font-size: 16px; }
-.tip canvas { width: 32px; height: 33px; flex: none; }
+/* ---------- how it works: pinned while you scroll through it ---------- */
+.how { position: relative; height: 320vh; }
+.how-pin { position: sticky; top: 0; height: 100svh; display: flex; align-items: center; }
+.how-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: center; width: 100%; }
+.how h2, .sec-head h2 { font-size: clamp(32px, 4vw, 48px); color: var(--accent); text-shadow: 3px 3px 0 var(--ink); }
+.how-steps { list-style: none; margin: 28px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.how-step { padding: 16px 18px 18px; background: rgba(36,26,38,.55); box-shadow: inset 4px 0 0 var(--rim); transition: background .15s steps(2), box-shadow .15s steps(2); }
+.how-step h3 { font-size: 22px; color: var(--muted); }
+.how-step p { font-size: 15px; color: var(--muted); margin-top: 6px; }
+.how-step .n { font-family: var(--label); font-size: 11px; color: var(--muted); }
+.how-step.on { background: var(--panel); box-shadow: inset 6px 0 0 var(--accent), 0 4px 0 rgba(0,0,0,.4); }
+.how-step.on h3 { color: var(--tooth); }
+.how-step.on .n { color: var(--accent); }
+.how-step.on p { color: var(--tooth); }
+.stage-box { position: relative; padding: 6px; }
+#how-scene { width: 100%; height: auto; aspect-ratio: 16 / 11; background: var(--stone); box-shadow: 0 0 0 4px var(--ink), 0 10px 0 rgba(0,0,0,.45); }
+.scroll-cue { margin-top: 14px; }
+.tip { margin-top: 20px; display: flex; gap: 10px; align-items: center; color: var(--muted); font-size: 14px; }
 
-/* what it can do */
-.items { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 22px; }
-.item { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 18px; padding: 20px; align-items: start; }
+/* ---------- regular rooms ---------- */
+section.room-sec { padding-block: 96px; }
+.sec-head { display: flex; flex-direction: column; gap: 10px; margin-bottom: 36px; }
+.sec-head p { color: var(--muted); max-width: 56ch; }
+.items { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.item { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 18px; padding: 22px; align-items: start; }
 .slot { width: 64px; height: 64px; display: grid; place-items: center; background: var(--stone); box-shadow: inset 0 0 0 4px var(--ink), inset 0 0 0 6px var(--rim); }
 .slot canvas { width: 36px; height: 36px; }
 .item h3 { font-size: 22px; margin-bottom: 6px; }
-.item p { font-size: 16px; color: var(--muted); }
-.foot-note { margin-top: 20px; }
-
-/* skins */
-.skins { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; }
-.skin { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 6px 12px; background: var(--panel); border: 0; color: var(--tooth); cursor: pointer;
+.item p { font-size: 15px; color: var(--muted); }
+.foot-note { margin-top: 22px; }
+.skins { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 18px; }
+.skin { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 18px 6px 14px; background: var(--panel); border: 0; color: var(--tooth); cursor: pointer;
   box-shadow: inset 0 0 0 4px var(--ink); font: inherit; }
 .skin:hover { background: var(--raised); }
 .skin[aria-pressed="true"] { box-shadow: inset 0 0 0 4px var(--accent), inset 0 0 0 8px var(--ink); }
-.skin canvas { width: 64px; height: 66px; }
+.skin canvas { width: 96px; height: 99px; }
 .skin span { font-family: var(--label); font-size: 11px; text-transform: uppercase; }
 .skin small { font-size: 12px; color: var(--muted); }
 .skin.locked canvas { opacity: .35; }
-
-/* good to know */
 .signs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
-.sign { padding: 22px 20px; display: flex; gap: 14px; align-items: center; font-size: 17px;
+.sign { padding: 22px 20px; display: flex; gap: 14px; align-items: center; font-size: 16px;
   background: #5e3820; box-shadow: 0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink), -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink), inset 0 4px 0 0 #7f512d, inset 0 -4px 0 0 #43281a, 0 8px 0 0 rgba(0,0,0,.45); }
 .sign canvas { width: 36px; height: 36px; flex: none; }
-.first { margin-top: 70px; padding: 26px 28px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 22px; align-items: center; }
+.first { margin-top: 56px; padding: 26px 28px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 22px; align-items: center; }
 .first canvas { width: 48px; height: 48px; }
 .first h3 { font-size: 24px; margin-bottom: 8px; }
-.first p { color: var(--muted); font-size: 16.5px; }
+.first p { color: var(--muted); font-size: 15px; }
 .first b { color: var(--tooth); }
 
-/* dungeon floor */
-.dungeon { position: relative; margin-top: 90px; }
-#dungeon { width: 100%; height: auto; cursor: default; }
-.say { position: absolute; transform: translate(-50%, -100%); padding: 6px 10px; font-size: 14px; white-space: nowrap; pointer-events: none;
+/* ---------- the dungeon floor ---------- */
+.dungeon { position: relative; margin-top: 40px; }
+#dungeon { width: 100%; height: auto; }
+.say { position: absolute; transform: translate(-50%, -100%); padding: 6px 10px; font-size: 13px; white-space: nowrap; pointer-events: none;
   background: var(--tooth); color: var(--ink); box-shadow: 0 -3px 0 0 var(--ink), 0 3px 0 0 var(--ink), -3px 0 0 0 var(--ink), 3px 0 0 0 var(--ink); }
 .say[hidden] { display: none; }
 .floor { background: var(--ink); padding-block: 22px calc(22px + env(safe-area-inset-bottom, 0px)); }
-.floor .wrap { display: flex; flex-wrap: wrap; gap: 10px 26px; align-items: center; justify-content: space-between; font-size: 15px; color: var(--muted); }
+.floor .wrap { display: flex; flex-wrap: wrap; gap: 12px 26px; align-items: center; justify-content: space-between; font-size: 14px; color: var(--muted); }
 .floor a { color: var(--tooth); text-decoration-color: var(--accent); text-underline-offset: 4px; }
 .floor .links { display: flex; flex-wrap: wrap; gap: 8px 22px; }
 .made { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -178,140 +171,134 @@ section.room-sec { padding-block: 70px; }
 .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); padding: 12px 16px; font-family: var(--display); font-size: 18px; z-index: 5; }
 .toast[hidden] { display: none; }
 
-@media (max-width: 880px) {
-  .hero { grid-template-columns: 1fr; gap: 10px; padding-top: 10px; }
-  .stage { order: -1; }
-  .steps, .signs { grid-template-columns: 1fr; }
-  .skins { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .top nav { gap: 14px; }
+@media (max-width: 900px) {
+  .hero { min-height: 0; }
+  #scene { position: relative; inset: auto; height: 62svh; order: 1; }
+  .top { order: 0; }
+  .hero-copy { order: 2; padding-block: 28px 56px; }
+  .hint { display: none; }
   .top nav .hide-sm { display: none; }
+  .how { height: 300vh; }
+  .how-grid { grid-template-columns: 1fr; gap: 18px; }
+  .how-steps { margin-top: 14px; gap: 6px; }
+  .how-step { padding: 10px 14px; }
+  .how-step p { display: none; }
+  .how-step.on p { display: block; }
+  .how-step h3 { font-size: 18px; }
+  .items, .signs { grid-template-columns: 1fr; }
+  .skins { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .skin canvas { width: 64px; height: 66px; }
   .first { grid-template-columns: 1fr; }
+  section.room-sec { padding-block: 72px; }
 }
-@media (hover: none) { .caption { display: none; } }
-@media (prefers-reduced-motion: reduce) {
-  .drag-art canvas, .cap, .maker svg g { animation: none !important; }
-}
+@media (hover: none) { .hint { display: none; } }
+@media (prefers-reduced-motion: reduce) { .maker svg g { animation: none !important; } .how { height: auto; } .how-pin { position: static; height: auto; padding-block: 72px; } }
 </style>
 </head>
 <body>
 
-<div class="wrap">
-  <header class="top">
+<header class="hero">
+  <canvas id="scene" aria-label="Chomp, a pixel-art treasure chest in a torch-lit dungeon, eating files that fall into its mouth"></canvas>
+  <div class="wrap top">
     <a class="brand" href="#"><canvas id="logo" width="32" height="33" aria-hidden="true"></canvas>Chomp</a>
     <nav>
       <a class="hide-sm" href="#how">How it works</a>
       <a class="hide-sm" href="#what">What it can do</a>
       <a href="https://github.com/Zeruxth/Chomp">GitHub</a>
     </nav>
-  </header>
+  </div>
+  <div class="wrap hero-copy">
+    <div>
+      <h1>A file converter for Mac that happens to be a <em>treasure chest.</em></h1>
+      <p class="lede">Drag a file, tap Shift, and pick what you want it to become: a JPG, a PDF, or a video small enough for Discord. Chomp makes it and puts it next to the original.</p>
+      <div class="ctas">
+        <a class="btn gold" href="https://github.com/Zeruxth/Chomp/releases/latest/download/Chomp.zip"><canvas data-icon="down" width="12" height="12" aria-hidden="true"></canvas>Download for Mac</a>
+        <a class="btn" href="https://github.com/Zeruxth/Chomp"><canvas data-icon="code" width="12" height="12" aria-hidden="true"></canvas>GitHub</a>
+      </div>
+      <p class="meta small">Free · 1.3 MB · macOS 13 or newer</p>
+    </div>
+  </div>
+  <p class="hint">Click to feed it · It'll also pretend to eat files you drop here</p>
+  <div class="bubble" id="bubble" aria-live="polite" hidden></div>
+</header>
 
-  <main>
-    <section class="hero">
+<div class="ledge" aria-hidden="true"></div>
+
+<section class="how" id="how">
+  <div class="how-pin">
+    <div class="wrap how-grid">
       <div>
-        <h1>A file converter for Mac that happens to be a <em>treasure chest.</em></h1>
-        <p class="lede">Drag a file, tap Shift, and pick what you want it to become: a JPG, a PDF, or a video small enough for Discord. Chomp makes it and puts it next to the original.</p>
-        <div class="ctas">
-          <a class="btn gold" href="https://github.com/Zeruxth/Chomp/releases/latest/download/Chomp.zip"><canvas data-icon="down" width="12" height="12" aria-hidden="true"></canvas>Download for Mac</a>
-          <a class="btn" href="https://github.com/Zeruxth/Chomp"><canvas data-icon="code" width="12" height="12" aria-hidden="true"></canvas>GitHub</a>
-        </div>
-        <p class="meta small">Free · 1.3 MB · macOS 13 or newer</p>
-      </div>
-      <div class="stage">
-        <div class="room" id="room">
-          <canvas id="roomCanvas" width="105" height="105" aria-hidden="true"></canvas>
-          <canvas id="heroChest" width="32" height="36" role="img" aria-label="Chomp, a pixel-art treasure chest, eating a snack"></canvas>
-          <div class="bubble" id="bubble" aria-live="polite" hidden></div>
-        </div>
-        <p class="caption">It'll also pretend to eat files you drop on this page.</p>
-      </div>
-    </section>
-
-    <div class="ledge" aria-hidden="true"></div>
-
-    <section class="room-sec" id="how">
-      <div class="sec-head">
         <span class="label">Level 1</span>
         <h2>How it works</h2>
+        <ol class="how-steps">
+          <li class="how-step on" data-step="0"><span class="n">Step 1</span><h3>Start dragging a file.</h3><p>From Finder, your Desktop, anywhere.</p></li>
+          <li class="how-step" data-step="1"><span class="n">Step 2</span><h3>Tap Shift.</h3><p>A wheel pops up. (<span class="key">⌘</span> gets you tools like compress, <span class="key">⌃</span> gets you AirDrop and zip.)</p></li>
+          <li class="how-step" data-step="2"><span class="n">Step 3</span><h3>Drop it on what you want.</h3><p>The new file shows up next to the old one.</p></li>
+        </ol>
+        <p class="scroll-cue small" id="scrollCue">Keep scrolling to watch it happen.</p>
       </div>
-      <div class="steps">
-        <div class="step frame">
-          <div class="art drag-art"><canvas data-sprite="file" width="24" height="24" aria-hidden="true"></canvas></div>
-          <span class="num">Step 1</span>
-          <h3>Start dragging a file.</h3>
-          <p>From Finder, your Desktop, anywhere.</p>
-        </div>
-        <div class="step frame">
-          <div class="art"><div class="cap" aria-hidden="true">⇧</div></div>
-          <span class="num">Step 2</span>
-          <h3>Tap Shift.</h3>
-          <p>A wheel pops up. (<span class="key">⌘</span> gets you tools like compress, <span class="key">⌃</span> gets you AirDrop and zip.)</p>
-        </div>
-        <div class="step frame">
-          <div class="art"><div class="wheel-art"><canvas id="miniWheel" width="120" height="120" aria-hidden="true"></canvas></div></div>
-          <span class="num">Step 3</span>
-          <h3>Drop it on what you want.</h3>
-          <p>The new file shows up next to the old one.</p>
-        </div>
-      </div>
-    </section>
+      <div class="stage-box"><canvas id="how-scene" role="img" aria-label="A pixel cursor drags holiday.heic, Shift opens the wheel, the file drops on JPG, Chomp eats it and holiday.jpg appears"></canvas></div>
+    </div>
+  </div>
+</section>
 
-    <div class="ledge" aria-hidden="true"></div>
+<div class="ledge" aria-hidden="true"></div>
 
-    <section class="room-sec" id="what">
-      <div class="sec-head">
-        <span class="label">Level 2</span>
-        <h2>What it can do</h2>
-      </div>
-      <div class="items">
-        <div class="item frame"><div class="slot"><canvas data-icon="frame" width="12" height="12" aria-hidden="true"></canvas></div>
-          <div><h3>Photos</h3><p>Turn them into JPG, PNG, WebP, HEIC or PDF. Make them smaller, resize for Instagram, cut out the background.</p></div></div>
-        <div class="item frame"><div class="slot"><canvas data-icon="film" width="12" height="12" aria-hidden="true"></canvas></div>
-          <div><h3>Videos</h3><p>MP4, MOV, GIF. Shrink one under 10 MB, mute it, or grab a still.</p></div></div>
-        <div class="item frame"><div class="slot"><canvas data-icon="wave" width="12" height="12" aria-hidden="true"></canvas></div>
-          <div><h3>Audio</h3><p>MP3, M4A, WAV, FLAC. Even out the volume, trim the silence.</p></div></div>
-        <div class="item frame"><div class="slot"><canvas data-icon="combine" width="12" height="12" aria-hidden="true"></canvas></div>
-          <div><h3>PDFs</h3><p>Merge them, split them, turn pages into images or text.</p></div></div>
-        <div class="item frame"><div class="slot"><canvas data-icon="airdrop" width="12" height="12" aria-hidden="true"></canvas></div>
-          <div><h3>Anything else</h3><p>AirDrop it, zip it, copy its path.</p></div></div>
-        <div class="item frame"><div class="slot"><canvas id="snackSlot" width="8" height="8" aria-hidden="true"></canvas></div>
-          <div><h3>Snacks</h3><p>Every file comes with a free snack for Chomp. There are ten. The brick is the crunchiest.</p></div></div>
-      </div>
-      <p class="foot-note small">Video and audio need ffmpeg for now.</p>
-    </section>
+<main>
+  <section class="room-sec wrap" id="what">
+    <div class="sec-head">
+      <span class="label">Level 2</span>
+      <h2>What it can do</h2>
+    </div>
+    <div class="items">
+      <div class="item frame"><div class="slot"><canvas data-icon="frame" width="12" height="12" aria-hidden="true"></canvas></div>
+        <div><h3>Photos</h3><p>Turn them into JPG, PNG, WebP, HEIC or PDF. Make them smaller, resize for Instagram, cut out the background.</p></div></div>
+      <div class="item frame"><div class="slot"><canvas data-icon="film" width="12" height="12" aria-hidden="true"></canvas></div>
+        <div><h3>Videos</h3><p>MP4, MOV, GIF. Shrink one under 10 MB, mute it, or grab a still.</p></div></div>
+      <div class="item frame"><div class="slot"><canvas data-icon="wave" width="12" height="12" aria-hidden="true"></canvas></div>
+        <div><h3>Audio</h3><p>MP3, M4A, WAV, FLAC. Even out the volume, trim the silence.</p></div></div>
+      <div class="item frame"><div class="slot"><canvas data-icon="combine" width="12" height="12" aria-hidden="true"></canvas></div>
+        <div><h3>PDFs</h3><p>Merge them, split them, turn pages into images or text.</p></div></div>
+      <div class="item frame"><div class="slot"><canvas data-icon="airdrop" width="12" height="12" aria-hidden="true"></canvas></div>
+        <div><h3>Anything else</h3><p>AirDrop it, zip it, copy its path.</p></div></div>
+      <div class="item frame"><div class="slot"><canvas id="snackSlot" width="8" height="8" aria-hidden="true"></canvas></div>
+        <div><h3>Snacks</h3><p>Every file comes with a free snack for Chomp. There are ten. The brick is the crunchiest.</p></div></div>
+    </div>
+    <p class="foot-note small">Video and audio need ffmpeg for now.</p>
+  </section>
 
-    <div class="ledge" aria-hidden="true"></div>
+  <div class="ledge" aria-hidden="true"></div>
 
-    <section class="room-sec" id="skins">
-      <div class="sec-head">
-        <span class="label">Level 3</span>
-        <h2>Skins</h2>
-        <p>Comes in six colours. One of them you have to earn by feeding it 100 files.</p>
-      </div>
-      <div class="skins" id="skinList"></div>
-    </section>
+  <section class="room-sec wrap" id="skins">
+    <div class="sec-head">
+      <span class="label">Level 3</span>
+      <h2>Skins</h2>
+      <p>Comes in six colours. One of them you have to earn by feeding it 100 files.</p>
+    </div>
+    <div class="skins" id="skinList"></div>
+  </section>
 
-    <div class="ledge" aria-hidden="true"></div>
+  <div class="ledge" aria-hidden="true"></div>
 
-    <section class="room-sec">
-      <div class="sec-head">
-        <span class="label">Level 4</span>
-        <h2>Good to know</h2>
+  <section class="room-sec wrap">
+    <div class="sec-head">
+      <span class="label">Level 4</span>
+      <h2>Good to know</h2>
+    </div>
+    <div class="signs">
+      <div class="sign"><canvas data-icon="home" width="12" height="12" aria-hidden="true"></canvas>Works offline. Your files never leave your Mac.</div>
+      <div class="sign"><canvas data-icon="copy" width="12" height="12" aria-hidden="true"></canvas>Your original file stays untouched.</div>
+      <div class="sign"><canvas data-icon="undo" width="12" height="12" aria-hidden="true"></canvas>Made a mistake? There's an Undo button.</div>
+    </div>
+    <div class="first frame">
+      <canvas data-icon="key" width="12" height="12" aria-hidden="true"></canvas>
+      <div>
+        <h3>Opening it the first time</h3>
+        <p>Chomp is free, so Apple grumbles the first time you open it. Click <b>Done</b>, go to <b>System Settings → Privacy &amp; Security</b>, and click <b>Open Anyway</b>.</p>
       </div>
-      <div class="signs">
-        <div class="sign"><canvas data-icon="home" width="12" height="12" aria-hidden="true"></canvas>Works offline. Your files never leave your Mac.</div>
-        <div class="sign"><canvas data-icon="copy" width="12" height="12" aria-hidden="true"></canvas>Your original file stays untouched.</div>
-        <div class="sign"><canvas data-icon="undo" width="12" height="12" aria-hidden="true"></canvas>Made a mistake? There's an Undo button.</div>
-      </div>
-      <div class="first frame">
-        <canvas data-icon="key" width="12" height="12" aria-hidden="true"></canvas>
-        <div>
-          <h3>Opening it the first time</h3>
-          <p>Chomp is free, so Apple grumbles the first time you open it. Click <b>Done</b>, go to <b>System Settings → Privacy &amp; Security</b>, and click <b>Open Anyway</b>.</p>
-        </div>
-      </div>
-    </section>
-  </main>
-</div>
+    </div>
+  </section>
+</main>
 
 <div class="dungeon" aria-label="The dungeon floor, with a slime, a bat and a sleeping skeleton">
   <canvas id="dungeon" width="200" height="64"></canvas>
@@ -328,10 +315,11 @@ section.room-sec { padding-block: 70px; }
 <script>
 (() => {
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const DPR = () => Math.min(2, window.devicePixelRatio || 1);
 
   // ---------- palette & skins (same values as the app) ----------
   const P = { ink: "#140A08", mouth: "#24101C", tooth: "#F6F1E6", tongue: "#EA4F86", tongueDark: "#A3285A", shadow: "rgba(0,0,0,.35)",
-    disc: "#1D1420", seg: "#2F2231", rim: "#3D2D3F", hole: "#120C14", stone: "#1D1420" };
+    disc: "#1D1420", seg: "#2F2231", rim: "#3D2D3F", hole: "#120C14", muted: "#B3A6B8", panel: "#241A26" };
   const SKINS = {
     oak:   { name: "Oak",   note: "Default",       c: ["#5E3820","#7F512D","#A06A3A","#C48A50","#43281A","#FFD45C","#C48D2A","#8FF6FF","#FFD45C","#C48D2A"] },
     frost: { name: "Frost", note: "Icy blue",      c: ["#2B4A6B","#3E6A94","#5A8FBF","#8FC0E8","#1F334D","#E8F6FF","#9CC4DE","#FFD45C","#8FD8FF","#4F9CC8"] },
@@ -348,7 +336,7 @@ section.room-sec { padding-block: 70px; }
   let K = sk(skinId);
 
   // ---------- snacks (Food.swift) ----------
-  const FC = { k: "#140A08", w: "#F6F1E6", g: "#A59AA8", y: "#FFD45C", o: "#E8913A", n: "#C9874A", r: "#C8463C", R: "#8A2A28", p: "#EA4F86", G: "#5FA34F", B: "#5A9BD8", P: "#6A4A94", b: "#7F512D", d: "#43281A" };
+  const FC = { k: "#140A08", w: "#F6F1E6", g: "#A59AA8", y: "#FFD45C", o: "#E8913A", n: "#C9874A", r: "#C8463C", R: "#8A2A28", p: "#EA4F86", G: "#5FA34F", B: "#5A9BD8" };
   const FOODS = [
     { rows: ["kkkkkk..","kwwwwkk.","kwggwwwk","kwwwwwwk","kwggggwk","kwwwwwwk","kwggggwk","kkkkkkkk"], crumb: "w" },
     { rows: ["....kkk.","...koonk","..kooook","..kooonk",".kwkook.","kwk.kk..","kwwk....",".kk....."], crumb: "o" },
@@ -361,6 +349,7 @@ section.room-sec { padding-block: 70px; }
     { rows: ["kkkkkkkk","knnnnnnk",".kyryyk.",".kyyyrk.","..kryk..","..kyyk..","...kk...","........"], crumb: "y" },
     { rows: ["..kkk...",".kyyyk..",".kykyokk",".kyyyook","kkyyykk.","kyyyyyyk","kyyyyyyk",".kkkkkk."], crumb: "y" },
   ];
+  // Draws a sprite of letter-rows at (x, y) in art pixels, `s` device pixels per art pixel.
   function sprite(ctx, rows, x, y, map, s = 1, clip) {
     rows.forEach((line, r) => {
       const yy = y + r;
@@ -371,14 +360,15 @@ section.room-sec { padding-block: 70px; }
 
   // ---------- Chomp (Mimic.swift) ----------
   const F = o => Object.assign({ open: 0, eyes: "none", look: 0, tongue: false, dx: 0, bits: [], food: null }, o);
-  const idle = [0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0].map((o, i) => F({ open: o, eyes: "glow", dx: [0,0,0,1,1,0,0,-1,0,0,0,0,0,0,0,0,0,0][i] }));
+  const idleSeq = [0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0], idleDx = [0,0,0,1,1,0,0,-1,0,0,0,0,0,0,0,0,0,0];
+  const idleFrame = (n, look = 0) => F({ open: Math.max(idleSeq[n % 18], look ? 1 : 0), eyes: "glow", dx: idleDx[n % 18], look });
   const working = [0,2,4,4,2,0,0,0].map(o => F({ open: o, eyes: "glow", dx: o === 0 ? 0 : (o === 4 ? 1 : -1) }));
   const happy = [...Array(8)].map((_, i) => F({ open: i === 4 || i === 5 ? 6 : 5, eyes: "happy", tongue: true,
     bits: (i % 4 < 2 ? [[2,6,1,1],[1,7,3,1],[2,8,1,1],[28,2,1,1]] : [[29,5,1,1],[28,6,3,1],[29,7,1,1],[3,3,1,1]]).map(b => ({ x: b[0], y: b[1], w: b[2], h: b[3], c: "gold" })) }));
-  const STEPS = [[0,-6,0,0],[2,-3,0,0],[5,0,0,0],[8,3,0,1],[8,7,0,1],[8,11,1,0],[5,12,1,0],[2,13,1,0]];
+  const STEPS = [[2,-6,0,0],[5,-2,0,0],[8,2,0,1],[8,6,0,1],[8,11,1,0],[5,12,1,0],[2,13,1,0]];
   function chompFrames(food) {
     const col = FC[FOODS[food].crumb];
-    const fr = STEPS.map(s => F({ open: s[0], eyes: s[0] > 0 ? "glow" : "none", tongue: !!s[3], food: { i: food, y: s[1], inside: !!s[2] } }));
+    const fr = STEPS.map(s => F({ open: s[0], eyes: "glow", tongue: !!s[3], food: { i: food, y: s[1], inside: !!s[2] } }));
     const cr = a => a.map(b => ({ x: b[0], y: b[1], w: b[2], h: b[2], c: col }));
     fr.push(F({ dx: 1, bits: cr([[2,17,2],[28,16,2],[5,14,1],[26,13,1]]).concat([{ x: 3, y: 12, w: 1, h: 1, c: "gold" }]) }));
     fr.push(F({ dx: -1, bits: cr([[1,13,2],[29,12,2],[3,10,1],[27,9,1]]).concat([{ x: 30, y: 8, w: 1, h: 1, c: "gold" }]) }));
@@ -416,7 +406,7 @@ section.room-sec { padding-block: 70px; }
   }
   const portrait = F({ open: 2, eyes: "glow" });
 
-  // ---------- icons (PixelArt.swift + a few for the site) ----------
+  // ---------- icons ----------
   const ICONS = {
     frame: ["","############","#..........#","#.......##.#","#.......##.#","#..........#","#...#......#","#..###...#.#","#.#####.####","############"],
     combine: [".######.....",".#....#.....",".#.######...",".#.#....#...",".#.#.##.#...",".###....#...","...#.##.#...","...#....#...","...######..."],
@@ -430,19 +420,12 @@ section.room-sec { padding-block: 70px; }
     down: [".....##.....",".....##.....",".....##.....",".....##.....","..########..","...######...","....####....",".....##.....","","############","############"],
     code: ["","...#....#...","..#......#..",".#...#...#..","#...#.....#.",".#.#.....#..","..#......#...","...#....#...."],
   };
-  function icon(canvas, name, color) {
-    const ctx = canvas.getContext("2d"); ctx.clearRect(0, 0, canvas.width, canvas.height);
-    sprite(ctx, ICONS[name], 0, 0, { "#": color });
-  }
-  document.querySelectorAll("canvas[data-icon]").forEach(c => icon(c, c.dataset.icon, c.closest(".btn.gold") ? P.ink : (c.closest(".sign") ? "#FFD45C" : P.tooth)));
-  const fileSprite = ["....kkkkkk..........","....kwwwwkk.........","....kwwwwkwk........","....kwwwwkkkk.......","....kwwwwwwwk.......","....kwggggwwk.......","....kwwwwwwwk.......","....kwggggwwk.......","....kwwwwwwwk.......","....kwgggwwwk.......","....kwwwwwwwk.......","....kkkkkkkkk......."];
-  document.querySelectorAll('canvas[data-sprite="file"]').forEach(c => {
-    const ctx = c.getContext("2d");
-    sprite(ctx, fileSprite, 2, 4, FC);
-    sprite(ctx, ["k...","kk..","kwk.","kwwk","kwkk","kk..","k..."], 13, 13, FC);
+  document.querySelectorAll("canvas[data-icon]").forEach(c => {
+    const color = c.closest(".btn.gold") ? P.ink : (c.closest(".sign") ? "#FFD45C" : P.tooth);
+    sprite(c.getContext("2d"), ICONS[c.dataset.icon], 0, 0, { "#": color });
   });
 
-  // ---------- brick wall (page background) ----------
+  // ---------- brick wall behind the rest of the page ----------
   (() => {
     const c = document.createElement("canvas"); c.width = 16; c.height = 8;
     const x = c.getContext("2d");
@@ -453,151 +436,350 @@ section.room-sec { padding-block: 70px; }
     document.body.style.setProperty("--bricks", `url(${c.toDataURL()})`);
   })();
 
+  // seeded random so the walls look the same on every visit
+  const rng = seed => () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+  const torchFlame = [["..y..",".yoy.","yoooy",".yoy."], [".y...",".yoy.",".ooy.","..o.."], ["...y.",".yoy.",".yooy","..o.."]];
+
+  // ======================================================================
+  // HERO: Chomp's room. Files and snacks fall into its mouth.
+  // ======================================================================
+  const scene = document.getElementById("scene"), sx = scene.getContext("2d");
+  const bubble = document.getElementById("bubble");
+  const H = { u: 4, aw: 0, ah: 0, cs: 3, cx: 0, cy: 0, floor: 0, bg: null, mouse: null };
+  const SAMPLES = [["IMG_2041.heic", "JPG", "#5FA34F"], ["notes.docx", "PDF", "#C8463C"], ["clip.mov", "10 MB", "#5A9BD8"], ["voice.wav", "MP3", "#9273C0"],
+                   ["scan.pdf", "PNG", "#C8463C"], ["logo.png", "WebP", "#5FA34F"], ["memes", "ZIP", "#E8913A"], ["holiday.heic", "JPG", "#5FA34F"]];
+  const MUNCH = ["crunch.", "yum.", "mmm.", "*burp*", "chomp.", "again."];
+
+  function layoutHero() {
+    const dpr = DPR(), w = scene.clientWidth, h = scene.clientHeight;
+    scene.width = Math.round(w * dpr); scene.height = Math.round(h * dpr);
+    const narrow = w < 900;
+    H.u = Math.max(2, Math.round((narrow ? 3 : 4) * dpr));
+    H.aw = Math.ceil(scene.width / H.u); H.ah = Math.ceil(scene.height / H.u);
+    H.floor = Math.round(H.ah * (narrow ? .9 : .86));
+    if (narrow) { H.cs = 2; H.cx = Math.round(H.aw * .5 - 16 * H.cs); }
+    else {
+      // Chomp sits in the middle of the free space right of the headline, as big as fits.
+      const copy = document.querySelector(".hero-copy > div").getBoundingClientRect(), sr = scene.getBoundingClientRect();
+      const left = (copy.right - sr.left + 48) * dpr / H.u, free = H.aw - left;
+      H.cs = [4, 3, 2].find(cs => 30 * cs <= free && 54 * cs <= H.floor - 22) || 2;
+      H.cx = Math.round(left + free / 2 - 16 * H.cs);
+    }
+    H.cy = H.floor - 31 * H.cs;
+    H.bg = paintRoomBackground();
+  }
+
+  function paintRoomBackground() {
+    const c = document.createElement("canvas"); c.width = scene.width; c.height = scene.height;
+    const g = c.getContext("2d"), u = H.u, r = rng(11);
+    const R = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(x * u, y * u, w * u, h * u); };
+    R(0, 0, H.aw, H.ah, "#140d17");
+    // wall bricks, a little lighter near Chomp's alcove
+    const ac = H.cx + 16 * H.cs;
+    for (let y = 0, row = 0; y < H.floor; y += 6, row++) {
+      for (let x = (row % 2 ? -7 : 0); x < H.aw; x += 14) {
+        const near = 1 - Math.min(1, Math.hypot(x + 7 - ac, y - H.floor * .55) / (H.aw * .6));
+        const base = ["#1d1420", "#201623", "#1b121e"][Math.floor(r() * 3)];
+        R(x, y, 13, 5, near > .55 ? "#2a1e2e" : near > .3 ? "#241a28" : base);
+        R(x, y, 13, 1, near > .55 ? "#33263a" : "#251a29");
+      }
+    }
+    // stone alcove behind the chest
+    const aw = 22 * H.cs, ah = 44 * H.cs, ax = ac - aw / 2, top = H.floor - ah;
+    for (let y = top - 4; y < H.floor; y++) for (let x = ax - 4; x < ax + aw + 4; x++) {
+      const dx = x + .5 - ac, archR = aw / 2 + 4, archY = top + aw / 2;
+      const inArchFrame = y >= archY || Math.hypot(dx, y - archY) <= archR;
+      if (!inArchFrame) continue;
+      const inside = y >= archY ? Math.abs(dx) <= aw / 2 : Math.hypot(dx, y - archY) <= aw / 2;
+      if (inside) R(x, y, 1, 1, y > H.floor - 6 ? "#0f0a11" : "#0c070d");
+      else R(x, y, 1, 1, ((Math.floor((y - top) / 4) + Math.floor((x - ax) / 4)) % 2) ? "#3d2d3f" : "#352737");
+    }
+    // floor
+    R(0, H.floor, H.aw, H.ah - H.floor, "#0d080f");
+    R(0, H.floor, H.aw, 1, "#3d2d3f");
+    for (let x = 0; x < H.aw; x += 9) R(x, H.floor + 2, 8, 3, "#1a121c");
+    for (let x = 4; x < H.aw; x += 9) R(x, H.floor + 6, 8, 3, "#161018");
+    // vines at the top of the room
+    for (let x = 5; x < H.aw; x += 9 + Math.floor(r() * 18)) {
+      const len = 6 + Math.floor(r() * 22);
+      for (let y = 0; y < len; y++) { R(x, y, 1, 1, "#2B5A2A"); if (y % 4 === 2) R(x + (y % 8 === 2 ? 1 : -1), y, 1, 1, "#5FA34F"); }
+    }
+    // shade the left half so the headline reads
+    if (scene.clientWidth >= 900) {
+      const grad = g.createLinearGradient(0, 0, c.width * .6, 0);
+      grad.addColorStop(0, "rgba(18,12,20,.82)"); grad.addColorStop(.7, "rgba(18,12,20,.45)"); grad.addColorStop(1, "rgba(18,12,20,0)");
+      g.fillStyle = grad; g.fillRect(0, 0, c.width * .6, c.height);
+    }
+    return c;
+  }
+
+  // state machine for the hero chest
+  const hero = { phase: "idle", t0: 0, food: 0, item: null, badge: null, next: 900, count: 0 };
+  function spawn(forced) {
+    const fileTurn = forced?.name || hero.count % 2 === 0;
+    const sample = SAMPLES[Math.floor(Math.random() * SAMPLES.length)];
+    hero.item = fileTurn
+      ? { kind: "file", food: 0, name: forced?.name || sample[0], out: forced?.out || sample[1], tag: forced ? "#FFD45C" : sample[2], y: -14, t0: performance.now() }
+      : { kind: "snack", food: 1 + Math.floor(Math.random() * 9), y: -14, t0: performance.now() };
+    hero.phase = "falling"; hero.count++;
+  }
+  function heroFrame(now) {
+    const t = now - hero.t0;
+    if (hero.phase === "idle") {
+      if (!reduce && t > hero.next) spawn();
+      let look = 0;
+      if (H.mouse) { const mx = H.mouse.x / H.u, c = H.cx + 16 * H.cs; look = mx < c - 30 ? -1 : mx > c + 30 ? 1 : 0; }
+      return idleFrame(Math.floor(now / 110), look);
+    }
+    if (hero.phase === "falling") {
+      // falls from the top of the screen and lands in the mouth after one second
+      const it = hero.item, ft = (now - it.t0) / 1000, y0 = -(H.cy + 14), mouth = -6 * H.cs;
+      it.y = y0 + (mouth - y0) * ft * ft;
+      if (it.y >= mouth) { it.y = mouth; hero.phase = "chomp"; hero.t0 = now; hero.food = it.food; }
+      return F({ open: it.y > mouth - 30 * H.cs ? 2 : 1, eyes: "glow" });
+    }
+    if (hero.phase === "chomp") {
+      const fr = chompFrames(hero.food), i = Math.floor(t / 80);
+      if (i >= fr.length) {
+        const it = hero.item;
+        hero.badge = { text: it.kind === "file" ? "→ " + it.out : MUNCH[Math.floor(Math.random() * MUNCH.length)], t0: now };
+        hero.item = null; hero.phase = "chew"; hero.t0 = now; return working[0];
+      }
+      return fr[i];
+    }
+    if (hero.phase === "chew") { if (t > 900) { hero.phase = "happy"; hero.t0 = now; } return working[Math.floor(t / 110) % working.length]; }
+    if (hero.phase === "happy") { if (t > 1300) { hero.phase = "idle"; hero.t0 = now; hero.next = 700 + Math.random() * 900; bubble.hidden = true; } return happy[Math.floor(t / 110) % happy.length]; }
+    return idleFrame(0);
+  }
+
+  function drawHero(now) {
+    const u = H.u, g = sx;
+    g.drawImage(H.bg, 0, 0);
+    // torches either side of the alcove, flames flicker
+    const ac = H.cx + 16 * H.cs, tdx = 11 * H.cs + 10, ty = H.floor - 40 * H.cs;
+    for (const tx of [ac - tdx - 2, ac + tdx]) {
+      g.fillStyle = "rgba(255,190,80,.05)"; g.fillRect((tx - 10) * u, (ty - 10) * u, 24 * u, 26 * u);
+      g.fillStyle = "rgba(255,190,80,.05)"; g.fillRect((tx - 5) * u, (ty - 5) * u, 14 * u, 16 * u);
+      sprite(g, torchFlame[Math.floor(now / 140 + tx) % 3], tx, ty, { y: "#FFD45C", o: "#E8913A" }, u);
+      g.fillStyle = "#43281A"; g.fillRect((tx + 1) * u, (ty + 4) * u, 3 * u, 9 * u);
+      g.fillStyle = P.ink; g.fillRect(tx * u, (ty + 13) * u, 5 * u, u);
+    }
+    const f = heroFrame(now);
+    // falling item, drawn at Chomp's scale above its mouth
+    const it = hero.item;
+    if (it && hero.phase === "falling") {
+      const s = u * H.cs, x = H.cx + (12) * H.cs, y = H.cy + it.y;
+      g.save(); g.translate(x * u, y * u);
+      sprite(g, FOODS[it.food].rows, 0, 0, FC, s);
+      if (it.kind === "file") { g.fillStyle = it.tag; g.fillRect(1 * s, 6 * s, 6 * s, 1 * s); }
+      g.restore();
+      if (it.kind === "file") label(g, it.name, (x + 4 * H.cs) * u, (y - 3) * u, P.tooth, 1);
+    }
+    g.save(); g.translate(H.cx * u, H.cy * u);
+    drawChomp(g, f, K, u * H.cs);
+    g.restore();
+    // the tag that pops out after a bite, rising in steps
+    if (hero.badge) {
+      const bt = now - hero.badge.t0;
+      if (bt > 1500) hero.badge = null;
+      else {
+        const rise = Math.floor(bt / 120) * 2;
+        label(g, hero.badge.text, ac * u, (H.cy - 2 - rise) * u, K.accent, bt > 1200 ? .5 : 1, true);
+      }
+    }
+  }
+  // pixel-font label with a dark box behind it
+  function label(g, text, x, y, color, alpha = 1, big) {
+    const dpr = DPR(), size = Math.round((big ? 24 : 13) * dpr);
+    g.save(); g.globalAlpha = alpha;
+    g.font = `${size}px Silkscreen, monospace`; g.textAlign = "center"; g.textBaseline = "bottom";
+    const w = g.measureText(text).width, pad = 6 * dpr;
+    g.fillStyle = P.ink; g.fillRect(Math.round(x - w / 2 - pad), Math.round(y - size - pad * 1.4), Math.round(w + pad * 2), Math.round(size + pad * 1.8));
+    g.fillStyle = color; g.fillText(text, Math.round(x), Math.round(y - pad * .4));
+    g.restore();
+  }
+
+  scene.addEventListener("pointermove", e => { const r = scene.getBoundingClientRect(); H.mouse = { x: (e.clientX - r.left) * DPR(), y: (e.clientY - r.top) * DPR() }; });
+  scene.addEventListener("pointerleave", () => { H.mouse = null; });
+  scene.addEventListener("click", () => { if (hero.phase === "idle") spawn(); });
+
+  // drop a file anywhere: Chomp reads only its name
+  function verdict(name) {
+    const ext = (name.split(".").pop() || "").toLowerCase();
+    if (["heic","heif","png","webp","avif","tiff","tif","bmp","gif"].includes(ext)) return ["I'd turn that into a JPG.", "JPG"];
+    if (["jpg","jpeg"].includes(ext)) return ["I'd make that smaller.", "SMALLER"];
+    if (["mov","mp4","m4v","mkv","webm","avi"].includes(ext)) return ["I'd squeeze that under 10 MB.", "10 MB"];
+    if (["mp3","wav","m4a","flac","aiff","aif","ogg"].includes(ext)) return ["I'd even out the volume.", "MP3"];
+    if (ext === "pdf") return ["I'd split that into pages.", "PAGES"];
+    if (["doc","docx","rtf","txt","md","pages","odt"].includes(ext)) return ["I'd make that a PDF.", "PDF"];
+    return ["I'd zip that up.", "ZIP"];
+  }
+  function sayAtChest(parts) {
+    bubble.textContent = "";
+    for (const p of parts) { const el = document.createElement(p.b ? "b" : "span"); el.textContent = p.t; bubble.append(el); }
+    const r = scene.getBoundingClientRect(), hr = scene.parentElement.getBoundingClientRect(), dpr = DPR();
+    bubble.style.left = ((H.cx + 16 * H.cs) * H.u / dpr + (r.left - hr.left)) + "px";
+    bubble.style.top = ((H.cy - 22) * H.u / dpr + (r.top - hr.top)) + "px";
+    bubble.hidden = false;
+  }
+  let dragDepth = 0;
+  const hasFiles = e => [...(e.dataTransfer?.types || [])].includes("Files");
+  addEventListener("dragenter", e => { if (!hasFiles(e)) return; e.preventDefault(); dragDepth++; document.body.classList.add("dragging"); if (hero.phase === "idle") sayAtChest([{ t: "ooh, what's that?" }]); });
+  addEventListener("dragover", e => { if (hasFiles(e)) e.preventDefault(); });
+  addEventListener("dragleave", () => { if (--dragDepth <= 0) { dragDepth = 0; document.body.classList.remove("dragging"); if (hero.phase === "idle") bubble.hidden = true; } });
+  addEventListener("drop", e => {
+    if (!hasFiles(e)) return;
+    e.preventDefault(); dragDepth = 0; document.body.classList.remove("dragging");
+    const f = e.dataTransfer.files[0]; if (!f) return;
+    const [line, out] = verdict(f.name);
+    scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+    hero.item = null; hero.badge = null;
+    spawn({ name: f.name, out });
+    setTimeout(() => sayAtChest([{ t: "mmm, " }, { t: f.name, b: true }, { t: ". " + line }]), 50);
+  });
+
+  // ======================================================================
+  // HOW IT WORKS: a little Mac desktop, played by your scroll position.
+  // ======================================================================
+  const how = document.getElementById("how"), hs = document.getElementById("how-scene"), hx = hs.getContext("2d");
+  const steps = [...document.querySelectorAll(".how-step")], cue = document.getElementById("scrollCue");
+  const GW = 160, GH = 110;
+  let hu = 4, wheelCache = {};
+  function layoutHow() {
+    const dpr = DPR();
+    hs.width = Math.round(hs.clientWidth * dpr); hs.height = Math.round(hs.clientWidth * dpr * GH / GW);
+    hu = hs.width / GW; wheelCache = {};
+  }
+  const CURSOR = ["k.......","kk......","kwk.....","kwwk....","kwwwk...","kwwwwk..","kwwwwwk.","kwwwkkkk","kwkwk...","kk.kwk..","k...kk.."];
+  const SLICES = ["JPG", "PNG", "WEBP", "HEIC", "PDF", "GIF"];
+  // the wheel, painted pixel by pixel like the app's, cached per highlighted slice
+  function wheelArt(hot) {
+    const key = hot + K.accent;
+    if (wheelCache[key]) return wheelCache[key];
+    const S = 70, C = 35, OUT = 33, IN = 13, DISC = 35, n = 6, w = 2 * Math.PI / n;
+    const c = document.createElement("canvas"); c.width = Math.round(S * hu); c.height = Math.round(S * hu);
+    const g = c.getContext("2d");
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+      const dx = x + .5 - C, dy = y + .5 - C, r = Math.hypot(dx, dy); let col = null;
+      if (r <= DISC) col = r > DISC - 1.5 ? P.ink : P.disc;
+      if (r < IN) col = r > IN - 1.5 ? P.ink : P.hole;
+      if (r >= IN + 2) {
+        let a = Math.atan2(dx, -dy); if (a < 0) a += 2 * Math.PI;
+        const t = (a + w / 2) % (2 * Math.PI), i = Math.floor(t / w) % n, off = Math.min(t % w, w - (t % w));
+        const out = i === hot ? OUT : OUT - 3;
+        if (r <= out && off * r > 1.2) col = i === hot ? ((r > out - 1 || off * r < 2) ? K.accentDk : K.accent) : (r > out - 1 ? P.rim : P.seg);
+      }
+      if (col) { g.fillStyle = col; g.fillRect(Math.floor(x * hu), Math.floor(y * hu), Math.ceil(hu), Math.ceil(hu)); }
+    }
+    g.font = `${Math.round(3.6 * hu)}px Silkscreen, monospace`; g.textAlign = "center"; g.textBaseline = "middle";
+    SLICES.forEach((l, i) => { const a = i * w; g.fillStyle = i === hot ? P.ink : P.tooth; g.fillText(l, (C + 23 * Math.sin(a)) * hu, (C - 23 * Math.cos(a)) * hu); });
+    return (wheelCache[key] = c);
+  }
+  const lerp = (a, b, t) => a + (b - a) * Math.max(0, Math.min(1, t));
+  const seg = (p, a, b) => Math.max(0, Math.min(1, (p - a) / (b - a)));
+  // size is in scene pixels, so text grows with the scene
+  function text(g, str, x, y, color, size = 5, align = "center", font = "Silkscreen") {
+    g.font = `${Math.round(size * hu)}px ${font}, monospace`; g.textAlign = align; g.textBaseline = "top"; g.fillStyle = color; g.fillText(str, x * hu, y * hu);
+  }
+  function drawHow(p, now) {
+    const g = hx, u = hu;
+    const R = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(Math.round(x * u), Math.round(y * u), Math.round(w * u), Math.round(h * u)); };
+    R(0, 0, GW, GH, "#1d1420");
+    for (let y = 0; y < GH; y += 6) for (let x = (y / 6) % 2 ? -6 : 0; x < GW; x += 12) R(x, y, 11, 5, "#211725");
+    // Finder-ish window
+    R(8, 12, 62, 78, P.ink); R(9, 13, 60, 76, "#2f2231"); R(9, 13, 60, 7, "#3d2d3f");
+    for (const [i, c] of [["#EA4F86"], ["#FFD45C"], ["#5FA34F"]].entries()) R(12 + i * 4, 15, 2, 2, c[0]);
+    text(g, "Desktop", 39, 14.5, P.muted, 4);
+    // the file: stays put until picked up (p .1), comes back as a ghost
+    const picked = p > .1, dropped = p > .62;
+    const fileAt = (x, y, alpha, name, tag) => {
+      g.save(); g.globalAlpha = alpha; g.translate(Math.round(x * u), Math.round(y * u));
+      sprite(g, FOODS[0].rows, 0, 0, FC, u * 2);
+      g.fillStyle = tag; g.fillRect(2 * u, 12 * u, 12 * u, 2 * u);
+      g.restore(); if (name) text(g, name, x + 8, y + 18, P.tooth, 3.6);
+    };
+    fileAt(16, 30, picked && !dropped ? .35 : 1, "holiday.heic", "#5FA34F");
+    if (p > .9) fileAt(16, 58, Math.min(1, (p - .9) / .04), "holiday.jpg", K.accent);
+    // keycap ⇧
+    const shiftOn = p > .34 && p < .4, lit = p >= .34 && p < .64;
+    if (p < .62) {
+    R(118, 86, 22, 18, P.ink); R(119, 87, 20, shiftOn ? 15 : 14, lit ? K.accent : P.tooth); if (!shiftOn) R(119, 101, 20, 2, lit ? K.accentDk : "#c9bfd0");
+    sprite(g, ["...#...", "..###..", ".#####.", "#######", "..###..", "..###..", "..###.."], 126, shiftOn ? 91 : 90, { "#": P.ink }, u);
+    }
+    // cursor path
+    let cx, cy;
+    if (p < .1) { cx = lerp(120, 26, p / .1); cy = lerp(70, 38, p / .1); }
+    else if (p < .32) { const t = seg(p, .1, .32); cx = lerp(26, 104, t); cy = lerp(38, 56, t) - Math.sin(t * Math.PI) * 10; }
+    else if (p < .44) { cx = 104; cy = 56; }
+    else { const t = seg(p, .44, .58); cx = 104; cy = lerp(56, 30, t); }
+    // the wheel, from Shift until the drop
+    const hot = p > .52 ? 0 : -1;
+    if (p > .37 && !dropped) {
+      const pop = p < .39 ? .8 : 1, img = wheelArt(hot), size = 70 * pop;
+      g.drawImage(img, Math.round((104 - size / 2) * u), Math.round((56 - size / 2) * u), Math.round(size * u), Math.round(size * u));
+      g.save(); g.translate(Math.round((104 - 16) * u * 0.5 + 0), 0); g.restore();
+      // tiny Chomp peeking from the hole
+      g.save(); g.translate(Math.round((104 - 8) * u), Math.round((56 - 9) * u));
+      drawChomp(g, F({ open: 2, eyes: "glow", look: hot === 0 ? 0 : 1 }), K, u * .5);
+      g.restore();
+    }
+    // after the drop: Chomp eats it, then the result
+    if (dropped) {
+      const t = seg(p, .62, .8), fr = chompFrames(0);
+      let f = p < .8 ? fr[Math.min(fr.length - 1, Math.floor(t * fr.length))] : p < .86 ? working[Math.floor(now / 110) % working.length] : happy[Math.floor(now / 110) % happy.length];
+      R(80, 28, 48, 48, P.ink); R(81, 29, 46, 46, p > .86 ? K.accent : P.seg); R(85, 33, 38, 38, P.hole);
+      g.save(); g.translate(Math.round((104 - 16) * u), Math.round((52 - 16) * u)); drawChomp(g, f, K, u); g.restore();
+      if (p > .86) {
+        R(74, 80, 60, 18, P.ink); R(75, 81, 58, 16, P.panel);
+        text(g, "1 f\u200Cile → JPG", 104, 82.5, P.tooth, 5.5, "center", "Pixelify Sans");
+        text(g, "2.1 MB saved", 104, 89.5, P.muted, 4, "center", "Google Sans Code");
+      }
+    }
+    // dragged file follows the cursor until the drop
+    if (picked && !dropped) fileAt(cx + 3, cy + 3, 1, null, "#5FA34F");
+    if (!dropped || p > .97) { g.save(); g.translate(Math.round(cx * u), Math.round(cy * u)); sprite(g, CURSOR, 0, 0, { k: P.ink, w: P.tooth }, u); g.restore(); }
+    // which step is lit
+    const active = p < .33 ? 0 : p < .62 ? 1 : 2;
+    steps.forEach((s, i) => s.classList.toggle("on", i === active));
+    cue.textContent = p > .95 ? "That's it. That's the whole app." : "Keep scrolling to watch it happen.";
+  }
+  function howProgress() {
+    if (reduce) return 1;
+    const r = how.getBoundingClientRect(), span = r.height - innerHeight;
+    return span > 0 ? Math.max(0, Math.min(1, -r.top / span)) : 1;
+  }
+
   // ---------- skins ----------
-  const logo = document.getElementById("logo"), tipChest = [];
-  const skinList = document.getElementById("skinList");
+  const logo = document.getElementById("logo"), skinList = document.getElementById("skinList");
   function paintPortrait(canvas, k) { const ctx = canvas.getContext("2d"); ctx.clearRect(0, 0, canvas.width, canvas.height); drawChomp(ctx, portrait, k); }
   function buildSkins() {
     skinList.innerHTML = "";
     for (const id of Object.keys(SKINS)) {
       const locked = id === "royal" && !royalUnlocked;
       const b = document.createElement("button");
-      b.className = "skin" + (locked ? " locked" : ""); b.type = "button";
-      b.setAttribute("aria-pressed", id === skinId);
-      const c = document.createElement("canvas"); c.width = 32; c.height = 33; c.setAttribute("aria-hidden", "true");
-      paintPortrait(c, sk(id));
+      b.className = "skin" + (locked ? " locked" : ""); b.type = "button"; b.setAttribute("aria-pressed", id === skinId);
+      const c = document.createElement("canvas"); c.width = 32; c.height = 33; c.setAttribute("aria-hidden", "true"); paintPortrait(c, sk(id));
       const name = document.createElement("span"); name.textContent = SKINS[id].name;
       const note = document.createElement("small"); note.textContent = locked ? "Feed it 100 files" : SKINS[id].note;
       b.append(c, name, note);
-      b.addEventListener("click", () => {
-        if (locked) { toast("Locked. Feed it 100 files."); return; }
-        setSkin(id);
-      });
+      b.addEventListener("click", () => { if (locked) { toast("Locked. Feed it 100 files."); return; } setSkin(id); });
       skinList.append(b);
     }
   }
   function setSkin(id) {
-    skinId = id; K = sk(id);
+    skinId = id; K = sk(id); wheelCache = {};
     document.documentElement.style.setProperty("--accent", K.accent);
     document.documentElement.style.setProperty("--accent-dk", K.accentDk);
     try { localStorage.setItem("chomp-skin", id); } catch (e) {}
-    paintPortrait(logo, K);
-    buildSkins();
-    paintWheel();
+    paintPortrait(logo, K); buildSkins();
   }
 
-  // ---------- hero: Chomp eats snacks on a loop ----------
-  const hero = document.getElementById("heroChest").getContext("2d");
-  const roomCtx = document.getElementById("roomCanvas").getContext("2d");
-  const bubble = document.getElementById("bubble");
-  let phase = { name: "idle", t0: performance.now(), food: 0, until: 1600 };
-  const nextFood = () => { let f; do { f = Math.floor(Math.random() * FOODS.length); } while (f === phase.food && FOODS.length > 1); return f; };
-  function go(name, until, food) { phase = { name, t0: performance.now(), until, food: food ?? phase.food }; }
-  function heroFrame(now) {
-    const t = now - phase.t0;
-    switch (phase.name) {
-      case "idle": if (t > phase.until) go("chomp", 1100, nextFood()); return idle[Math.floor(now / 110) % idle.length];
-      case "peek": return F({ open: Math.floor(now / 110) % 30 === 0 ? 1 : 2, eyes: "glow" });
-      case "chomp": { const fr = chompFrames(phase.food), i = Math.floor(t / 80); if (i >= fr.length) { go("chew", 1400); return working[0]; } return fr[i]; }
-      case "chew": if (t > phase.until) go("happy", 1500); return working[Math.floor(t / 110) % working.length];
-      case "happy": if (t > phase.until) { go("idle", 1800); bubble.hidden = true; } return happy[Math.floor(t / 110) % happy.length];
-    }
-    return idle[0];
-  }
-
-  // torch-lit stone room behind the chest
-  const torchFlame = [["..y..",".yoy.","yoooy",".yoy."], [".y...",".yoy.",".ooy.","..o.."], ["...y.",".yoy.",".yooy","..o.."]];
-  function paintRoom(now) {
-    const W = 105, c = roomCtx;
-    c.clearRect(0, 0, W, W);
-    const cx = 52.5, cy = 55, R = 50;
-    for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
-      const d = Math.hypot(x + .5 - cx, y + .5 - cy);
-      if (d > R) continue;
-      const brickRow = Math.floor(y / 5), off = brickRow % 2 ? 5 : 0, mortar = y % 5 === 0 || (x + off) % 10 === 0;
-      const light = 1 - d / R;
-      c.fillStyle = d > R - 2 ? P.ink : mortar ? "#140d17" : (light > .55 ? "#33243a" : light > .3 ? "#2a1e2e" : "#211725");
-      c.fillRect(x, y, 1, 1);
-    }
-    c.fillStyle = "#140d17"; c.fillRect(10, 86, 85, 1);
-    const fl = torchFlame[Math.floor(now / 140) % 3];
-    for (const tx of [14, 86]) {
-      sprite(c, fl, tx - 2, 30, { y: "#FFD45C", o: "#E8913A" });
-      c.fillStyle = "#43281A"; c.fillRect(tx - 1, 34, 2, 8); c.fillStyle = P.ink; c.fillRect(tx - 2, 42, 4, 1);
-      c.fillStyle = "rgba(255,212,92,.07)"; c.fillRect(tx - 6, 26, 12, 20);
-    }
-  }
-
-  // drop a file on the page: Chomp only reads its name
-  const room = document.getElementById("room");
-  const say = (html) => { bubble.innerHTML = ""; html.forEach(part => { const el = document.createElement(part.b ? "b" : "span"); el.textContent = part.t; bubble.append(el); }); bubble.hidden = false; };
-  function verdict(name) {
-    const ext = (name.split(".").pop() || "").toLowerCase();
-    if (["heic","heif","png","webp","avif","tiff","tif","bmp","gif"].includes(ext)) return "I'd turn that into a JPG.";
-    if (["jpg","jpeg"].includes(ext)) return "I'd make that smaller.";
-    if (["mov","mp4","m4v","mkv","webm","avi"].includes(ext)) return "I'd squeeze that under 10 MB.";
-    if (["mp3","wav","m4a","flac","aiff","aif","ogg"].includes(ext)) return "I'd even out the volume.";
-    if (ext === "pdf") return "I'd split that into pages.";
-    if (["doc","docx","rtf","txt","md","pages","odt"].includes(ext)) return "I'd make that a PDF.";
-    return "I'd zip that up.";
-  }
-  let dragDepth = 0;
-  addEventListener("dragenter", e => { if (![...(e.dataTransfer?.types || [])].includes("Files")) return; e.preventDefault(); dragDepth++; document.body.classList.add("dragging"); go("peek", 0); say([{ t: "ooh, what's that?" }]); });
-  addEventListener("dragover", e => { if ([...(e.dataTransfer?.types || [])].includes("Files")) e.preventDefault(); });
-  addEventListener("dragleave", () => { if (--dragDepth <= 0) { dragDepth = 0; document.body.classList.remove("dragging"); if (phase.name === "peek") { go("idle", 1200); bubble.hidden = true; } } });
-  addEventListener("drop", e => {
-    if (![...(e.dataTransfer?.types || [])].includes("Files")) return;
-    e.preventDefault(); dragDepth = 0; document.body.classList.remove("dragging");
-    const f = e.dataTransfer.files[0]; if (!f) return;
-    say([{ t: "mmm, " }, { t: f.name, b: true }, { t: ". " + verdict(f.name) }]);
-    go("chomp", 1100, 0);
-    room.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
-  });
-  room.addEventListener("click", () => { if (phase.name === "idle") go("chomp", 1100, nextFood()); });
-
-  // ---------- mini wheel (step 3) ----------
-  const wheel = document.getElementById("miniWheel"), wctx = wheel.getContext("2d");
-  let hot = 0;
-  function paintWheel() {
-    const S = 120, C = 60, OUT = 56, IN = 22, DISC = 59, n = 6, w = 2 * Math.PI / n;
-    const img = wctx.createImageData(S, S), d = img.data;
-    const rgb = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
-    const cols = { ink: rgb(P.ink), disc: rgb(P.disc), seg: rgb(P.seg), rim: rgb(P.rim), hole: rgb(P.hole), a: rgb(K.accent), ad: rgb(K.accentDk) };
-    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
-      const dx = x + .5 - C, dy = y + .5 - C, r = Math.hypot(dx, dy); let c = null;
-      if (r <= DISC) c = r > DISC - 2 ? cols.ink : cols.disc;
-      if (r < IN) c = r > IN - 2 ? cols.ink : cols.hole;
-      if (r >= IN + 3) {
-        let a = Math.atan2(dx, -dy); if (a < 0) a += 2 * Math.PI;
-        const t = (a + w / 2) % (2 * Math.PI), i = Math.floor(t / w) % n, off = Math.min(t % w, w - (t % w));
-        const out = i === hot ? OUT : OUT - 4;
-        if (r <= out && off * r > 1.5) c = i === hot ? ((r > out - 1 || off * r < 2.5) ? cols.ad : cols.a) : (r > out - 1 ? cols.rim : cols.seg);
-      }
-      if (c) { const k = (y * S + x) * 4; d[k] = c[0]; d[k + 1] = c[1]; d[k + 2] = c[2]; d[k + 3] = 255; }
-    }
-    wctx.putImageData(img, 0, 0);
-    const labels = ["JPG", "PNG", "WEBP", "HEIC", "PDF", "GIF"];
-    wctx.font = "7px Silkscreen, monospace"; wctx.textAlign = "center"; wctx.textBaseline = "middle";
-    labels.forEach((l, i) => { const a = i * w, R = 40; wctx.fillStyle = i === hot ? P.ink : P.tooth; wctx.fillText(l, C + R * Math.sin(a), C - R * Math.cos(a)); });
-    const ctx2 = wctx; ctx2.save(); ctx2.translate(C - 16, C - 18);
-    const s = Math.sin(2 * Math.PI * hot / 6);
-    drawChomp(ctx2, F({ open: 2, eyes: "glow", look: s > .35 ? 1 : (s < -.35 ? -1 : 0) }), K);
-    ctx2.restore();
-  }
-  wheel.addEventListener("pointermove", e => {
-    const r = wheel.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * 120 - 60, y = (e.clientY - r.top) / r.height * 120 - 60;
-    if (Math.hypot(x, y) < 22) return;
-    let a = Math.atan2(x, -y); if (a < 0) a += 2 * Math.PI;
-    const i = Math.floor(((a + Math.PI / 6) % (2 * Math.PI)) / (Math.PI / 3)) % 6;
-    if (i !== hot) { hot = i; paintWheel(); wheelHeld = performance.now(); }
-  });
-  let wheelHeld = 0;
-
-  // snack slot cycles through the ten snacks
   const slot = document.getElementById("snackSlot").getContext("2d");
   let slotFood = -1;
 
-  // ---------- the dungeon floor ----------
+  // ======================================================================
+  // DUNGEON FLOOR
+  // ======================================================================
   const dc = document.getElementById("dungeon"), dx = dc.getContext("2d"), sayEl = document.getElementById("say");
   const SLIME = [["....kkkk....","..kkGGGGkk..",".kGGGGGGGGk.",".kGwkGGwkGk.","kGGGGGGGGGGk","kGGGGGGGGGGk",".kkkkkkkkkk."],
                  ["............","...kkkkkk...",".kkGGGGGGkk.","kGGwkGGwkGGk","kGGGGGGGGGGk","kkkkkkkkkkkk","............"]];
@@ -605,111 +787,85 @@ section.room-sec { padding-block: 70px; }
                [".....kkk.....","....kPPPk....","..kkPwPwPkk..",".kPPkPPPkPPk.","kPPk.....kPPk","kk.........kk","............."]];
   const SKULL = ["..kkkkk.....",".kwwwwwk....","kwkwwkwwk...","kwkwwkwwk.k.","kwwwwwwwkkwk",".kwkwkwk.kwk","..kkkkk...k."];
   const BONES = ["k.k.k.k.k.k","wkwkwkwkwkw","k.k.k.k.k.k"];
-  const mons = [
-    { id: "slime", line: "blub", x: .22 },
-    { id: "bat", line: "don't tell it I'm here", x: .55 },
-    { id: "skel", line: "I used to be a .exe", x: .8 },
-  ];
-  let skelClicks = 0, W = 300, H = 96, vines = [], pile = [];
+  const mons = [{ id: "slime", line: "blub", x: .22 }, { id: "bat", line: "don't tell it I'm here", x: .55 }, { id: "skel", line: "I used to be a .exe", x: .8 }];
+  let skelClicks = 0, DW = 200, DH = 64, vines = [], pile = [];
   function sizeDungeon() {
-    // Bigger pixels than the rest of the page so the monsters read as characters.
     const scale = dc.clientWidth < 600 ? 4 : 6;
-    W = Math.max(90, Math.round(dc.clientWidth / scale)); H = 64;
-    dc.width = W; dc.height = H;
-    let seed = 7; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
-    vines = []; for (let x = 3; x < W - 3; x += 5 + Math.floor(rnd() * 11)) vines.push({ x, len: 6 + Math.floor(rnd() * 20) });
-    pile = []; for (let i = 0; i < 7; i++) pile.push({ f: Math.floor(rnd() * FOODS.length), x: Math.floor(W * .36) + i * 6 - 18 + Math.floor(rnd() * 4), y: H - 18 - (i % 3 === 1 ? 5 : 0) });
+    DW = Math.max(90, Math.round(dc.clientWidth / scale)); DH = 64; dc.width = DW; dc.height = DH;
+    const r = rng(7);
+    vines = []; for (let x = 3; x < DW - 3; x += 5 + Math.floor(r() * 11)) vines.push({ x, len: 6 + Math.floor(r() * 20) });
+    pile = []; for (let i = 0; i < 7; i++) pile.push({ f: Math.floor(r() * FOODS.length), x: Math.floor(DW * .36) + i * 6 - 18 + Math.floor(r() * 4), y: DH - 18 - (i % 3 === 1 ? 5 : 0) });
   }
   function paintDungeon(now) {
     const c = dx, t = Math.floor(now / 140);
-    for (let y = 0; y < H; y++) {
-      const row = Math.floor(y / 6), off = row % 2 ? 6 : 0, depth = y / H;
-      for (let x = 0; x < W; x++) {
-        const mortar = y % 6 === 0 || (x + off) % 12 === 0;
-        c.fillStyle = mortar ? "#0d080f" : (depth < .5 ? "#1c131f" : "#170f19");
-        c.fillRect(x, y, 1, 1);
-      }
+    c.fillStyle = "#170f19"; c.fillRect(0, 0, DW, DH);
+    for (let y = 0; y < DH; y += 6) { c.fillStyle = "#0d080f"; c.fillRect(0, y, DW, 1); for (let x = (y / 6) % 2 ? 6 : 0; x < DW; x += 12) c.fillRect(x, y, 1, 6); }
+    c.fillStyle = "#1c131f"; for (let y = 1; y < DH * .5; y += 6) c.fillRect(0, y, DW, 1);
+    c.fillStyle = "#0d080f"; c.fillRect(0, DH - 10, DW, 10);
+    c.fillStyle = "#241a26"; c.fillRect(0, DH - 10, DW, 2);
+    for (let x = 0; x < DW; x += 8) { c.fillStyle = "#1a121c"; c.fillRect(x, DH - 8, 6, 8); }
+    for (const v of vines) for (let y = 0; y < v.len; y++) {
+      const sway = (y > v.len - 6 && (t + v.x) % 8 < 4) ? 1 : 0;
+      c.fillStyle = "#2B5A2A"; c.fillRect(v.x + sway, y, 1, 1);
+      if (y % 4 === 2) { c.fillStyle = "#5FA34F"; c.fillRect(v.x + sway + (y % 8 === 2 ? 1 : -1), y, 1, 1); }
     }
-    c.fillStyle = "#0d080f"; c.fillRect(0, H - 10, W, 10);
-    c.fillStyle = "#241a26"; c.fillRect(0, H - 10, W, 2);
-    for (let x = 0; x < W; x += 8) { c.fillStyle = "#1a121c"; c.fillRect(x, H - 8, 6, 8); }
-    for (const v of vines) {
-      for (let y = 0; y < v.len; y++) {
-        const sway = (y > v.len - 6 && (t + v.x) % 8 < 4) ? 1 : 0;
-        c.fillStyle = "#2B5A2A"; c.fillRect(v.x + sway, y, 1, 1);
-        if (y % 4 === 2) { c.fillStyle = "#5FA34F"; c.fillRect(v.x + sway + (y % 8 === 2 ? 1 : -1), y, 1, 1); }
-      }
-    }
-    for (const tx of [Math.floor(W * .1), Math.floor(W * .68)]) {
+    for (const tx of [Math.floor(DW * .1), Math.floor(DW * .68)]) {
       sprite(c, torchFlame[t % 3], tx - 2, 22, { y: "#FFD45C", o: "#E8913A" });
       c.fillStyle = "#43281A"; c.fillRect(tx - 1, 26, 2, 8);
       c.fillStyle = "rgba(255,212,92,.05)"; c.fillRect(tx - 8, 18, 16, 20);
     }
     for (const p of pile) sprite(c, FOODS[p.f].rows, p.x, p.y, FC);
-    const sx = Math.floor(W * mons[0].x), sf = SLIME[Math.floor(now / 380) % 2];
-    sprite(c, sf, sx - 6, H - 17, { k: P.ink, G: "#5FA34F", w: P.tooth });
-    mons[0].px = sx; mons[0].py = H - 17;
-    const bx = Math.floor(W * mons[1].x + Math.sin(now / 900) * 10), by = 14 + Math.round(Math.sin(now / 300) * 3);
-    sprite(c, BAT[Math.floor(now / 160) % 2], bx - 6, by, { k: P.ink, P: "#6A4A94", w: "#FF5A5A" });
-    mons[1].px = bx; mons[1].py = by;
-    const kx = Math.floor(W * mons[2].x);
-    sprite(c, SKULL, kx - 6, H - 17, { k: P.ink, w: "#E9E2D6" });
-    sprite(c, BONES, kx + 6, H - 13, { k: P.ink, w: "#E9E2D6" });
-    if (skelClicks < 3) { const z = Math.floor(now / 500) % 3; c.fillStyle = P.muted || "#b3a6b8"; c.fillStyle = "#b3a6b8"; c.fillRect(kx - 2 + z, H - 22 - z * 3, 2, 1); }
-    mons[2].px = kx; mons[2].py = H - 17;
+    const sxp = Math.floor(DW * mons[0].x); sprite(c, SLIME[Math.floor(now / 380) % 2], sxp - 6, DH - 17, { k: P.ink, G: "#5FA34F", w: P.tooth }); mons[0].px = sxp; mons[0].py = DH - 17;
+    const bx = Math.floor(DW * mons[1].x + Math.sin(now / 900) * 10), by = 14 + Math.round(Math.sin(now / 300) * 3);
+    sprite(c, BAT[Math.floor(now / 160) % 2], bx - 6, by, { k: P.ink, P: "#6A4A94", w: "#FF5A5A" }); mons[1].px = bx; mons[1].py = by;
+    const kx = Math.floor(DW * mons[2].x);
+    sprite(c, SKULL, kx - 6, DH - 17, { k: P.ink, w: "#E9E2D6" }); sprite(c, BONES, kx + 6, DH - 13, { k: P.ink, w: "#E9E2D6" });
+    if (skelClicks < 3) { const z = Math.floor(now / 500) % 3; c.fillStyle = "#b3a6b8"; c.fillRect(kx - 2 + z, DH - 22 - z * 3, 2, 1); }
+    mons[2].px = kx; mons[2].py = DH - 17;
   }
   function nearest(e) {
-    const r = dc.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * W, y = (e.clientY - r.top) / r.height * H;
+    const r = dc.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * DW, y = (e.clientY - r.top) / r.height * DH;
     let best = null, bd = 16;
     for (const m of mons) { const d = Math.hypot(x - m.px, y - (m.py + 3)); if (d < bd) { bd = d; best = m; } }
     return { best, r };
   }
-  function speak(m, r, text) {
-    sayEl.textContent = text;
-    sayEl.style.left = (m.px / W * r.width) + "px";
-    sayEl.style.top = (m.py / H * r.height - 10) + "px";
-    sayEl.hidden = false;
-  }
-  dc.addEventListener("pointermove", e => {
-    const { best, r } = nearest(e);
-    dc.style.cursor = best && best.id === "skel" && !royalUnlocked ? "pointer" : "default";
-    if (best) speak(best, r, best.line); else sayEl.hidden = true;
-  });
+  function speak(m, r, str) { sayEl.textContent = str; sayEl.style.left = (m.px / DW * r.width) + "px"; sayEl.style.top = (m.py / DH * r.height - 10) + "px"; sayEl.hidden = false; }
+  dc.addEventListener("pointermove", e => { const { best, r } = nearest(e); dc.style.cursor = best && best.id === "skel" && !royalUnlocked ? "pointer" : "default"; if (best) speak(best, r, best.line); else sayEl.hidden = true; });
   dc.addEventListener("pointerleave", () => { sayEl.hidden = true; });
   dc.addEventListener("click", e => {
     const { best, r } = nearest(e);
     if (!best || best.id !== "skel" || royalUnlocked) return;
     skelClicks++;
     if (skelClicks < 3) { speak(best, r, skelClicks === 1 ? "zzz" : "...what"); return; }
-    royalUnlocked = true;
-    try { localStorage.setItem("chomp-royal", "1"); } catch (e2) {}
-    speak(best, r, "fine. take it.");
-    setSkin("royal");
-    toast("Royal skin unlocked");
+    royalUnlocked = true; try { localStorage.setItem("chomp-royal", "1"); } catch (e2) {}
+    speak(best, r, "fine. take it."); setSkin("royal"); toast("Royal skin unlocked");
   });
 
   let toastTimer;
-  function toast(text) { const t = document.getElementById("toast"); t.textContent = text; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 2400); }
+  function toast(str) { const t = document.getElementById("toast"); t.textContent = str; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 2400); }
 
   // ---------- one loop for everything that moves ----------
-  sizeDungeon();
-  addEventListener("resize", () => { sizeDungeon(); });
+  function layout() { layoutHero(); layoutHow(); sizeDungeon(); }
+  layout();
+  let resizeT; addEventListener("resize", () => { clearTimeout(resizeT); resizeT = setTimeout(layout, 120); });
+  document.fonts?.ready.then(() => { wheelCache = {}; });
   setSkin(skinId);
+  hero.t0 = performance.now();
+  const visible = el => { const r = el.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; };
   let last = 0;
   function loop(now) {
     if (now - last >= 40) {
       last = now;
-      hero.clearRect(0, 0, 32, 36);
-      drawChomp(hero, heroFrame(now), K, 1, 3);
-      paintRoom(now);
+      if (visible(scene)) drawHero(now);
+      if (visible(how)) drawHow(howProgress(), now);
       const f = Math.floor(now / 900) % FOODS.length;
       if (f !== slotFood) { slotFood = f; slot.clearRect(0, 0, 8, 8); sprite(slot, FOODS[f].rows, 0, 0, FC); }
-      if (now - wheelHeld > 2500 && Math.floor(now / 1100) % 6 !== hot) { hot = Math.floor(now / 1100) % 6; paintWheel(); }
-      paintDungeon(now);
+      if (visible(dc)) paintDungeon(now);
     }
     if (!reduce) requestAnimationFrame(loop);
   }
-  if (reduce) { phase = { name: "happy", t0: 0, until: Infinity, food: 0 }; loop(1000); } else requestAnimationFrame(loop);
+  if (reduce) { hero.phase = "happy"; hero.t0 = -1e9; loop(1000); addEventListener("resize", () => setTimeout(() => loop(1000), 200)); }
+  else requestAnimationFrame(loop);
 })();
 </script>
 </body>
