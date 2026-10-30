@@ -929,6 +929,9 @@ section.room-sec { padding-block: 96px; }
     return (qWheels[key] = c);
   }
 
+  // Is this colour dark enough that light text should go on it (and dark text needs no shadow)?
+  const dark = hex => { const n = parseInt(hex.slice(1), 16); return ((n >> 16) * 299 + ((n >> 8) & 255) * 587 + (n & 255) * 114) / 1000 < 140; };
+
   // Chomp's result disc: a round hole with a ring, like the app's.
   function questDisc(ring) {
     const key = "disc" + ring + qu;
@@ -952,8 +955,8 @@ section.room-sec { padding-block: 96px; }
     g.translate(-5 * s, -6 * s);
     sprite(g, PAGE, 0, 0, { k: P.ink, w: P.tooth }, s);
     g.fillStyle = tag; g.fillRect(1 * s, 6 * s, 8 * s, 3 * s);
-    g.fillStyle = P.tooth; g.font = `${Math.round(2.6 * s)}px Silkscreen, monospace`; g.textAlign = "center"; g.textBaseline = "middle";
-    g.fillText(ext, 5 * s, 7.6 * s);
+    g.fillStyle = dark(tag) ? P.tooth : P.ink; g.font = `${Math.round(2.6 * s)}px Silkscreen, monospace`; g.textAlign = "center"; g.textBaseline = "middle";
+    g.fillText(ext, Math.round(5 * s), Math.round(7.6 * s));
     g.restore();
   }
   function qtext(g, str, x, y, color, size, align = "center", font = "Silkscreen", alpha = 1) {
@@ -961,8 +964,9 @@ section.room-sec { padding-block: 96px; }
     // Pixelify joins "fi" into one glyph ("file" reads "Ale"); a zero-width non-joiner keeps them apart.
     if (font === "Pixelify Sans") str = str.replace(/f(?=[il])/g, "f\u200C");
     g.save(); g.globalAlpha = alpha; g.font = `${Math.round(size * qu)}px ${font}, monospace`; g.textAlign = align; g.textBaseline = "middle";
-    g.fillStyle = P.ink; g.fillText(str, x * qu + Math.max(1, qu * .5), y * qu + Math.max(1, qu * .5));
-    g.fillStyle = color; g.fillText(str, x * qu, y * qu); g.restore();
+    // A hard shadow lifts light text off the bricks; under dark text it would only smudge it.
+    if (!dark(color)) { g.fillStyle = P.ink; g.fillText(str, Math.round(x * qu + Math.max(1, qu * .5)), Math.round(y * qu + Math.max(1, qu * .5))); }
+    g.fillStyle = color; g.fillText(str, Math.round(x * qu), Math.round(y * qu)); g.restore();
   }
   function panel(g, x, y, w, h, fill, border, alpha = 1) {
     g.save(); g.globalAlpha = alpha;
@@ -987,7 +991,7 @@ section.room-sec { padding-block: 96px; }
     const R = (a, b, c, d, col) => { g.fillStyle = col; g.fillRect(Math.round(a * qu), Math.round(b * qu), Math.round(c * qu), Math.round(d * qu)); };
     R(x, y, w, h + 2, P.ink); R(x + 1, y + 1 + sink, w - 2, h - 1, lit ? K.accent : P.tooth);
     if (!down) R(x + 1, y + h - 1, w - 2, 2, lit ? K.accentDk : "#c9bfd0");
-    qtext(g, kind === "shift" ? "⇧ SHIFT" : "⌘ CTRL", x + w / 2, y + 7.5 + sink, P.ink, 3.6, "center", "Silkscreen");
+    qtext(g, kind === "shift" ? "SHIFT" : "CMD/CTRL", x + w / 2, y + 7.5 + sink, P.ink, 3.4, "center", "Silkscreen");
   }
 
   function drawQuest(qi, t, now) {
@@ -1084,7 +1088,7 @@ section.room-sec { padding-block: 96px; }
     // the stamp
     if (t > 6.3) {
       const s = span(t, 6.3, 6.7, E.back), k = 1.8 - .8 * s;
-      g.save(); g.translate(96 * qu, 22 * qu); g.rotate(-.08 * s); g.scale(k, k); g.globalAlpha = Math.min(1, s * 1.5);
+      g.save(); g.translate(96 * qu, 22 * qu); g.scale(k, k); g.globalAlpha = Math.min(1, s * 1.5);
       g.translate(-96 * qu, -22 * qu);
       panel(g, 56, 14, 80, 16, K.accent, K.accentDk);
       qtext(g, "QUEST COMPLETE", 96, 19.3, P.ink, 3.4, "center", "Silkscreen");
