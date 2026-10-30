@@ -62,6 +62,7 @@ enum Snapshot {
         hud.outputs = sample
         save(HUDView(hud: hud).background(Color(white: 0.55)), "toast", dir)
         save(MenuPanel(), "menu", dir)
+        save(MoreSettings(scrolls: false), "settings", dir)
         UserDefaults.standard.set(savedSkin, forKey: "skin")
         exit(0)
     }
@@ -73,8 +74,11 @@ enum Snapshot {
         guard let i = args.firstIndex(of: "--run"), i + 2 < args.count else { return }
         let id = args[i + 1]
         let files = args[(i + 2)...].map { URL(fileURLWithPath: $0) }
-        let all = Mode.allCases.flatMap { m in [Kind.image, .video, .audio, .pdf, .document].flatMap { Catalog.ops(m, $0) } }
-        guard let op = all.first(where: { $0.id == id }) else { print("No such op: \(id)"); exit(2) }
+        // The same id (to.gif, to.jpg…) exists for several kinds of file: take the one for these files.
+        let all = Mode.allCases.flatMap { m in [Kind.image, .video, .audio, .pdf, .document].flatMap { Catalog.allOps(m, $0) } }
+        let kind = files.first.map(Catalog.kind(of:)) ?? .other
+        let matches = all.filter { $0.id == id }
+        guard let op = matches.first(where: { $0.kinds.contains(kind) }) ?? matches.first else { print("No such op: \(id)"); exit(2) }
         Task {
             let r = await Engine.run(op, items: files)
             print("outputs:", r.outputs.map(\.path))

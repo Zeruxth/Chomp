@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 
 struct MenuPanel: View {
     @ObservedObject private var history = History.shared
+    @ObservedObject private var updates = Updates.shared
     @AppStorage("quality") private var quality = 0.85
     @AppStorage("saveTo") private var saveTo = Prefs.saveTo.rawValue
     @AppStorage("customFolder") private var customFolder = ""
@@ -29,6 +30,8 @@ struct MenuPanel: View {
                 }
                 Spacer()
             }
+
+            if let u = updates.available { updateNote(u) }
 
             dropZone
 
@@ -83,11 +86,28 @@ struct MenuPanel: View {
         }
     }
 
+    private func updateNote(_ u: Updates.Release) -> some View {
+        Button { NSWorkspace.shared.open(u.page) } label: {
+            HStack(spacing: 8) {
+                PixelIcon(name: "send", color: Pal.inkC)
+                Text("Chomp \(u.version) is out").font(Fonts.display(14))
+                Spacer()
+                Text("Get it").font(Fonts.label(9))
+            }
+            .foregroundStyle(Pal.inkC)
+            .padding(.horizontal, 10)
+            .frame(height: 36)
+            .pixelBox(accent, shade: true)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
     private var ffmpegNote: some View {
         HStack(alignment: .top, spacing: 8) {
             PixelIcon(name: "lock", color: accent)
             VStack(alignment: .leading, spacing: 4) {
-                Text("Video, audio, WebP and AVIF need ffmpeg")
+                Text("Video and audio need ffmpeg")
                     .font(.system(size: 11.5, weight: .semibold))
                 Button("Copy: brew install ffmpeg") {
                     let pb = NSPasteboard.general
@@ -192,6 +212,11 @@ struct MenuPanel: View {
                         loginItem = SMAppService.mainApp.status == .enabled
                     }
                 }
+            Button { SettingsWindow.show() } label: {
+                Text("More settings…").font(Fonts.label(10)).foregroundStyle(accent)
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 2)
         }
     }
 

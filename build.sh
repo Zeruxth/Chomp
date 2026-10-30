@@ -5,6 +5,7 @@
 #   UNIVERSAL=1   one app for both Apple Silicon and Intel (what releases use)
 #   VERSION=0.3.0 stamps that version into the app (releases set it from the tag)
 #   CI=true       builds without opening the app (set by GitHub Actions)
+# Run ./fetch-ffmpeg.sh first to ship ffmpeg inside the app (releases do); otherwise Chomp looks for Homebrew's.
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -33,7 +34,12 @@ if [[ -n "${VERSION:-}" ]]; then
 fi
 cp -R Resources/Fonts "$APP/Contents/Resources/Fonts"
 iconutil -c icns Resources/AppIcon.iconset -o "$APP/Contents/Resources/AppIcon.icns"
-codesign --force --deep --sign - "$APP" >/dev/null 2>&1 || true
+if [[ -x vendor/ffmpeg/ffmpeg ]]; then
+  cp vendor/ffmpeg/ffmpeg "$APP/Contents/MacOS/ffmpeg"
+  cp vendor/ffmpeg/SOURCE.txt "$APP/Contents/Resources/ffmpeg-SOURCE.txt"
+  codesign --force --sign - "$APP/Contents/MacOS/ffmpeg" >/dev/null 2>&1 || true
+fi
+codesign --force --sign - "$APP" >/dev/null 2>&1 || true
 
 if [[ "${1:-}" == "--install" ]]; then
   pkill -x Chomp 2>/dev/null || true
@@ -43,8 +49,8 @@ if [[ "${1:-}" == "--install" ]]; then
   echo "→ Installed to /Applications"
 fi
 
-if ! command -v ffmpeg >/dev/null 2>&1 && [ ! -x /opt/homebrew/bin/ffmpeg ] && [ ! -x /usr/local/bin/ffmpeg ]; then
-  echo "! Video and audio formats need ffmpeg: brew install ffmpeg"
+if [[ ! -x "$APP/Contents/MacOS/ffmpeg" ]] && ! command -v ffmpeg >/dev/null 2>&1; then
+  echo "! No ffmpeg: run ./fetch-ffmpeg.sh and build again for video and audio"
 fi
 
 echo "→ Done: $APP ($(lipo -archs "$APP/Contents/MacOS/Chomp"))"

@@ -28,6 +28,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         watcher.onTrigger = { mode, files in WheelController.shared.trigger(mode, files: files) }
         watcher.onEnd = { WheelController.shared.dragEnded() }
         watcher.start()
+        Updates.shared.start()
+        FolderWatcher.shared.restart()
+        ClipboardShrinker.shared.start()
+        NSApp.servicesProvider = self
+        NSUpdateDynamicServices()
 
         if !UserDefaults.standard.bool(forKey: "onboarded") {
             UserDefaults.standard.set(true, forKey: "onboarded")
@@ -39,6 +44,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// Finder "Open With → Chomp", or files dropped on the app icon.
     func application(_ application: NSApplication, open urls: [URL]) {
+        WheelController.shared.show(files: urls, mode: .convert, interactive: true, at: NSEvent.mouseLocation)
+    }
+
+    /// Finder → right-click → Quick Actions (or Services) → Chomp it.
+    @objc func chompFiles(_ pb: NSPasteboard, userData: String?, error: AutoreleasingUnsafeMutablePointer<NSString>) {
+        let urls = (pb.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL]) ?? []
+        guard !urls.isEmpty else { return }
         WheelController.shared.show(files: urls, mode: .convert, interactive: true, at: NSEvent.mouseLocation)
     }
 
@@ -58,6 +70,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func finish(_ op: Op, _ r: RunResult, _ job: Int) {
+        if r.cancelled && r.outputs.isEmpty && r.failures.isEmpty {
+            HUD.shared.dismiss()
+            return
+        }
         let isConvert = op.id.hasPrefix("to.")
         let n = r.outputs.count
         var parts: [String] = []

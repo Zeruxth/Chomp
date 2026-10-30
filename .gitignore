@@ -5,3 +5,4 @@ build/
 .claude/
 windows/Chomp/bin/
 windows/Chomp/obj/
+vendor/

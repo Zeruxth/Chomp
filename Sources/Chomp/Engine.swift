@@ -1,4 +1,4 @@
-import Foundation
+import AppKit
 
 struct RunResult {
     var outputs: [URL] = []
@@ -7,7 +7,11 @@ struct RunResult {
     var failures: [String] = []
     var skipped = 0
     var note: String?
+    var cancelled = false     // the person backed out (closed the editor): nothing to report
 }
+
+/// Thrown when someone backs out halfway, like closing the video editor.
+struct Cancelled: Error {}
 
 /// Runs one wheel choice over a drop (files and/or folders).
 enum Engine {
@@ -44,6 +48,9 @@ enum Engine {
             r.skipped = before - queue.count
         }
 
+        // The editor works on one video at a time.
+        if op.id == "vid.edit", let first = queue.first { queue = [first] }
+
         let work: (URL) async -> (URL, Result<[URL], Error>) = { f in
             do { return (f, .success(try await perform(op, f))) } catch { return (f, .failure(error)) }
         }
@@ -60,6 +67,8 @@ enum Engine {
                     r.outputs += outs
                     r.bytesIn += Files.size(f)
                     r.bytesOut += outs.reduce(0) { $0 + Files.size($1) }
+                case .failure(let e) where e is Cancelled:
+                    r.cancelled = true
                 case .failure(let e):
                     r.failures.append("\(f.lastPathComponent): \(e.localizedDescription)")
                 }
@@ -109,7 +118,9 @@ enum Engine {
         // Images
         case "img.compress":
             let t = Images.compressTarget(src)
-            return [try await Images.convert(src, to: t, out: try Files.dest(src, ext: t, suffix: "small"), quality: min(q, 0.7))]
+            let out = try await Images.convert(src, to: t, out: try Files.dest(src, ext: t, suffix: "small"), quality: min(q, 0.7))
+            try await Images.squeeze(out, ext: t, under: Int64(Prefs.sizeLimit) * 1_000_000)
+            return [out]
         case "img.1080":
             let t = Images.keepTarget(ext)
             return [try await Images.convert(src, to: t, out: try Files.dest(src, ext: t, suffix: "1080"), quality: q, maxPixel: 1080)]
@@ -125,6 +136,16 @@ enum Engine {
         case "img.rotate":
             let t = Images.keepTarget(ext)
             return [try await Images.rotate(src, ext: t, out: try Files.dest(src, ext: t, suffix: "rotated"), quality: max(q, 0.9))]
+        case "img.text":
+            let text = try Images.text(src)
+            let out = try Files.dest(src, ext: "txt")
+            try text.write(to: out, atomically: true, encoding: .utf8)
+            await MainActor.run {
+                let pb = NSPasteboard.general
+                pb.clearContents()
+                pb.setString(text, forType: .string)
+            }
+            return [out]
         case "img.cutout":
             if #available(macOS 14.0, *) {
                 return [try Images.cutout(src, out: try Files.dest(src, ext: "png", suffix: "cutout"))]
@@ -134,8 +155,11 @@ enum Engine {
         // Video
         case "vid.compress":
             return [try await Media.ff(src, ext: "mp4", suffix: "small", Media.h264(crf: 28, audio: "128k") + ["-movflags", "+faststart"])]
-        case "vid.10mb":
-            return [try await Media.under(src, mb: 10)]
+        case "vid.fit":
+            return [try await Media.under(src, mb: Double(Prefs.sizeLimit))]
+        case "vid.edit":
+            guard let plan = await Editor.ask(src) else { throw Cancelled() }
+            return [try await Media.edit(src, plan)]
         case "vid.half":
             return [try await Media.ff(src, ext: "mp4", suffix: "half", Media.h264(crf: 23, vf: "scale=trunc(iw/4)*2:trunc(ih/4)*2"))]
         case "vid.frame":

@@ -45,6 +45,12 @@ final class HUD: ObservableObject {
         }
     }
 
+    /// Goes away now, if it's up (an editor closed without saving, say).
+    func dismiss() {
+        guard panel?.isVisible == true else { return }
+        scheduleHide(0.01)
+    }
+
     private func scheduleHide(_ secs: Double?) {
         hideItem?.cancel()
         guard let secs else { return }
