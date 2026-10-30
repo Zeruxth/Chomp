@@ -1,0 +1,70 @@
+# XcodeGen spec for the Mac App Store build of Chomp.
+# Generate the project with:  xcodegen generate
+# Then open Chomp.xcodeproj. The .xcodeproj is generated, so edit this file instead.
+#
+# Before archiving, whoever publishes sets two things (search for CHANGE ME):
+#   DEVELOPMENT_TEAM           their 10-character Apple Team ID
+#   PRODUCT_BUNDLE_IDENTIFIER  an ID registered under that team, e.g. com.theirname.chomp
+
+name: Chomp
+options:
+  deploymentTarget:
+    macOS: "13.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+settings:
+  base:
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEVELOPMENT_TEAM: ""                      # CHANGE ME
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_VERSION: "5.0"
+    MACOSX_DEPLOYMENT_TARGET: "13.0"
+    DEAD_CODE_STRIPPING: YES
+
+targets:
+  # Google's libwebp, so WebP works without ffmpeg.
+  CWebP:
+    type: library.static
+    platform: macOS
+    sources:
+      - path: Sources/CWebP
+        excludes:
+          - COPYING
+          - PATENTS
+          - README.md
+          - include/module.modulemap
+    settings:
+      base:
+        HEADER_SEARCH_PATHS: ["$(SRCROOT)/Sources/CWebP"]
+        GCC_WARN_INHIBIT_ALL_WARNINGS: YES
+        CLANG_WARN_DOCUMENTATION_COMMENTS: NO
+        SKIP_INSTALL: YES
+
+  Chomp:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/Chomp
+      - path: Resources/Assets.xcassets
+      - path: Resources/PrivacyInfo.xcprivacy
+        buildPhase: resources
+      # Folder reference, so the fonts land in Contents/Resources/Fonts (see ATSApplicationFontsPath).
+      - path: Resources/Fonts
+        type: folder
+        buildPhase: resources
+    dependencies:
+      - target: CWebP
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.chomp   # CHANGE ME
+        PRODUCT_NAME: Chomp
+        INFOPLIST_FILE: Resources/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_ENTITLEMENTS: Resources/Chomp.entitlements
+        ENABLE_HARDENED_RUNTIME: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        SWIFT_INCLUDE_PATHS: ["$(SRCROOT)/Sources/CWebP/include"]
+        COMBINE_HIDPI_IMAGES: YES
+        ENABLE_USER_SCRIPT_SANDBOXING: YES

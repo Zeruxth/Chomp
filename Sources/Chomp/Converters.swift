@@ -541,7 +541,7 @@ enum Actions {
     static func zip(_ urls: [URL]) async throws -> URL {
         let parent = urls[0].deletingLastPathComponent()
         let base = urls.count == 1 ? urls[0].deletingPathExtension().lastPathComponent : "Archive"
-        let out = Files.unique(parent.appendingPathComponent(base).appendingPathExtension("zip"))
+        let out = Files.unique(try Files.outputDir(for: urls[0]).appendingPathComponent(base).appendingPathExtension("zip"))
         if urls.count == 1 {
             try await Shell.run("/usr/bin/ditto", ["-c", "-k", "--sequesterRsrc", "--keepParent", urls[0].path, out.path])
         } else {

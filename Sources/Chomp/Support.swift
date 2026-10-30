@@ -26,7 +26,8 @@ enum Prefs {
     static var saveTo: SaveTo {
         let d = UserDefaults.standard
         if let raw = d.string(forKey: "saveTo"), let v = SaveTo(rawValue: raw) { return v }
-        return d.object(forKey: "outputBeside") as? Bool ?? true ? .beside : .downloads
+        // App Store build: Downloads works without asking, so it's the default.
+        return .downloads
     }
 
     static var customFolder: URL? {
@@ -41,13 +42,9 @@ enum Prefs {
 // MARK: - Binaries
 
 enum Bin {
-    static var ffmpeg: String? {
-        var paths = ["/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg"]
-        if let bundled = Bundle.main.url(forResource: "ffmpeg", withExtension: nil)?.path {
-            paths.insert(bundled, at: 0)
-        }
-        return paths.first { FileManager.default.isExecutableFile(atPath: $0) }
-    }
+    /// The App Store build never runs ffmpeg: sandboxed apps can't launch Homebrew's copy, and
+    /// ffmpeg's licence doesn't fit the store. Video and audio use AVFoundation instead.
+    static var ffmpeg: String? { nil }
 
     /// Which AV1 encoder this ffmpeg was built with, if any. Builds differ: Homebrew's has SVT-AV1 but not libaom.
     static let av1Encoder: String? = {
@@ -103,9 +100,11 @@ enum Files {
     static func outputDir(for src: URL) throws -> URL {
         switch Prefs.saveTo {
         case .beside:
-            return src.deletingLastPathComponent()
+            // Only if the person allowed this folder; otherwise Downloads/Chomped.
+            let parent = src.deletingLastPathComponent()
+            if FileManager.default.isWritableFile(atPath: parent.path) { return parent }
         case .custom:
-            // A folder that's gone (deleted, drive unplugged) falls back to Downloads/Chomp.
+            // A folder that's gone (deleted, drive unplugged) falls back to Downloads/Chomped.
             var isDir: ObjCBool = false
             if let dir = Prefs.customFolder,
                FileManager.default.fileExists(atPath: dir.path, isDirectory: &isDir), isDir.boolValue,
@@ -116,7 +115,7 @@ enum Files {
             break
         }
         let dir = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Chomp", isDirectory: true)
+            .appendingPathComponent("Chomped", isDirectory: true)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir
     }

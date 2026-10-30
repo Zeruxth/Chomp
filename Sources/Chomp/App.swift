@@ -20,8 +20,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        FolderAccess.shared.restore()
         Snapshot.runIfAsked()
         Snapshot.runOpIfAsked()
+        Snapshot.runStoreShotsIfAsked()
         if CommandLine.arguments.contains("--run") { return }
 
         WheelController.shared.onRun = { [weak self] op, files, job in self?.run(op, files, job) }
@@ -47,6 +49,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let isAction = op.id.hasPrefix("act.")
         let what = files.count == 1 ? files[0].lastPathComponent : "\(files.count) items"
         let title = isConvert ? "Converting to \(op.title)…" : "\(op.title)…"
+        // Sandbox: ask once for any folder Chomp hasn't been allowed into yet. If the person
+        // says no, results go to Downloads/Chomped instead.
+        let blocked = FolderAccess.needed(for: op, files: files).filter { !FolderAccess.shared.canWrite($0) }
+        if !blocked.isEmpty {
+            WheelController.shared.hide()
+            blocked.forEach { FolderAccess.shared.request($0) }
+        }
         // The wheel shows progress in its ring; the bottom toast is only for when the wheel has gone.
         if !WheelController.shared.jobStarted(job, title: title, detail: what) && !isAction {
             HUD.shared.show(.working, title: title, detail: what)

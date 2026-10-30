@@ -3,3 +3,6 @@ build/
 .swiftpm/
 .DS_Store
 .claude/
+.dd/
+*.xcarchive
+xcuserdata/

@@ -1,4 +1,8 @@
-# Chomp
+# Chomp (Mac App Store build)
+
+This copy is set up for the Mac App Store: an Xcode project from XcodeGen (`project.yml`), App Sandbox, no ffmpeg (video and audio use AVFoundation), and results saved to Downloads/Chomped by default. To release it, follow **[AppStore/RELEASE_GUIDE.md](AppStore/RELEASE_GUIDE.md)**. The listing copy is in **[AppStore/APP_STORE_CONNECT.md](AppStore/APP_STORE_CONNECT.md)**.
+
+The GitHub version lives in the original Chomp folder.
 
 A pixel-art treasure chest that eats your files. Drag a file, tap a key, drop it on the wheel: Chomp converts, shrinks or sends it. Lives in the menu bar on your Mac.
 

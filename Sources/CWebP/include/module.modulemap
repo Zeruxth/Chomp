@@ -1,0 +1,4 @@
+module CWebP {
+    umbrella header "CWebP.h"
+    export *
+}

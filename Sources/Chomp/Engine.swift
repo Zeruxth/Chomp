@@ -132,6 +132,15 @@ enum Engine {
             throw ChompError.msg("Needs macOS 14")
 
         // Video
+        // No ffmpeg (the App Store build): Apple's own frameworks do the video tools.
+        case "vid.compress" where Bin.ffmpeg == nil: return [try await AVMedia.compress(src)]
+        case "vid.10mb" where Bin.ffmpeg == nil: return [try await AVMedia.under(src, mb: 10)]
+        case "vid.half" where Bin.ffmpeg == nil: return [try await AVMedia.half(src)]
+        case "vid.frame" where Bin.ffmpeg == nil: return [try await AVMedia.frame(src)]
+        case "vid.mute" where Bin.ffmpeg == nil: return [try await AVMedia.mute(src)]
+        case "vid.x2" where Bin.ffmpeg == nil: return [try await AVMedia.double(src)]
+        case "aud.compress" where Bin.ffmpeg == nil: return [try await AVMedia.compressAudio(src)]
+
         case "vid.compress":
             return [try await Media.ff(src, ext: "mp4", suffix: "small", Media.h264(crf: 28, audio: "128k") + ["-movflags", "+faststart"])]
         case "vid.10mb":

@@ -32,7 +32,6 @@ struct MenuPanel: View {
 
             dropZone
 
-            if Bin.ffmpeg == nil { ffmpegNote }
 
             if !history.items.isEmpty { recent }
 
@@ -173,7 +172,7 @@ struct MenuPanel: View {
                             .foregroundStyle(accent)
                     }
                 } else if saveTo == Prefs.SaveTo.downloads.rawValue {
-                    Text("~/Downloads/Chomp")
+                    Text("~/Downloads/Chomped")
                         .font(Fonts.body(11))
                         .foregroundStyle(Pal.mutedC)
                 }
@@ -252,6 +251,7 @@ struct MenuPanel: View {
         if !customFolder.isEmpty { p.directoryURL = URL(fileURLWithPath: customFolder) }
         guard p.runModal() == .OK, let url = p.url else { return false }
         customFolder = url.path
+        FolderAccess.shared.remember(url)
         return true
     }
 

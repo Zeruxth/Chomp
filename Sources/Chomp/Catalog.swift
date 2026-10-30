@@ -56,6 +56,8 @@ enum Catalog {
         if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir), isDir.boolValue, ext != "rtfd" {
             return .folder
         }
+        // Mid-drag the sandbox may not let us look yet; folder URLs still end in a slash.
+        if url.hasDirectoryPath, ext != "rtfd" { return .folder }
         switch ext {
         case "jpg", "png", "heic", "webp", "avif", "tiff", "gif", "bmp": return .image
         case "mp4", "mov", "mkv", "webm", "avi", "wmv", "flv", "mpg", "mpeg", "3gp": return .video
@@ -115,11 +117,25 @@ enum Catalog {
     private static let everything: Set<Kind> = [.image, .video, .audio, .pdf, .document, .folder, .other]
 
     static func ops(_ mode: Mode, _ kind: Kind) -> [Op] {
+        let all: [Op]
         switch mode {
-        case .convert: return convert(kind)
-        case .tools: return tools(kind)
-        case .actions: return actions
+        case .convert: all = convert(kind)
+        case .tools: all = tools(kind)
+        case .actions: all = actions
         }
+        return all.filter(available)
+    }
+
+    /// Video and audio jobs that work with AVFoundation alone (no ffmpeg in the App Store build).
+    private static let withoutFFmpeg: Set<String> = [
+        "to.mp4", "to.mov", "to.m4a",
+        "vid.compress", "vid.10mb", "vid.half", "vid.frame", "vid.mute", "vid.x2", "aud.compress",
+    ]
+
+    private static func available(_ op: Op) -> Bool {
+        if op.id == "to.avif" { return Images.canSave("avif") }
+        let media = op.kinds.isSubset(of: [.video, .audio])
+        return !media || Bin.ffmpeg != nil || withoutFFmpeg.contains(op.id)
     }
 
     private static func convert(_ kind: Kind) -> [Op] {

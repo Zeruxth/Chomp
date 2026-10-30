@@ -1,0 +1,79 @@
+# Builds the App Store version of Chomp (sandboxed, no ffmpeg) for Apple Silicon and Intel.
+#
+# - Every push to the appstore branch: builds it, to catch breakage. The zip is kept on the run page.
+# - Pushing a tag like appstore-v1.0.0: also publishes Chomp-AppStore.zip on the Releases page.
+#
+# Builds are unsigned (ad-hoc signed, so the sandbox still applies). These releases are never marked
+# "latest", so the website's Download button keeps serving the main GitHub version.
+name: App Store build
+
+on:
+  push:
+    branches: [appstore]
+    tags: ["appstore-v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: appstore-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tools
+        run: |
+          brew install xcodegen
+          xcodebuild -version
+
+      - name: Version
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            echo "VERSION=${GITHUB_REF_NAME#appstore-v}" >> "$GITHUB_ENV"
+          else
+            echo "VERSION=0.0.0-test" >> "$GITHUB_ENV"
+          fi
+          echo "BUILD=${{ github.run_number }}" >> "$GITHUB_ENV"
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Archive
+        run: |
+          xcodebuild -project Chomp.xcodeproj -scheme Chomp -configuration Release \
+            -destination 'generic/platform=macOS' -archivePath build/Chomp.xcarchive \
+            MARKETING_VERSION="$VERSION" CURRENT_PROJECT_VERSION="$BUILD" \
+            CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= \
+            -quiet archive
+          APP=build/Chomp.xcarchive/Products/Applications/Chomp.app
+          lipo -archs "$APP/Contents/MacOS/Chomp"
+          codesign -d --entitlements - "$APP" 2>/dev/null | grep -q app-sandbox && echo "sandbox: on"
+
+      - name: Zip
+        run: |
+          ditto -c -k --sequesterRsrc --keepParent build/Chomp.xcarchive/Products/Applications/Chomp.app Chomp-AppStore.zip
+          shasum -a 256 Chomp-AppStore.zip | tee Chomp-AppStore.zip.sha256
+          ls -lh Chomp-AppStore.zip
+
+      - name: Keep the build on the run page
+        uses: actions/upload-artifact@v4
+        with:
+          name: Chomp-AppStore
+          path: |
+            Chomp-AppStore.zip
+            Chomp-AppStore.zip.sha256
+
+      - name: Publish release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" Chomp-AppStore.zip Chomp-AppStore.zip.sha256 \
+            --title "Chomp $VERSION (App Store build)" \
+            --notes-file AppStore/release-notes.md \
+            --latest=false
