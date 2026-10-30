@@ -342,4 +342,53 @@ enum WheelArt {
         cache[key] = img
         return img
     }
+
+    // MARK: Compact disc (after a drop)
+
+    /// The small disc shown while a job runs and when it's done: a big hole for Chomp and a thin ring.
+    static let compactGrid = 130
+    static let compactHole = 41.0       // grid pixels; Chomp at 4× fits inside
+    static let compactBand = 58.0
+    static let compactDisc = 64.0
+
+    static func compact(ring: Ring, skin: Skin) -> CGImage? {
+        let key = "compact-\(skin.rawValue)-\(String(describing: ring))"
+        if let hit = cache[key] { return hit }
+        let g = compactGrid, c0 = Double(g) / 2
+        let accent = skin.accentHex, accentDark = skin.accentDarkHex
+        var px = [UInt8](repeating: 0, count: g * g * 4)
+        for y in 0..<g {
+            for x in 0..<g {
+                let dx = Double(x) + 0.5 - c0, dy = Double(y) + 0.5 - c0
+                let r = (dx * dx + dy * dy).squareRoot()
+                var c: UInt32? = nil
+                if r <= compactDisc { c = r > compactDisc - 2 ? Pal.ink : Pal.disc }
+                if r > compactHole + 2, r <= compactBand {
+                    c = Pal.segment
+                    switch ring {
+                    case .full(let col): c = col
+                    case .spin(let step):
+                        var a = atan2(dx, -dy)
+                        if a < 0 { a += 2 * .pi }
+                        let head = 2 * Double.pi * Double(step) / Double(spinSteps)
+                        let behind = (head - a + 4 * .pi).truncatingRemainder(dividingBy: 2 * .pi)
+                        if behind < .pi / 2 { c = behind < .pi / 6 ? accent : accentDark }
+                    }
+                }
+                if r <= compactHole + 2 { c = r > compactHole ? Pal.ink : Pal.hole }
+                if let c {
+                    let k = (y * g + x) * 4
+                    px[k] = UInt8((c >> 16) & 255); px[k + 1] = UInt8((c >> 8) & 255); px[k + 2] = UInt8(c & 255); px[k + 3] = 255
+                }
+            }
+        }
+        guard let provider = CGDataProvider(data: Data(px) as CFData),
+              let img = CGImage(width: g, height: g, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: g * 4,
+                                space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+                                provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent)
+        else { return nil }
+        cache[key] = img
+        return img
+    }
 }

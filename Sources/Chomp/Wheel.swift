@@ -476,9 +476,13 @@ struct WheelRoot: View {
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
-                disc
-                if model.stage == .pick { labels } else { jobText }
-                center
+                if model.stage == .pick {
+                    disc
+                    labels
+                    center
+                } else {
+                    compact
+                }
             }
             .frame(width: Geo.size, height: Geo.size)
             pills
@@ -498,52 +502,60 @@ struct WheelRoot: View {
     }
 
     @ViewBuilder private var disc: some View {
-        switch model.stage {
-        case .pick:
-            art(WheelArt.image(count: model.ops.count, hover: model.hover, skin: skin))
-        case .eating, .working:
-            // A short gold arc runs round the rim while Chomp chews.
-            TimelineView(.periodic(from: .now, by: 0.08)) { t in
-                art(WheelArt.image(count: 0, hover: nil, skin: skin,
-                                   ring: .spin(Int(t.date.timeIntervalSinceReferenceDate / 0.08) % WheelArt.spinSteps)))
-            }
-        case .done(let ok):
-            art(WheelArt.image(count: 0, hover: nil, skin: skin, ring: .full(ok ? skin.accentHex : Pal.tongue)))
-        case .spat:
-            art(WheelArt.image(count: 0, hover: nil, skin: skin, ring: .full(Pal.segmentRim)))
-        }
+        art(WheelArt.image(count: model.ops.count, hover: model.hover, skin: skin), size: Geo.size)
     }
 
-    @ViewBuilder private func art(_ img: CGImage?) -> some View {
+    @ViewBuilder private func art(_ img: CGImage?, size: CGFloat) -> some View {
         if let img {
             Image(decorative: img, scale: 1)
                 .resizable()
                 .interpolation(.none)
-                .frame(width: Geo.size, height: Geo.size)
+                .frame(width: size, height: size)
         }
     }
 
-    /// What used to be the bottom toast, inside the ring: title above Chomp, details below.
-    private var jobText: some View {
-        let mid = (Geo.inner + Geo.outer) / 2
+    /// After a drop the wheel shrinks to a small disc around a big Chomp, with the result underneath.
+    private var compact: some View {
+        let d = CGFloat(WheelArt.compactGrid) * WheelArt.scale
         let failed = model.stage == .done(ok: false)
         return ZStack {
-            Text(model.jobTitle)
-                .font(Fonts.display(20))
-                .foregroundStyle(failed ? Pal.tongueC : Pal.toothC)
-                .multilineTextAlignment(.center)
-                .lineLimit(2)
-                .minimumScaleFactor(0.8)
-                .frame(width: 250)
-                .position(x: Geo.size / 2, y: Geo.size / 2 - mid + 4)
-            Text(model.jobDetail)
-                .font(Fonts.body(14))
-                .foregroundStyle(Pal.mutedC)
-                .multilineTextAlignment(.center)
-                .lineLimit(2)
-                .truncationMode(.middle)
-                .frame(width: 250)
-                .position(x: Geo.size / 2, y: Geo.size / 2 + mid - 4)
+            Group {
+                switch model.stage {
+                case .done(let ok):
+                    art(WheelArt.compact(ring: .full(ok ? skin.accentHex : Pal.tongue), skin: skin), size: d)
+                case .spat:
+                    art(WheelArt.compact(ring: .full(Pal.segmentRim), skin: skin), size: d)
+                default:
+                    // A gold arc chases round the ring while Chomp chews.
+                    TimelineView(.periodic(from: .now, by: 0.08)) { t in
+                        art(WheelArt.compact(ring: .spin(Int(t.date.timeIntervalSinceReferenceDate / 0.08) % WheelArt.spinSteps),
+                                             skin: skin), size: d)
+                    }
+                }
+            }
+            .position(x: Geo.size / 2, y: Geo.size / 2)
+
+            MimicView(mood: model.mood, since: model.chompAt ?? .distantPast, scale: 4)
+                .position(x: Geo.size / 2, y: Geo.size / 2 + 4)
+
+            VStack(spacing: 6) {
+                Text(model.jobTitle)
+                    .font(Fonts.display(20))
+                    .foregroundStyle(failed ? Pal.tongueC : Pal.toothC)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                Text(model.jobDetail)
+                    .font(Fonts.body(14))
+                    .foregroundStyle(Pal.mutedC)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .frame(width: Geo.pillW * 3 + Geo.pillGap * 2)   // lines up with the keys below
+            .pixelBox(Pal.panelC, px: 2)
+            .position(x: Geo.size / 2, y: Geo.size / 2 + d / 2 + 46)
         }
         .frame(width: Geo.size, height: Geo.size)
     }
