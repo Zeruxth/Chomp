@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 using WinForms = System.Windows.Forms;
 
 namespace Chomp;
@@ -94,6 +95,7 @@ public static class Program
 public sealed class ChompApp : Application
 {
     WinForms.NotifyIcon? tray;
+    readonly DragWatcher watcher = new();
 
     public ChompApp() => ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
@@ -113,6 +115,8 @@ public sealed class ChompApp : Application
         Exit += (_, _) => { if (tray != null) tray.Visible = false; };
 
         WheelWindow.Shared.OnRun = Run;
+        watcher.OnTrigger = m => WheelWindow.Shared.Trigger(m);
+        watcher.Start();
         Program.Listen(f => Dispatcher.InvokeAsync(() => OpenWheel(f)));
 
         var p = Prefs.Current;
@@ -120,7 +124,7 @@ public sealed class ChompApp : Application
         {
             p.Onboarded = true;
             p.Save();
-            tray.ShowBalloonTip(5000, "Chomp is awake", "Click the chest down here and drop a file on it. Or right-click a file → Send to → Chomp.", WinForms.ToolTipIcon.None);
+            Dispatcher.InvokeAsync(() => Toast.Shared.Show(Toast.Phase.Done, "Chomp is awake", "Drag any file, then tap Shift, Ctrl or Alt"), DispatcherPriority.ApplicationIdle);
             if (!Integration.InSendTo) try { Integration.InSendTo = true; } catch { }
         }
         if (files.Count > 0) OpenWheel(files);
@@ -138,8 +142,9 @@ public sealed class ChompApp : Application
         var isConvert = op.Id.StartsWith("to.");
         var what = files.Count == 1 ? Path.GetFileName(files[0]) : $"{files.Count} items";
         var title = isConvert ? $"Converting to {op.Title}…" : $"{op.Title}…";
-        // The wheel shows progress in its ring; the tray only hears about it once the wheel has gone.
-        WheelWindow.Shared.JobStarted(job, title, what);
+        // The wheel shows progress in its ring; the bottom toast is only for when the wheel has gone.
+        if (!WheelWindow.Shared.JobStarted(job, title, what) && !op.Id.StartsWith("act."))
+            Toast.Shared.Show(Toast.Phase.Working, title, what);
         RunResult r;
         try { r = await Engine.Run(op, files); }
         catch (Exception e)
@@ -176,7 +181,7 @@ public sealed class ChompApp : Application
         var detail = string.Join(" · ", parts);
 
         if (!WheelWindow.Shared.JobFinished(job, ok, title, detail, r.Outputs))
-            tray?.ShowBalloonTip(4000, title, detail.Length > 0 ? detail : " ", ok ? WinForms.ToolTipIcon.None : WinForms.ToolTipIcon.Warning);
+            Toast.Shared.Show(ok ? Toast.Phase.Done : Toast.Phase.Failed, title, detail, r.Outputs);
         if (ok && r.Outputs.Count > 0) History.Add(title, detail, r.Outputs.ToList());
         if (ok) { Prefs.Current.Chomps++; Prefs.Current.Save(); }
         if (Prefs.Current.Sounds) Sound.Play(ok);

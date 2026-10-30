@@ -29,7 +29,8 @@ public static class KindExt
 /// <summary>One slice of the wheel. Ids match the Mac app so `--run` works the same.</summary>
 public sealed record Op(string Id, string Title, string Detail, string? Icon, IReadOnlySet<Kind> Kinds, bool Batch = false);
 
-/// <summary>Which options show for which file type. Mirrors Catalog.swift, minus what Windows can't do yet.</summary>
+/// <summary>Which options show for which file type. Mirrors Catalog.swift: Share stands in for AirDrop, BMP is extra,
+/// and Markdown takes the place of old binary Word (.doc).</summary>
 public static class Catalog
 {
     // MARK: File types
@@ -121,6 +122,7 @@ public static class Catalog
                     O("to.jpg", "JPG", "Universal", null, k),
                     O("to.png", "PNG", "Lossless", null, k),
                     O("to.webp", "WebP", "For web", null, k),
+                    O("to.heic", "HEIC", "Tiny, Apple", null, k),
                     O("to.avif", "AVIF", "Smallest", null, k),
                     O("to.pdf", "PDF", "Document", null, k),
                     O("to.tiff", "TIFF", "Print", null, k),
@@ -164,11 +166,25 @@ public static class Catalog
                     O("to.png", "PNG", "Every page", null, k),
                     O("to.jpg", "JPG", "Every page", null, k),
                     O("to.txt", "TXT", "Plain text", null, k),
+                    O("to.docx", "DOCX", "Editable", null, k),
+                    O("to.rtf", "RTF", "Rich text", null, k),
                 };
             }
             case Kind.Document:
-                // Layout-preserving conversions (PDF, DOCX, RTF…) come in a later phase.
-                return new() { O("to.txt", "TXT", "Plain", null, K(Kind.Document)) };
+            {
+                // Old binary Word (.doc) is the Mac's last slice; Markdown takes its place here.
+                var k = K(Kind.Document);
+                return new()
+                {
+                    O("to.pdf", "PDF", "Print-ready", null, k),
+                    O("to.docx", "DOCX", "Word", null, k),
+                    O("to.rtf", "RTF", "Rich text", null, k),
+                    O("to.txt", "TXT", "Plain", null, k),
+                    O("to.html", "HTML", "Web page", null, k),
+                    O("to.odt", "ODT", "OpenDoc", null, k),
+                    O("to.md", "MD", "Markdown", null, k),
+                };
+            }
             default:
                 return new();
         }
@@ -181,15 +197,17 @@ public static class Catalog
             case Kind.Image:
             {
                 var k = K(Kind.Image);
-                return new()
+                var l = new List<Op>
                 {
                     O("img.compress", "Compress", "Smaller file", "compress", k),
                     O("img.1080", "1080", "Web / Insta", "1080", k),
                     O("img.half", "Half", "50% size", "half", k),
-                    O("img.strip", "Clean", "No EXIF / GPS", "clean", k),
-                    O("img.rotate", "Rotate", "90° right", "rotate", k),
-                    O("img.pdf", "Combine", "One PDF", "combine", k, batch: true),
                 };
+                if (Cutout.Available) l.Add(O("img.cutout", "Cut out", "Remove BG", "cutout", k));
+                l.Add(O("img.strip", "Clean", "No EXIF / GPS", "clean", k));
+                l.Add(O("img.rotate", "Rotate", "90° right", "rotate", k));
+                l.Add(O("img.pdf", "Combine", "One PDF", "combine", k, batch: true));
+                return l;
             }
             case Kind.Video:
             {
@@ -230,6 +248,7 @@ public static class Catalog
                 return new()
                 {
                     O("doc.count", "Count", "Words", "count", K(Kind.Document, Kind.Pdf)),
+                    O("doc.merge", "Combine", "One PDF", "combine", K(Kind.Document, Kind.Pdf), batch: true),
                     O("doc.clean", "Clean", "Plain text", "text", K(Kind.Document)),
                 };
             default:
@@ -239,6 +258,7 @@ public static class Catalog
 
     static List<Op> Actions() => new()
     {
+        O("act.share", "Share", "Send nearby", "airdrop", Everything),
         O("act.copy", "Copy", "To clipboard", "copy", Everything),
         O("act.path", "Path", "Copy path", "path", Everything),
         O("act.zip", "Zip", "Archive", "zip", Everything),

@@ -14,75 +14,6 @@ using System.Xml.Linq;
 
 namespace Chomp;
 
-/// <summary>Plain text out of documents. Layout-keeping conversions come in a later phase.</summary>
-public static class Docs
-{
-    public static string Text(string src)
-    {
-        switch (Catalog.Ext(src))
-        {
-            case "txt":
-            case "md":
-                return File.ReadAllText(src);
-            case "html":
-            {
-                var s = File.ReadAllText(src);
-                s = Regex.Replace(s, @"<(script|style)[^>]*>.*?</\1>", "", RegexOptions.Singleline | RegexOptions.IgnoreCase);
-                s = Regex.Replace(s, @"<(br|/p|/div|/h\d|/li|/tr)[^>]*>", "\n", RegexOptions.IgnoreCase);
-                s = Regex.Replace(s, "<[^>]+>", "");
-                return Regex.Replace(WebUtility.HtmlDecode(s), @"\n{3,}", "\n\n").Trim();
-            }
-            case "docx":
-                return FromZipXml(src, "word/document.xml", "http://schemas.openxmlformats.org/wordprocessingml/2006/main", "p", "t", "tab");
-            case "odt":
-                return FromZipXml(src, "content.xml", "urn:oasis:names:tc:opendocument:xmlns:text:1.0", "p", null, "tab");
-            case "pdf":
-                return Pdfs.Text(src);
-            default:
-                throw new ChompException($"{Catalog.Ext(src).ToUpperInvariant()} isn't readable on Windows yet");
-        }
-    }
-
-    /// <summary>Word and OpenDocument files are zips of XML: one line per paragraph.</summary>
-    static string FromZipXml(string src, string entry, string ns, string para, string? run, string tab)
-    {
-        using var z = ZipFile.OpenRead(src);
-        var e = z.GetEntry(entry) ?? throw new ChompException("Can't read document");
-        using var s = e.Open();
-        XNamespace n = ns;
-        var sb = new StringBuilder();
-        foreach (var p in XDocument.Load(s).Descendants(n + para))
-        {
-            foreach (var node in p.DescendantNodes())
-            {
-                if (node is XElement el && el.Name == n + tab) sb.Append('\t');
-                else if (node is XText t && (run == null || t.Parent?.Name == n + run)) sb.Append(t.Value);
-            }
-            sb.Append('\n');
-        }
-        return sb.ToString();
-    }
-
-    public static string ToText(string src, string o)
-    {
-        File.WriteAllText(o, Text(src));
-        return o;
-    }
-
-    public static RunResult Count(IEnumerable<string> files)
-    {
-        long words = 0, chars = 0;
-        foreach (var f in files)
-        {
-            string s;
-            try { s = Text(f); } catch { continue; }
-            words += s.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
-            chars += s.Length;
-        }
-        return new RunResult { Note = $"{words:N0} words · {chars:N0} characters" };
-    }
-}
-
 public static class Actions
 {
     public static async Task<RunResult> Run(Op op, IReadOnlyList<string> items)
@@ -94,6 +25,14 @@ public static class Actions
         var things = n == 1 ? Path.GetFileName(first) : $"{n} items";
         switch (op.Id)
         {
+            case "act.share":
+                try
+                {
+                    OnUi(() => Share.Show(items));
+                    r.Note = $"Sharing {things}";
+                }
+                catch (Exception e) { r.Failures.Add($"Sharing isn't available here: {e.Message}"); }
+                break;
             case "act.copy":
                 OnUi(() =>
                 {

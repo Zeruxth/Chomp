@@ -44,6 +44,8 @@
     <PackageReference Include="PDFsharp" Version="6.2.4" />
     <!-- PDF text for TXT and word counts. -->
     <PackageReference Include="PdfPig" Version="0.1.16" />
+    <!-- Background removal: runs models\cutout.onnx on the CPU. -->
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.22.0" />
   </ItemGroup>
 
 </Project>

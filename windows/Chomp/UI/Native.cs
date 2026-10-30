@@ -49,6 +49,11 @@ public static class Native
         return (GetAsyncKeyState(vk) & 0x8000) != 0;
     }
 
+    public static bool KeyDown(int vk) => (GetAsyncKeyState(vk) & 0x8000) != 0;
+
+    /// <summary>How far the mouse has to move with the button down before Windows calls it a drag, in physical pixels.</summary>
+    public static (int X, int Y) DragDistance() => (GetSystemMetrics(68 /* SM_CXDRAG */), GetSystemMetrics(69 /* SM_CYDRAG */));
+
     /// <summary>Clicks don't steal focus from the app you're dragging out of, and no taskbar button.</summary>
     public static void NoActivate(IntPtr hwnd, bool on)
     {

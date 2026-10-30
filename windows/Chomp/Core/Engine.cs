@@ -88,6 +88,7 @@ public static class Engine
         {
             case "img.pdf": Images.ToPdf(sorted, o); break;
             case "pdf.merge": Pdfs.Merge(sorted, o); break;
+            case "doc.merge": Docs.Combine(sorted, o); break;
             default: throw new ChompException("Unknown operation");
         }
         return o;
@@ -106,8 +107,9 @@ public static class Engine
             {
                 Kind.Image => new() { await Images.Convert(src, t, Files.Dest(src, t), q) },
                 Kind.Video or Kind.Audio => new() { await Media.Convert(src, t) },
+                Kind.Pdf when t is "docx" or "rtf" => new() { Docs.Convert(src, t, Files.Dest(src, t)) },
                 Kind.Pdf => await Pdfs.Convert(src, t),
-                Kind.Document => new() { Docs.ToText(src, Files.Dest(src, t)) },
+                Kind.Document => new() { Docs.Convert(src, t, Files.Dest(src, t)) },
                 _ => throw new ChompException("Unsupported file"),
             };
         }
@@ -136,6 +138,8 @@ public static class Engine
                 var t = Images.KeepTarget(ext);
                 return new() { await Images.Convert(src, t, Files.Dest(src, t, "clean"), Math.Max(q, 0.9), strip: true) };
             }
+            case "img.cutout":
+                return new() { Cutout.Run(src, Files.Dest(src, "png", "cutout")) };
             case "img.rotate":
             {
                 var t = Images.KeepTarget(ext);
