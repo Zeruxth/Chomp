@@ -39,6 +39,22 @@ enum Snapshot {
             save(WheelRoot(model: m).background(Color(white: 0.55)), "wheel-\(name)", dir)
         }
 
+        // Every snack at three moments of the bite: dropping in, inside the mouth, crumbs.
+        let sheet = VStack(spacing: 6) {
+            ForEach([2, 4, 6, 8], id: \.self) { step in
+                HStack(spacing: 6) {
+                    ForEach(0..<Food.all.count, id: \.self) { food in
+                        Canvas { ctx, _ in Mimic.draw(Mimic.chomp(food)[step], skin: .oak, in: &ctx, scale: 3) }
+                            .frame(width: 96, height: 99)
+                            .background(Color(hex: Pal.hole))
+                    }
+                }
+            }
+        }
+        .padding(8)
+        .background(Color(white: 0.55))
+        save(sheet, "foods", dir)
+
         let hud = HUD.shared
         hud.phase = .done
         hud.title = "1 file → WebP"

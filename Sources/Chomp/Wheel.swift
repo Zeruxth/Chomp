@@ -45,11 +45,12 @@ final class WheelModel: ObservableObject {
     @Published var outputs: [URL] = []
     @Published var pillHover: Int? = nil  // Show / Undo / Close under the wheel
     var jobID = 0
+    var food = 0                          // which snack Chomp eats this time
 
     /// Chomp follows the hovered segment with its eyes.
     var mood: MimicMood {
         switch stage {
-        case .eating: return .chomp
+        case .eating: return .chomp(food)
         case .working: return .working
         case .done(let ok): return ok ? .happy : .closed
         case .spat: return .closed
@@ -220,6 +221,7 @@ final class WheelController {
         // The wheel stays: Chomp bites, chews while the job runs, then shows the result in the ring.
         model.hover = nil
         model.chompAt = Date()
+        model.food = Food.random()
         model.stage = .eating
         model.jobTitle = ""
         model.jobDetail = ""
@@ -227,7 +229,7 @@ final class WheelController {
         jobs += 1
         model.jobID = jobs
         let t = token
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + Mimic.chompLength) { [weak self] in
             guard let self, self.token == t, self.model.stage == .eating else { return }
             self.model.stage = .working
         }
@@ -251,7 +253,7 @@ final class WheelController {
         // Let the bite finish before the result lands.
         let bitten = Date().timeIntervalSince(model.chompAt ?? .distantPast)
         let t = token
-        DispatchQueue.main.asyncAfter(deadline: .now() + max(0, 0.75 - bitten)) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + max(0, Mimic.chompLength - bitten)) { [weak self] in
             guard let self, self.token == t else { return }
             self.model.stage = .done(ok: ok)
             self.model.jobTitle = title

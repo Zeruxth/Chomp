@@ -5,7 +5,7 @@ enum MimicMood: Equatable {
     case idle            // closed, breathing, eyes glint now and then
     case peek(Int)       // lid cracked, eyes looking -1 left / 0 / 1 right
     case closed          // shut tight (hovering cancel)
-    case chomp           // one-shot: paper falls in, big bite, crumbs
+    case chomp(Int)      // one-shot: a snack (Food.all index) drops in, big bite, crumbs
     case working         // chewing loop
     case happy           // done: grin, tongue, sparkles
 }
@@ -13,7 +13,7 @@ enum MimicMood: Equatable {
 /// Pixel-art treasure-chest mimic, 32×33 grid. Wood, trim and eyes come from the skin.
 enum Mimic {
     enum Eyes { case none, glow, happy }
-    enum Tint { case tooth, gold, paper }
+    enum Tint { case tooth, gold, paper, color(Color) }
 
     struct Bit {
         let x: Int, y: Int, w: Int, h: Int
@@ -30,6 +30,8 @@ enum Mimic {
         var tongue = false
         var dx = 0
         var bits: [Bit] = []
+        /// A snack being eaten: its top-left y, and whether it has gone into the mouth (drawn under the lid).
+        var food: (index: Int, y: Int, inside: Bool)? = nil
     }
 
     // MARK: Fixed colours (same in every skin)
@@ -52,18 +54,30 @@ enum Mimic {
         return opens.indices.map { Frame(open: opens[$0], eyes: .glow, dx: dxs[$0]) }
     }()
 
-    static let chomp: [Frame] = [
-        Frame(open: 0, bits: [Bit(14, 2, 3, 4, .paper)]),
-        Frame(open: 0, bits: [Bit(14, 5, 3, 4, .paper)]),
-        Frame(open: 3, eyes: .glow, bits: [Bit(14, 6, 3, 4, .paper)]),
-        Frame(open: 6, eyes: .glow),
-        Frame(open: 8, eyes: .glow, tongue: true),
-        Frame(open: 8, eyes: .glow, tongue: true),
-        Frame(open: 3, eyes: .glow),
-        Frame(open: 0, dx: 1, bits: [Bit(3, 16), Bit(28, 15), Bit(2, 13, 1, 1, .gold)]),
-        Frame(open: 0, dx: -1, bits: [Bit(1, 13), Bit(30, 12), Bit(0, 10, 1, 1, .gold)]),
-        Frame(open: 0, bits: [Bit(0, 10), Bit(31, 9)]),
+    /// Seconds per frame of the bite, and how long the whole bite takes.
+    static let chompTick = 0.08
+    static let chompLength = Double(chompSteps.count + 3) * chompTick
+
+    /// Mouth opening and snack height for each step: Chomp opens up, the snack drops in, the lid snaps shut.
+    private static let chompSteps: [(open: Int, y: Int, inside: Bool, tongue: Bool)] = [
+        (0, -2, false, false), (2, 0, false, false), (5, 2, false, false), (8, 4, false, true),
+        (8, 7, false, true), (8, 11, true, false), (5, 12, true, false), (2, 13, true, false),
     ]
+
+    static func chomp(_ food: Int) -> [Frame] {
+        let k = Food.colors[Food.all[food % Food.all.count].crumb] ?? .white
+        var frames = chompSteps.map {
+            Frame(open: $0.open, eyes: $0.open > 0 ? .glow : .none, tongue: $0.tongue, food: (food, $0.y, $0.inside))
+        }
+        // Crumbs in the snack's colour burst out both sides as the lid slams.
+        func crumbs(_ spots: [(Int, Int, Int)]) -> [Bit] { spots.map { Bit($0.0, $0.1, $0.2, $0.2, .color(k)) } }
+        frames += [
+            Frame(open: 0, dx: 1, bits: crumbs([(2, 17, 2), (28, 16, 2), (5, 14, 1), (26, 13, 1)]) + [Bit(3, 12, 1, 1, .gold)]),
+            Frame(open: 0, dx: -1, bits: crumbs([(1, 13, 2), (29, 12, 2), (3, 10, 1), (27, 9, 1)]) + [Bit(30, 8, 1, 1, .gold)]),
+            Frame(open: 0, bits: crumbs([(0, 9, 2), (30, 8, 2), (2, 6, 1), (29, 5, 1)])),
+        ]
+        return frames
+    }
 
     static let working: [Frame] = [0, 2, 4, 4, 2, 0, 0, 0].map { Frame(open: $0, eyes: .glow, dx: $0 == 0 ? 0 : ($0 == 4 ? 1 : -1)) }
 
@@ -84,9 +98,10 @@ enum Mimic {
         case .closed: return Frame()
         case .peek(let look):
             return Frame(open: n % 30 == 0 ? 1 : 2, eyes: .glow, look: look)
-        case .chomp:
-            let i = max(0, Int(t.timeIntervalSince(since) / 0.075))
-            return i < chomp.count ? chomp[i] : Frame()
+        case .chomp(let food):
+            let frames = chomp(food)
+            let i = max(0, Int(t.timeIntervalSince(since) / chompTick))
+            return i < frames.count ? frames[i] : Frame()
         case .working: return working[n % working.count]
         case .happy: return happy[n % happy.count]
         }
@@ -113,11 +128,25 @@ enum Mimic {
         px(bx + 1, by + 1, 2, bh - 2, k.goldDark); px(bx + bw - 3, by + 1, 2, bh - 2, k.goldDark)
         px(bx + 1, by + 1, 2, 1, k.gold); px(bx + bw - 3, by + 1, 2, 1, k.gold)
 
+        func snack(_ sn: (index: Int, y: Int, inside: Bool)) {
+            let sprite = Food.all[sn.index % Food.all.count]
+            for (row, line) in sprite.rows.enumerated() {
+                let y = sn.y + row
+                // Once inside, only what's in the open mouth shows; the lid hides the rest.
+                if sn.inside && (y < by - open || y >= by) { continue }
+                for (col, ch) in line.enumerated() {
+                    guard let c = Food.colors[ch] else { continue }
+                    px(bx + 8 + col, y, 1, 1, c)
+                }
+            }
+        }
+
         // Mouth
         if open > 0 {
             px(bx, by - open, bw, open, ink)
             px(bx + 1, by - open, bw - 2, open, mouth)
         }
+        if let food = f.food, food.inside { snack(food) }
         if open >= 3 {
             x = bx + 3
             while x < bx + bw - 4 {
@@ -174,12 +203,15 @@ enum Mimic {
             px(bx + 16, by + 4, 2, 1, tongueDark)
         }
 
+        if let food = f.food, !food.inside { snack(food) }
+
         for b in f.bits {
             let c: Color
             switch b.tint {
             case .tooth: c = tooth
             case .gold: c = k.gold
             case .paper: c = paper
+            case .color(let col): c = col
             }
             px(b.x, b.y, b.w, b.h, c)
         }
