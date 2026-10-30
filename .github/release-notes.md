@@ -6,9 +6,9 @@
 
 Look for the little chest in your menu bar. macOS 13 or newer, Apple Silicon and Intel.
 
-## Windows (early)
+## Windows
 
 1. Download **Chomp-Windows.zip** below and unzip it anywhere, like your Documents folder.
 2. Open **Chomp.exe**. First time only: Windows may say it protected your PC, because Chomp isn't paid-signed. Click **More info**, then **Run anyway**.
 
-Look for the chest in the tray by the clock. Click it and drop files on it, or right-click a file and choose **Send to → Chomp**. Windows 10 or 11, 64-bit. Video and audio use the copy of ffmpeg in the zip (GPL, see `ffmpeg/LICENSE.txt`).
+Look for the chest in the tray by the clock. Drag any file and tap **Shift**, **Ctrl** or **Alt**, or right-click a file and choose **Send to → Chomp**. Windows 10 or 11, 64-bit. Video and audio use the copy of ffmpeg in the zip (GPL, see `ffmpeg/LICENSE.txt`); Cut out uses the model in `models/` (Apache 2.0).

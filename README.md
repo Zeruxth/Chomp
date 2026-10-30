@@ -33,15 +33,15 @@ Your originals are never touched. Results go next to the original, to Downloads/
 
 Video and audio formats, plus AVIF on macOS 13, need [ffmpeg](https://ffmpeg.org) for now (`brew install ffmpeg`). Images, PDFs and documents work out of the box, including WebP.
 
-## Windows (early)
+## Windows
 
-Chomp for Windows is in its first phase. Download **Chomp-Windows.zip** from the [latest release](https://github.com/Zeruxth/Chomp/releases/latest), unzip it anywhere and run **Chomp.exe**. The chest lives in the system tray.
+Download **Chomp-Windows.zip** from the [latest release](https://github.com/Zeruxth/Chomp/releases/latest), unzip it anywhere and run **Chomp.exe**. The chest lives in the system tray.
 
-- Click the chest and drop files on the panel: the wheel pops up under your cursor, just like on a Mac.
-- Or right-click any file → **Send to → Chomp**.
-- Images (JPG, PNG, WebP, TIFF, GIF, BMP, AVIF), PDFs, video and audio work. ffmpeg comes in the zip.
-- HEIC and AVIF *input* need Microsoft's free HEIF / AV1 Image Extensions from the Store.
-- Not yet: the drag-anywhere-and-tap-a-key trick, cut out background, and Word/RTF conversions.
+- Drag any file, then tap **Shift** (convert), **Ctrl** (tools) or **Alt** (actions): the wheel pops up under your cursor, just like on a Mac.
+- Or click the chest and drop files on the panel, or right-click any file → **Send to → Chomp**.
+- Everything the Mac does, with Windows stand-ins: **Share** opens the Windows share sheet instead of AirDrop, background removal runs a small model on your PC, and documents convert between PDF, DOCX, RTF, TXT, HTML, ODT and Markdown (old binary .doc isn't read).
+- ffmpeg and the cut-out model come in the zip.
+- HEIC needs Microsoft's free HEIF Image Extensions (and the HEVC Video Extensions, for making HEIC) from the Store.
 
 Windows will warn that Chomp is from an unknown publisher (it isn't paid-signed). Click **More info → Run anyway**.
 
@@ -59,6 +59,7 @@ On Windows, with the [.NET 10 SDK](https://dotnet.microsoft.com/download):
 ```powershell
 dotnet publish windows/Chomp -c Release -o out
 windows/fetch-ffmpeg.ps1 out          # optional: video, audio and AVIF
+windows/fetch-model.ps1 out           # optional: Cut out (background removal)
 windows/smoke-test.ps1 out/Chomp.exe  # runs real conversions headlessly
 ```
 

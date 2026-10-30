@@ -901,7 +901,7 @@ static class DocWriters
 
     // MARK: PDF
 
-    static DocWriters() => GlobalFontSettings.UseWindowsFontsUnderWindows = true;
+    static DocWriters() => GlobalFontSettings.FontResolver ??= new WindowsFonts();
 
     const double PageW = 595, PageH = 842, Margin = 64;   // A4, in points
     const string Face = "Segoe UI";
@@ -998,4 +998,30 @@ static class DocWriters
         g?.Dispose();
         doc.Save(o);
     }
+}
+
+/// <summary>Hands PDFsharp the font files from Windows\Fonts: Segoe UI, or Arial if that's missing.</summary>
+sealed class WindowsFonts : IFontResolver
+{
+    static readonly string Dir = Environment.GetFolderPath(Environment.SpecialFolder.Fonts);
+
+    static readonly string[][] Families =
+    {
+        new[] { "segoeui.ttf", "segoeuib.ttf", "segoeuii.ttf", "segoeuiz.ttf" },
+        new[] { "arial.ttf", "arialbd.ttf", "ariali.ttf", "arialbi.ttf" },
+    };
+
+    public FontResolverInfo? ResolveTypeface(string familyName, bool bold, bool italic)
+    {
+        var i = (bold ? 1 : 0) + (italic ? 2 : 0);
+        foreach (var f in Families)
+        {
+            if (File.Exists(Path.Combine(Dir, f[i]))) return new FontResolverInfo(f[i]);
+            // No bold or italic file: let PDFsharp fake it from the regular one.
+            if (File.Exists(Path.Combine(Dir, f[0]))) return new FontResolverInfo(f[0], bold, italic);
+        }
+        return null;
+    }
+
+    public byte[]? GetFont(string faceName) => File.ReadAllBytes(Path.Combine(Dir, faceName));
 }
