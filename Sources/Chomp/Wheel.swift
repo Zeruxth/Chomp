@@ -257,9 +257,17 @@ final class WheelController {
             self.model.jobTitle = title
             self.model.jobDetail = detail
             self.model.outputs = outputs
-            self.scheduleHide(ok ? 3 : 6)
+            self.scheduleHide(ok ? 2 : 4)
         }
         return true
+    }
+
+    /// The pointer left the wheel after the result showed: you've seen it, so it goes.
+    func pointerLeft() {
+        switch model.stage {
+        case .done, .spat: scheduleHide(0.5)
+        default: break
+        }
     }
 
     /// Fades out by itself. The pointer is usually still on Chomp after a drop, so only
@@ -416,6 +424,7 @@ final class DropOverlay: NSView {
     override func mouseExited(with event: NSEvent) {
         if controller?.model.interactive == true { controller?.setHover(nil) }
         if controller?.model.pillHover != nil { controller?.model.pillHover = nil }
+        controller?.pointerLeft()
     }
 
     override func mouseDown(with e: NSEvent) {

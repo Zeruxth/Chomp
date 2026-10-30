@@ -31,13 +31,23 @@ public static class Media
         _ => [],
     };
 
+    /// <summary>Which streams go into the new file: the main picture (never embedded cover art) and the first sound
+    /// track. Left to itself ffmpeg takes the sound with the most channels, and on newer iPhones that's a spatial audio
+    /// track it can't decode. GIFs and stills get no sound, audio files no picture.</summary>
+    static string[] Streams(string ext) => ext switch
+    {
+        "gif" or "png" or "jpg" or "webp" => ["-map", "0:V:0", "-sn", "-dn"],
+        "mp3" or "m4a" or "wav" or "flac" or "aiff" or "ogg" or "opus" => ["-map", "0:a:0", "-sn", "-dn"],
+        _ => ["-map", "0:V:0?", "-map", "0:a:0?", "-sn", "-dn"],
+    };
+
     public static async Task<string> FF(string src, string ext, string? suffix, string[] args)
     {
         var ff = Bin.FFmpeg ?? throw ChompException.NeedsFFmpeg;
         var o = Files.Dest(src, ext, suffix);
         try
         {
-            await Shell.Run(ff, ["-y", "-nostdin", "-loglevel", "error", "-i", src, .. args, o]);
+            await Shell.Run(ff, ["-y", "-nostdin", "-loglevel", "error", "-i", src, .. Streams(ext), .. args, o]);
         }
         catch
         {

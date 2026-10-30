@@ -54,7 +54,18 @@ footer { color: var(--muted); font-size: 14px; text-align: center; padding-top: 
   <p class="lede">Every release, newest first. Chomp tells you itself when a new one is out.</p>
 
   <article class="release">
-    <header><h2>0.6</h2><span class="tag">Latest</span><time datetime="2026-10-31">31 October 2026</time></header>
+    <header><h2>0.6.1</h2><span class="tag">Latest</span><time datetime="2026-10-31">31 October 2026</time></header>
+    <h3>Fixes</h3>
+    <ul>
+      <li><b>Trim no longer crashes on the Mac.</b> The editor opens with your video in it.</li>
+      <li><b>Videos from newer iPhones convert.</b> Chomp now picks the main picture and sound itself instead of a spatial audio track ffmpeg can't read.</li>
+      <li><b>Clearer errors.</b> When something does go wrong, the message says why instead of “Invalid argument”.</li>
+      <li><b>The wheel closes sooner</b> after showing what it made: two seconds, or as soon as you move away.</li>
+    </ul>
+  </article>
+
+  <article class="release">
+    <header><h2>0.6</h2><time datetime="2026-10-31">31 October 2026</time></header>
     <h3>New tricks</h3>
     <ul>
       <li><b>Trim and crop videos.</b> Pick the part to keep and a shape (square, 9:16, 16:9) in a little editor.</li>

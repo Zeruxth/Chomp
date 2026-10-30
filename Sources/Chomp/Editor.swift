@@ -123,7 +123,7 @@ struct EditorView: View {
         GeometryReader { geo in
             let fit = fitted(model.size, in: geo.size)
             ZStack(alignment: .topLeading) {
-                VideoPlayer(player: model.player)
+                PlayerView(player: model.player)
                 if let r = model.aspect.ratio {
                     let box = cropBox(r, in: fit)
                     Path { p in
@@ -164,6 +164,25 @@ struct EditorView: View {
     private func cropBox(_ r: Double, in f: CGRect) -> CGRect {
         let w = min(f.width, f.height * r), h = min(f.height, f.width / r)
         return CGRect(x: f.minX + (f.width - w) * model.offset, y: f.minY + (f.height - h) * model.offset, width: w, height: h)
+    }
+}
+
+/// AppKit's player view. SwiftUI's own VideoPlayer crashes in apps built with SwiftPM (its AVKit overlay can't
+/// find AVPlayerView unless AVKit is linked), so Chomp uses the AppKit view directly, which links it.
+struct PlayerView: NSViewRepresentable {
+    let player: AVPlayer
+
+    func makeNSView(context: Context) -> AVPlayerView {
+        let v = AVPlayerView()
+        v.player = player
+        v.controlsStyle = .inline
+        v.videoGravity = .resizeAspect
+        v.showsFullScreenToggleButton = false
+        return v
+    }
+
+    func updateNSView(_ v: AVPlayerView, context: Context) {
+        if v.player !== player { v.player = player }
     }
 }
 

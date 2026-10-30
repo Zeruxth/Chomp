@@ -140,7 +140,11 @@ public static class Shell
         await p.WaitForExitAsync();
         var e = await err;
         if (p.ExitCode == 0) return e;
-        var line = e.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).LastOrDefault();
+        // ffmpeg ends with a summary ("Error opening output files: Invalid argument") that hides the cause above it.
+        var lines = e.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        string[] generic = ["Error opening output file", "Conversion failed", "Error while filtering", "Error initializing output stream"];
+        var line = lines.LastOrDefault(l => !generic.Any(l.Contains)) ?? lines.LastOrDefault();
+        if (line != null) line = System.Text.RegularExpressions.Regex.Replace(line, @"^\[[^\]]+\]\s*", "");
         throw new ChompException(line ?? $"Exit {p.ExitCode}");
     }
 }
