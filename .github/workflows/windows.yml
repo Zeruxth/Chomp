@@ -3,9 +3,9 @@ name: Windows
 
 on:
   push:
-    paths: ["windows/**", "Resources/Fonts/**", ".github/workflows/windows.yml"]
+    paths: ["windows/**", "Resources/Fonts/**", "Resources/Localization/**", ".github/workflows/windows.yml"]
   pull_request:
-    paths: ["windows/**", "Resources/Fonts/**"]
+    paths: ["windows/**", "Resources/Fonts/**", "Resources/Localization/**"]
   workflow_dispatch:
 
 jobs:

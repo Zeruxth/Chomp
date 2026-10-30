@@ -141,7 +141,7 @@ body.dragging #scene { outline: 6px dashed var(--accent); outline-offset: -12px;
 .quest-log .done .n b::after { content: "✓"; color: var(--accent); }
 
 /* ---------- questions ---------- */
-.faq { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 24px; align-items: start; }
+.faq { display: grid; gap: 16px; max-width: 880px; }
 .faq details { padding: 0; }
 .faq summary { list-style: none; cursor: pointer; font-variant-ligatures: none; padding: 18px 52px 18px 20px; font-family: var(--display); font-size: 20px; position: relative; }
 .faq summary::-webkit-details-marker { display: none; }
@@ -223,7 +223,7 @@ section.room-sec { padding-block: 96px; }
   .how-step p { display: none; }
   .how-step.on p { display: block; }
   .how-step h3 { font-size: 18px; }
-  .items, .signs, .faq { grid-template-columns: 1fr; }
+  .items, .signs { grid-template-columns: 1fr; }
   .quests-grid { grid-template-columns: 1fr; gap: 20px; }
   .quest-log { flex-direction: row; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; }
   .quest-log li { flex: 0 0 72%; scroll-snap-align: start; }
