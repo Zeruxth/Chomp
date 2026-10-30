@@ -28,11 +28,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         watcher.onTrigger = { mode, files in WheelController.shared.trigger(mode, files: files) }
         watcher.onEnd = { WheelController.shared.dragEnded() }
         watcher.start()
+        Updates.shared.start()
+        FolderWatcher.shared.restart()
+        ClipboardShrinker.shared.start()
+        NSApp.servicesProvider = self
+        NSUpdateDynamicServices()
 
         if !UserDefaults.standard.bool(forKey: "onboarded") {
             UserDefaults.standard.set(true, forKey: "onboarded")
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                HUD.shared.show(.done, title: "Chomp is awake", detail: "Drag any file, then tap ⇧ ⌘ or ⌃")
+                HUD.shared.show(.done, title: L("Chomp is awake"), detail: L("Drag any file, then tap ⇧ ⌘ or ⌃"))
             }
         }
     }
@@ -42,11 +47,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         WheelController.shared.show(files: urls, mode: .convert, interactive: true, at: NSEvent.mouseLocation)
     }
 
+    /// Finder → right-click → Quick Actions (or Services) → Chomp it.
+    @objc func chompFiles(_ pb: NSPasteboard, userData: String?, error: AutoreleasingUnsafeMutablePointer<NSString>) {
+        let urls = (pb.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL]) ?? []
+        guard !urls.isEmpty else { return }
+        WheelController.shared.show(files: urls, mode: .convert, interactive: true, at: NSEvent.mouseLocation)
+    }
+
     private func run(_ op: Op, _ files: [URL], _ job: Int) {
         let isConvert = op.id.hasPrefix("to.")
         let isAction = op.id.hasPrefix("act.")
-        let what = files.count == 1 ? files[0].lastPathComponent : "\(files.count) items"
-        let title = isConvert ? "Converting to \(op.title)…" : "\(op.title)…"
+        let what = files.count == 1 ? files[0].lastPathComponent : counted(files.count, "item", "items")
+        let title = isConvert ? L("Converting to {0}…", op.title) : "\(op.title)…"
         // The wheel shows progress in its ring; the bottom toast is only for when the wheel has gone.
         if !WheelController.shared.jobStarted(job, title: title, detail: what) && !isAction {
             HUD.shared.show(.working, title: title, detail: what)
@@ -58,6 +70,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func finish(_ op: Op, _ r: RunResult, _ job: Int) {
+        if r.cancelled && r.outputs.isEmpty && r.failures.isEmpty {
+            HUD.shared.dismiss()
+            return
+        }
         let isConvert = op.id.hasPrefix("to.")
         let n = r.outputs.count
         var parts: [String] = []
@@ -67,28 +83,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let f = ByteCountFormatter.string(fromByteCount: abs(diff), countStyle: .file)
             if diff <= 0 {
                 let pct = Int((Double(-diff) / Double(r.bytesIn) * 100).rounded())
-                parts.append("\(f) saved (\(pct)%)")
+                parts.append(L("{0} saved ({1}%)", f, pct))
             } else {
                 parts.append("+\(f)")
             }
         }
-        if r.skipped > 0 { parts.append("\(r.skipped) already \(op.title)") }
+        if r.skipped > 0 { parts.append(L("{0} already {1}", r.skipped, op.title)) }
         if !r.failures.isEmpty {
-            parts.append(r.failures.count == 1 ? r.failures[0] : "\(r.failures.count) failed")
+            parts.append(r.failures.count == 1 ? r.failures[0] : L("{0} failed", r.failures.count))
         }
 
         let ok = n > 0 || (r.failures.isEmpty && (r.note != nil || r.skipped > 0))
         let title: String
         if !ok {
-            title = "Couldn't chew that"
+            title = L("Couldn't chew that")
         } else if n == 0 && r.skipped > 0 && r.note == nil {
-            title = "Already \(op.title)"
+            title = L("Already {0}", op.title)
         } else if op.id.hasPrefix("act.") || op.id == "doc.count" {
             title = op.title
         } else if isConvert {
-            title = "\(n) file\(n == 1 ? "" : "s") → \(op.title)"
+            title = L(n == 1 ? "{0} file → {1}" : "{0} files → {1}", n, op.title)
         } else {
-            title = "\(op.title) · \(n) file\(n == 1 ? "" : "s")"
+            title = L(n == 1 ? "{0} · {1} file" : "{0} · {1} files", op.title, n)
         }
         let detail = parts.joined(separator: " · ")
 

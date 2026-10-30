@@ -45,6 +45,12 @@ final class HUD: ObservableObject {
         }
     }
 
+    /// Goes away now, if it's up (an editor closed without saving, say).
+    func dismiss() {
+        guard panel?.isVisible == true else { return }
+        scheduleHide(0.01)
+    }
+
     private func scheduleHide(_ secs: Double?) {
         hideItem?.cancel()
         guard let secs else { return }
@@ -75,7 +81,7 @@ final class HUD: ObservableObject {
         guard !o.isEmpty else { return }
         NSWorkspace.shared.recycle(o)
         History.shared.remove(o)
-        show(.failed, title: "Spat it out", detail: "Moved \(o.count) file\(o.count == 1 ? "" : "s") to the Trash")
+        show(.failed, title: L("Spat it out"), detail: L(o.count == 1 ? "Moved {0} file to the Trash" : "Moved {0} files to the Trash", o.count))
     }
 
     private func makePanel() -> NSPanel {
@@ -127,8 +133,8 @@ struct HUDView: View {
             Spacer(minLength: 6)
 
             if hud.phase == .done && !hud.outputs.isEmpty {
-                chip("Show") { hud.reveal() }
-                chip("Undo") { hud.undo() }
+                chip(L("Show")) { hud.reveal() }
+                chip(L("Undo")) { hud.undo() }
             }
         }
         .padding(.horizontal, 16)

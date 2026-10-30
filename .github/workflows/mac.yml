@@ -1,0 +1,24 @@
+# Builds Chomp.app with ffmpeg inside and runs real conversions through it on every change to the Mac app.
+name: Mac
+
+on:
+  push:
+    paths: ["Sources/**", "Resources/**", "Package.swift", "build.sh", "fetch-ffmpeg.sh", "smoke-test.sh", ".github/workflows/mac.yml"]
+  pull_request:
+    paths: ["Sources/**", "Resources/**", "Package.swift", "build.sh", "fetch-ffmpeg.sh", "smoke-test.sh"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bundle ffmpeg
+        run: ./fetch-ffmpeg.sh
+      - name: Build
+        env:
+          UNIVERSAL: "1"
+          CI: "true"
+        run: ./build.sh
+      - name: Smoke test
+        run: ./smoke-test.sh build/Chomp.app

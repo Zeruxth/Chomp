@@ -12,6 +12,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Xml.Linq;
 
+using static Chomp.Loc;
+
 namespace Chomp;
 
 public static class Actions
@@ -22,16 +24,16 @@ public static class Actions
         if (items.Count == 0) return r;
         var first = items[0];
         var n = items.Count;
-        var things = n == 1 ? Path.GetFileName(first) : $"{n} items";
+        var things = n == 1 ? Path.GetFileName(first) : Counted(n, "item", "items");
         switch (op.Id)
         {
             case "act.share":
                 try
                 {
                     OnUi(() => Share.Show(items));
-                    r.Note = $"Sharing {things}";
+                    r.Note = L("Sharing {0}", things);
                 }
-                catch (Exception e) { r.Failures.Add($"Sharing isn't available here: {e.Message}"); }
+                catch (Exception e) { r.Failures.Add(L("Sharing isn't available here: {0}", e.Message)); }
                 break;
             case "act.copy":
                 OnUi(() =>
@@ -40,11 +42,11 @@ public static class Actions
                     list.AddRange(items.ToArray());
                     Clipboard.SetFileDropList(list);
                 });
-                r.Note = $"Copied {things}";
+                r.Note = L("Copied {0}", things);
                 break;
             case "act.path":
                 OnUi(() => Clipboard.SetText(string.Join(Environment.NewLine, items)));
-                r.Note = n == 1 ? first : $"Copied {n} paths";
+                r.Note = n == 1 ? first : L("Copied {0} paths", n);
                 break;
             case "act.zip":
                 try
@@ -59,7 +61,7 @@ public static class Actions
             {
                 var dir = Directory.Exists(first) ? first : Path.GetDirectoryName(first)!;
                 Terminal(dir);
-                r.Note = $"Terminal · {Path.GetFileName(dir.TrimEnd('\\'))}";
+                r.Note = L("Terminal · {0}", Path.GetFileName(dir.TrimEnd('\\')));
                 break;
             }
             case "act.desktop":
@@ -75,7 +77,7 @@ public static class Actions
                     }
                     catch (Exception e) { r.Failures.Add($"{Path.GetFileName(u)}: {e.Message}"); }
                 }
-                r.Note = $"Copied {things} to Desktop";
+                r.Note = L("Copied {0} to Desktop", things);
                 break;
             }
         }

@@ -8,6 +8,8 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
 
+using static Chomp.Loc;
+
 namespace Chomp;
 
 /// <summary>Bottom-of-screen toast: progress, result, size saved, Show / Undo. For when the wheel has already gone.
@@ -121,7 +123,7 @@ public sealed class Toast : Window
         if (o.Count == 0) return;
         Native.Recycle(o);
         History.Remove(o);
-        Show(Phase.Failed, "Spat it out", $"Moved {o.Count} file{(o.Count == 1 ? "" : "s")} to the Recycle Bin");
+        Show(Phase.Failed, L("Spat it out"), L(o.Count == 1 ? "Moved {0} file to the Recycle Bin" : "Moved {0} files to the Recycle Bin", o.Count));
     }
 
     Mood Mood_() => phase switch { Phase.Working => Mood.Working, Phase.Done => Mood.Happy, _ => Mood.Closed };
@@ -144,8 +146,8 @@ public sealed class Toast : Window
         if (phase == Phase.Done && outputs.Count > 0)
         {
             var chips = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0, 0, 0) };
-            chips.Children.Add(Chip("Show", k, Reveal));
-            chips.Children.Add(Chip("Undo", k, Undo));
+            chips.Children.Add(Chip(L("Show"), k, Reveal));
+            chips.Children.Add(Chip(L("Undo"), k, Undo));
             DockPanel.SetDock(chips, Dock.Right);
             row.Children.Add(chips);
         }

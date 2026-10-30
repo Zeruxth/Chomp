@@ -5,10 +5,10 @@ import SwiftUI
 
 enum ChompError: LocalizedError {
     case msg(String)
-    static var needsFFmpeg: ChompError { .msg("Needs ffmpeg (brew install ffmpeg)") }
+    static var needsFFmpeg: ChompError { .msg("This copy of Chomp has no ffmpeg: download it again from the site") }
     var errorDescription: String? {
         switch self {
-        case .msg(let m): return m
+        case .msg(let m): return L(m)
         }
     }
 }
@@ -36,18 +36,39 @@ enum Prefs {
     static var haptics: Bool { UserDefaults.standard.object(forKey: "haptics") as? Bool ?? true }
     static var sounds: Bool { UserDefaults.standard.object(forKey: "sounds") as? Bool ?? true }
     static var pixelText: Bool { UserDefaults.standard.object(forKey: "pixelText") as? Bool ?? true }
+
+    /// The size the "fit" slices aim under, in MB: 10 is Discord's limit, 25 email's.
+    static let sizeLimits = [10, 25, 50]
+    static var sizeLimit: Int {
+        let v = UserDefaults.standard.integer(forKey: "sizeLimit")
+        return sizeLimits.contains(v) ? v : 10
+    }
+    static var checkUpdates: Bool { UserDefaults.standard.object(forKey: "checkUpdates") as? Bool ?? true }
+    static var shrinkClipboard: Bool { UserDefaults.standard.bool(forKey: "shrinkClipboard") }
+    static var watchFolder: URL? {
+        guard let p = UserDefaults.standard.string(forKey: "watchFolder"), !p.isEmpty else { return nil }
+        return URL(fileURLWithPath: p, isDirectory: true)
+    }
+    static var watchRule: String { UserDefaults.standard.string(forKey: "watchRule") ?? WatchRule.heicToJpg.rawValue }
+
+    /// Wheel slices someone switched off, as "kind:op id" (actions use "any:").
+    static var hiddenSlices: Set<String> {
+        get { Set(UserDefaults.standard.stringArray(forKey: "hiddenSlices") ?? []) }
+        set { UserDefaults.standard.set(Array(newValue).sorted(), forKey: "hiddenSlices") }
+    }
 }
 
 // MARK: - Binaries
 
 enum Bin {
-    static var ffmpeg: String? {
+    /// The ffmpeg inside Chomp.app (releases ship one), else Homebrew's.
+    static let ffmpeg: String? = {
         var paths = ["/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg"]
-        if let bundled = Bundle.main.url(forResource: "ffmpeg", withExtension: nil)?.path {
+        if let bundled = Bundle.main.url(forAuxiliaryExecutable: "ffmpeg")?.path {
             paths.insert(bundled, at: 0)
         }
         return paths.first { FileManager.default.isExecutableFile(atPath: $0) }
-    }
+    }()
 
     /// Which AV1 encoder this ffmpeg was built with, if any. Builds differ: Homebrew's has SVT-AV1 but not libaom.
     static let av1Encoder: String? = {

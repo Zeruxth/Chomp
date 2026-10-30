@@ -116,6 +116,41 @@ body.dragging #scene { outline: 6px dashed var(--accent); outline-offset: -12px;
 .scroll-cue { margin-top: 14px; }
 .tip { margin-top: 20px; display: flex; gap: 10px; align-items: center; color: var(--muted); font-size: 14px; }
 
+/* ---------- side quests: a little cutscene for each everyday job ---------- */
+.quests-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: 40px; align-items: start; }
+.screen { padding: 10px; background: #0c070d; box-shadow: 0 0 0 4px var(--ink), inset 0 0 0 4px var(--rim), 0 10px 0 rgba(0,0,0,.45); }
+#quest-scene { width: 100%; height: auto; aspect-ratio: 16 / 9; cursor: pointer; background: var(--stone); }
+.quest-bar { display: flex; gap: 10px; align-items: center; margin-top: 10px; }
+.qplay { flex: none; width: 34px; height: 30px; display: grid; place-items: center; border: 0; padding: 0; cursor: pointer; background: var(--raised);
+  box-shadow: inset 0 0 0 2px var(--ink), inset 0 -4px 0 rgba(0,0,0,.35); }
+.qplay:hover { background: var(--rim); }
+.qplay canvas { width: 14px; height: 14px; }
+.pips { flex: 1; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.pip { height: 10px; border: 0; padding: 0; cursor: pointer; background: var(--raised); box-shadow: inset 0 0 0 2px var(--ink); position: relative; overflow: hidden; }
+.pip i { position: absolute; inset: 2px auto 2px 2px; width: 0; background: var(--accent); }
+.quest-log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.quest-log button { width: 100%; text-align: left; border: 0; cursor: pointer; font: inherit; color: var(--muted); padding: 12px 16px 13px;
+  background: rgba(36,26,38,.55); box-shadow: inset 4px 0 0 var(--rim); transition: background .15s steps(2), box-shadow .15s steps(2); }
+.quest-log button:hover { background: var(--panel); }
+.quest-log .n { font-family: var(--label); font-size: 11px; display: flex; justify-content: space-between; }
+.quest-log h3 { font-size: 19px; margin-top: 3px; }
+.quest-log p { font-size: 14px; margin-top: 4px; display: none; }
+.quest-log .on button { background: var(--panel); color: var(--tooth); box-shadow: inset 6px 0 0 var(--accent), 0 4px 0 rgba(0,0,0,.4); }
+.quest-log .on .n { color: var(--accent); }
+.quest-log .on p { display: block; }
+.quest-log .done .n b::after { content: "✓"; color: var(--accent); }
+
+/* ---------- questions ---------- */
+.faq { display: grid; gap: 16px; max-width: 880px; }
+.faq details { padding: 0; }
+.faq summary { list-style: none; cursor: pointer; font-variant-ligatures: none; padding: 18px 52px 18px 20px; font-family: var(--display); font-size: 20px; position: relative; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-family: var(--label); color: var(--accent); font-size: 18px; }
+.faq details[open] summary::after { content: "–"; }
+.faq details p { padding: 0 20px 20px; color: var(--muted); font-size: 15px; }
+.faq details p b { color: var(--tooth); }
+.faq a { color: var(--accent); }
+
 /* ---------- regular rooms ---------- */
 section.room-sec { padding-block: 96px; }
 .sec-head { display: flex; flex-direction: column; gap: 10px; margin-bottom: 36px; }
@@ -189,6 +224,9 @@ section.room-sec { padding-block: 96px; }
   .how-step.on p { display: block; }
   .how-step h3 { font-size: 18px; }
   .items, .signs { grid-template-columns: 1fr; }
+  .quests-grid { grid-template-columns: 1fr; gap: 20px; }
+  .quest-log { flex-direction: row; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; }
+  .quest-log li { flex: 0 0 72%; scroll-snap-align: start; }
   .skins { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .skin canvas { width: 64px; height: 66px; }
   .first { grid-template-columns: 1fr; }
@@ -206,7 +244,9 @@ section.room-sec { padding-block: 96px; }
     <a class="brand" href="#"><canvas id="logo" width="32" height="33" aria-hidden="true"></canvas>Chomp</a>
     <nav>
       <a class="hide-sm" href="#how">How it works</a>
+      <a class="hide-sm" href="#quests">Side quests</a>
       <a class="hide-sm" href="#what">What it can do</a>
+      <a class="hide-sm" href="whats-new.html">What's new</a>
       <a href="https://github.com/Zeruxth/Chomp">GitHub</a>
     </nav>
   </div>
@@ -218,7 +258,7 @@ section.room-sec { padding-block: 96px; }
         <a class="btn gold" id="get-mac" href="https://github.com/Zeruxth/Chomp/releases/latest/download/Chomp.zip"><canvas data-icon="down" width="12" height="12" aria-hidden="true"></canvas>Download for Mac</a>
         <a class="btn" id="get-win" href="https://github.com/Zeruxth/Chomp/releases/latest/download/Chomp-Windows.zip"><canvas data-icon="down" width="12" height="12" aria-hidden="true"></canvas>Download for Windows</a>
       </div>
-      <p class="meta small">Free and <a href="https://github.com/Zeruxth/Chomp">open source</a> · macOS 13 or newer · Windows 10 or 11 (early)</p>
+      <p class="meta small">Free and <a href="https://github.com/Zeruxth/Chomp">open source</a> · macOS 13 or newer · Windows 10 or 11</p>
     </div>
   </div>
   <p class="hint">Click to feed it · It'll also pretend to eat files you drop here</p>
@@ -235,7 +275,7 @@ section.room-sec { padding-block: 96px; }
         <h2>How it works</h2>
         <ol class="how-steps">
           <li class="how-step on" data-step="0"><span class="n">Step 1</span><h3>Start dragging a file.</h3><p>From Finder, your Desktop, anywhere.</p></li>
-          <li class="how-step" data-step="1"><span class="n">Step 2</span><h3>Tap Shift.</h3><p>A wheel pops up. (<span class="key">⌘</span> gets you tools like compress, <span class="key">⌃</span> gets you AirDrop and zip.)</p></li>
+          <li class="how-step" data-step="1"><span class="n">Step 2</span><h3>Tap Shift.</h3><p>A wheel pops up. <span class="key">⌘</span> gets you tools like compress, <span class="key">⌃</span> gets you share and zip. On Windows it's <span class="key">Ctrl</span> and <span class="key">Alt</span>.</p></li>
           <li class="how-step" data-step="2"><span class="n">Step 3</span><h3>Drop it on what you want.</h3><p>The new file shows up next to the old one.</p></li>
         </ol>
         <p class="scroll-cue small" id="scrollCue">Keep scrolling to watch it happen.</p>
@@ -248,33 +288,53 @@ section.room-sec { padding-block: 96px; }
 <div class="ledge" aria-hidden="true"></div>
 
 <main>
-  <section class="room-sec wrap" id="what">
+  <section class="room-sec wrap" id="quests">
     <div class="sec-head">
       <span class="label">Level 2</span>
+      <h2>Side quests</h2>
+      <p>Six everyday jobs, one chomp each.</p>
+    </div>
+    <div class="quests-grid">
+      <div class="screen">
+        <canvas id="quest-scene" role="img" aria-label="Quest animation"></canvas>
+        <div class="quest-bar">
+          <button class="qplay" id="qplay" type="button" aria-pressed="true" aria-label="Pause"><canvas id="qplayIcon" width="7" height="7" aria-hidden="true"></canvas></button>
+          <div class="pips" id="pips"></div>
+        </div>
+      </div>
+      <ol class="quest-log" id="questLog"></ol>
+    </div>
+  </section>
+
+  <div class="ledge" aria-hidden="true"></div>
+
+  <section class="room-sec wrap" id="what">
+    <div class="sec-head">
+      <span class="label">Level 3</span>
       <h2>What it can do</h2>
     </div>
     <div class="items">
       <div class="item frame"><div class="slot"><canvas data-icon="frame" width="12" height="12" aria-hidden="true"></canvas></div>
-        <div><h3>Photos</h3><p>Turn them into JPG, PNG, WebP, HEIC or PDF. Make them smaller, resize for Instagram, cut out the background.</p></div></div>
+        <div><h3>Photos</h3><p>Turn them into JPG, PNG, WebP, HEIC or PDF. Make them smaller, cut out the background, or copy the words in them.</p></div></div>
       <div class="item frame"><div class="slot"><canvas data-icon="film" width="12" height="12" aria-hidden="true"></canvas></div>
-        <div><h3>Videos</h3><p>MP4, MOV, GIF. Shrink one under 10 MB, mute it, or grab a still.</p></div></div>
+        <div><h3>Videos</h3><p>MP4, MOV, GIF. Trim and crop, shrink one to fit Discord or email, mute it, or grab a still.</p></div></div>
       <div class="item frame"><div class="slot"><canvas data-icon="wave" width="12" height="12" aria-hidden="true"></canvas></div>
         <div><h3>Audio</h3><p>MP3, M4A, WAV, FLAC. Even out the volume, trim the silence.</p></div></div>
       <div class="item frame"><div class="slot"><canvas data-icon="combine" width="12" height="12" aria-hidden="true"></canvas></div>
-        <div><h3>PDFs</h3><p>Merge them, split them, turn pages into images or text.</p></div></div>
+        <div><h3>PDFs and documents</h3><p>Merge, split, turn pages into images. Word, RTF, Markdown and text into each other.</p></div></div>
       <div class="item frame"><div class="slot"><canvas data-icon="airdrop" width="12" height="12" aria-hidden="true"></canvas></div>
-        <div><h3>Anything else</h3><p>AirDrop it, zip it, copy its path.</p></div></div>
+        <div><h3>On autopilot</h3><p>Watch a folder and chew whatever lands in it. Copy a big screenshot and paste a small one.</p></div></div>
       <div class="item frame"><div class="slot"><canvas id="snackSlot" width="8" height="8" aria-hidden="true"></canvas></div>
         <div><h3>Snacks</h3><p>Every file comes with a free snack for Chomp. There are ten. The brick is the crunchiest.</p></div></div>
     </div>
-    <p class="foot-note small">Video and audio need ffmpeg for now.</p>
+    <p class="foot-note small">Speaks English, Español, Français, Deutsch, Português, 日本語 and 中文. Anything else: share it, zip it, copy its path.</p>
   </section>
 
   <div class="ledge" aria-hidden="true"></div>
 
   <section class="room-sec wrap" id="skins">
     <div class="sec-head">
-      <span class="label">Level 3</span>
+      <span class="label">Level 4</span>
       <h2>Skins</h2>
       <p>Comes in six colours. One of them you have to earn by feeding it 100 files.</p>
     </div>
@@ -285,7 +345,7 @@ section.room-sec { padding-block: 96px; }
 
   <section class="room-sec wrap">
     <div class="sec-head">
-      <span class="label">Level 4</span>
+      <span class="label">Level 5</span>
       <h2>Good to know</h2>
     </div>
     <div class="signs">
@@ -308,6 +368,33 @@ section.room-sec { padding-block: 96px; }
       </div>
     </div>
   </section>
+
+  <div class="ledge" aria-hidden="true"></div>
+
+  <section class="room-sec wrap" id="faq">
+    <div class="sec-head">
+      <span class="label">Level 6</span>
+      <h2>Questions</h2>
+    </div>
+    <div class="faq">
+      <details class="frame"><summary>Is it really free?</summary>
+        <p>Yes. No ads, no account, no trial. It's open source under the MIT licence, so anyone can read the code on <a href="https://github.com/Zeruxth/Chomp">GitHub</a>.</p></details>
+      <details class="frame"><summary>Does it upload my files?</summary>
+        <p>Never. Everything happens on your computer, even background removal and reading text in pictures. The only time Chomp goes online is a once-a-day check for a new version, which sends nothing about you and can be switched off in More settings.</p></details>
+      <details class="frame"><summary>Why does my computer warn me the first time?</summary>
+        <p>Apple and Microsoft charge every year to sign an app, and Chomp is free, so it isn't signed. On a Mac, click <b>Done</b>, then <b>System Settings → Privacy &amp; Security → Open Anyway</b>. On Windows, click <b>More info → Run anyway</b>. You only do it once.</p></details>
+      <details class="frame"><summary>What can it open?</summary>
+        <p>Photos (JPG, PNG, HEIC, WebP, AVIF, TIFF, GIF, BMP), videos (MP4, MOV, MKV, WebM, AVI and more), audio (MP3, M4A, WAV, FLAC, OGG, Opus…), PDFs and documents (Word, RTF, ODT, HTML, Markdown, text). Folders work too: Chomp goes through everything inside.</p></details>
+      <details class="frame"><summary>Where do the new files go?</summary>
+        <p>Next to the original, with a new name, so nothing gets overwritten. You can switch to Downloads/Chomp or any folder you like in the settings.</p></details>
+      <details class="frame"><summary>I picked the wrong thing.</summary>
+        <p>Click <b>Undo</b> under the wheel and the new file goes to the Trash. The original is never touched in the first place.</p></details>
+      <details class="frame"><summary>Does it speak my language?</summary>
+        <p>Chomp follows your computer's language: English, Spanish, French, German, Portuguese, Japanese and Chinese so far.</p></details>
+      <details class="frame"><summary>How do I get rid of it?</summary>
+        <p>On a Mac, quit it from the menu bar and drag it to the Trash. On Windows, turn off <b>Start with Windows</b> and <b>In Send to menu</b> in its settings, quit it from the tray, and delete its folder.</p></details>
+    </div>
+  </section>
 </main>
 
 <div class="dungeon" aria-label="The dungeon floor, with a slime, a bat and a sleeping skeleton">
@@ -317,7 +404,7 @@ section.room-sec { padding-block: 96px; }
 <footer class="floor">
   <div class="wrap">
     <span class="made">Made by <a class="maker" href="https://akiwip.work" aria-label="Aki Yamin, akiwip.work"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 39.3 30.1" fill="none" aria-hidden="true"><g data-part="head"><path d="M15.2354 27.3783L8.05012 24.897L4.89687 22.1056L3.50116 14.145L4.98075 10.9464L5.79145 9.1939L7.01627 6.54613L8.75867 5.19849L10.9406 3.51087L13.6329 1.42854H23.8164L26.1535 3.52746L28.5702 5.69789L31.9322 8.71722L32.0161 9.02009L32.5636 10.9958L34.31 17.2982L31.1051 23.7081L28.8532 24.627L22.1105 27.3783H15.2354Z" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/></g><g data-part="earRight"><path d="M28.5702 5.69789L30.4848 4.32334L33.2245 5.3572V7.4766L32.0161 9.0201" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/><path d="M30.4848 4.32334L33.2245 5.3572V7.4766L32.0161 9.0201L31.9322 8.71723L28.5702 5.69789L30.4848 4.32334Z" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/><path d="M28.5701 5.69792L26.1534 3.52749L29.4508 1.06673L34.31 1.73873L36.5328 6.02923L35.2404 10.0096L32.5635 10.9958L32.016 9.02012L33.2244 7.47663V5.35723L30.4847 4.32337L28.5701 5.69792Z" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/></g><g data-part="earLeft"><path d="M7.32654 4.53008L4.43174 5.25378V7.9418L5.79156 9.19387L4.98086 10.9464L3.13942 10.5781L0.761559 7.42487L1.58864 3.03099L6.8613 0.808203L10.9408 3.51084L8.75878 5.19846L7.32654 4.53008Z" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/><path d="M7.0163 6.54616L5.79148 9.19393L4.43166 7.94186V5.25384L7.32646 4.53014L8.7587 5.19852L7.0163 6.54616Z" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/></g><g data-part="eyes"><path d="M7.09871 14.8448L9.08403 19.6117L14.7185 18.4872L16.1659 13.7314L13.633 10.1129L9.08403 10.7849L7.09871 14.8448Z" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/><path d="M21.5419 12.4391V17.1432L26.0391 20.9167L30.4847 18.2804L29.761 12.4391L25.1604 10.1129L21.5419 12.4391Z" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/></g><g data-part="pupilLeft"><path d="M9.43881 15.1764L10.7524 12.9355L12.1047 12.5105L13.7274 13.8627L13.1865 16.2582L9.82517 17.1854L9.43881 15.1764Z" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/></g><g data-part="pupilRight"><path d="M23.8257 16.4449L24.1035 13.2511H26.7418L28.1304 15.2877L26.2326 17.1855L23.8257 16.4449Z" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/></g><g data-part="nose"><path d="M16.4243 18.4871L17.9234 16.9881H19.7843L20.6114 18.4871L19.4225 20.0379H17.9234L16.4243 18.4871Z" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/><path d="M17.9234 16.9881L16.4243 18.4871L17.9234 20.0379H19.4225L20.6114 18.4871L19.7843 16.9881H17.9234Z" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/></g><g data-part="mouth"><path d="M22.3691 20.9167L20.9734 22.1056H18.936L18.526 20.6779L17.5403 22.1056H15.2355L14.6152 20.9167" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/></g><g data-part="marks"><path d="M23.1444 7.42489L25.2638 6.59781L27.3832 7.42489" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/><path d="M13.5295 7.26982L11.3067 6.90797L9.75594 8.45876" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/><path d="M25.9875 3.65133L26.1535 3.52746M32.5636 10.9958L32.294 11.0951" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/><path d="M10.9966 3.54796L10.9407 3.51088M4.98076 10.9465L5.20704 10.9917" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/><path d="M28.4687 5.77072L28.5702 5.69787" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/><path d="M5.79146 9.1939L5.85351 9.25104" fill-rule="evenodd" clip-rule="evenodd" stroke="currentColor" stroke-width="1.43085"/></g></svg><span class="wip">AKI_WIP</span></a> · Free and open source</span>
-    <span class="links"><a href="https://github.com/Zeruxth/Chomp">GitHub</a><a href="https://github.com/Zeruxth/Chomp/releases/latest">All downloads</a><a href="https://github.com/Zeruxth/Chomp/blob/main/LICENSE">MIT licence</a><a href="privacy.html">Privacy</a></span>
+    <span class="links"><a href="https://github.com/Zeruxth/Chomp">GitHub</a><a href="whats-new.html">What's new</a><a href="https://github.com/Zeruxth/Chomp/releases/latest">All downloads</a><a href="https://github.com/Zeruxth/Chomp/blob/main/LICENSE">MIT licence</a><a href="privacy.html">Privacy</a></span>
   </div>
 </footer>
 <div class="toast frame" id="toast" role="status" hidden></div>
@@ -764,6 +851,289 @@ section.room-sec { padding-block: 96px; }
     return span > 0 ? Math.max(0, Math.min(1, -r.top / span)) : 1;
   }
 
+  // ======================================================================
+  // SIDE QUESTS: a short cutscene for each everyday job. Plays while it's on screen.
+  // ======================================================================
+  const qs = document.getElementById("quest-scene"), qx = qs.getContext("2d"), qlog = document.getElementById("questLog");
+  const qplay = document.getElementById("qplay"), qplayIcon = document.getElementById("qplayIcon").getContext("2d"), pipsEl = document.getElementById("pips");
+  const QW = 192, QH = 108, QLEN = 7.8, WC = { x: 120, y: 54 };
+  const CONVERT = ["JPG", "PNG", "WEBP", "HEIC", "PDF", "GIF"], PHOTO = ["SMALLER", "1080", "HALF", "TEXT", "CUT OUT", "CLEAN"],
+        VIDEO = ["SMALLER", "10 MB", "HALF", "TRIM", "FRAME", "MUTE"], PDFT = ["SMALLER", "MERGE", "SPLIT", "ROTATE"];
+  const QUESTS = [
+    { title: "The phone photos", line: "Your phone sent HEIC. The upload form only takes JPG.", files: ["IMG_2041.heic"], tag: "#5FA34F", key: "shift",
+      slices: CONVERT, hot: 0, out: "IMG_2041.jpg", reward: "It uploads.", food: 0 },
+    { title: "The 10 MB gate", line: "Discord won't take a 48 MB clip. Chomp makes it fit.", files: ["clip.mov"], tag: "#5A9BD8", key: "cmd",
+      slices: VIDEO, hot: 1, out: "clip (10MB).mp4", reward: "It sends.", food: 2 },
+    { title: "The pile of PDFs", line: "Three worksheets, one upload box.", files: ["page 1.pdf", "page 2.pdf", "page 3.pdf"], tag: "#C8463C", key: "cmd",
+      slices: PDFT, hot: 1, out: "Combined.pdf", reward: "Handed in.", food: 3 },
+    { title: "The sticker", line: "Your cat, minus the couch.", files: ["cat.jpg"], tag: "#E8913A", key: "cmd",
+      slices: PHOTO, hot: 4, out: "cat (cutout).png", reward: "Sticker made.", food: 6 },
+    { title: "The words in the picture", line: "The text you need is stuck in a screenshot.", files: ["slide.png"], tag: "#9273C0", key: "cmd",
+      slices: PHOTO, hot: 3, out: "slide.txt", reward: "Copied.", food: 9 },
+    { title: "The good part", line: "Thirty seconds of video, three worth keeping, in 9:16.", files: ["trip.mp4"], tag: "#5A9BD8", key: "cmd",
+      slices: VIDEO, hot: 3, out: "trip (edited).mp4", reward: "Posted.", food: 5 },
+  ];
+  const E = {
+    inOut: t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2,
+    out: t => 1 - Math.pow(1 - t, 3),
+    in: t => t * t * t,
+    back: t => { const c = 1.70158; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); },
+    bounce: t => { const n = 7.5625, d = 2.75; if (t < 1 / d) return n * t * t; if (t < 2 / d) return n * (t -= 1.5 / d) * t + .75; if (t < 2.5 / d) return n * (t -= 2.25 / d) * t + .9375; return n * (t -= 2.625 / d) * t + .984375; },
+  };
+  // Progress of `t` through [a, b], eased.
+  const span = (t, a, b, e = E.inOut) => e(Math.max(0, Math.min(1, (t - a) / (b - a))));
+  let qu = 4, qbg = null, qWheels = {}, qi = 0, qt = 0, qPlaying = !reduce, qPrev = 0, qShown = -1;
+  const done = new Set();
+
+  function layoutQuests() {
+    const dpr = DPR();
+    qs.width = Math.round(qs.clientWidth * dpr); qs.height = Math.round(qs.width * QH / QW);
+    qu = qs.width / QW; qWheels = {};
+    // The room: bricks, a floor, two torch brackets. Painted once.
+    const c = document.createElement("canvas"); c.width = qs.width; c.height = qs.height;
+    const g = c.getContext("2d"), r = rng(23), R = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(Math.round(x * qu), Math.round(y * qu), Math.ceil(w * qu), Math.ceil(h * qu)); };
+    R(0, 0, QW, QH, "#140d17");
+    for (let y = 0, row = 0; y < 92; y += 6, row++) for (let x = row % 2 ? -7 : 0; x < QW; x += 14) {
+      const near = 1 - Math.min(1, Math.hypot(x + 7 - WC.x, y - WC.y) / 110);
+      R(x, y, 13, 5, near > .5 ? "#271c2b" : ["#1d1420", "#201623", "#1b121e"][Math.floor(r() * 3)]); R(x, y, 13, 1, near > .5 ? "#30243a" : "#251a29");
+    }
+    R(0, 92, QW, 16, "#0d080f"); R(0, 92, QW, 1, "#3d2d3f");
+    for (let x = 0; x < QW; x += 9) R(x, 94, 8, 3, "#1a121c");
+    for (let x = 4; x < QW; x += 9) R(x, 98, 8, 3, "#161018");
+    for (const tx of [14, 178]) { R(tx - 1, 34, 2, 8, "#43281A"); R(tx - 2, 33, 4, 1, "#5E3820"); }
+    qbg = c;
+    buildLog();
+  }
+
+  // The wheel, painted pixel by pixel like the app's, for any set of slices.
+  function questWheel(labels, hot) {
+    const key = labels.join() + hot + K.accent + qu;
+    if (qWheels[key]) return qWheels[key];
+    const S = 66, C = 33, OUT = 31, IN = 12, DISC = 33, n = labels.length, w = 2 * Math.PI / n;
+    const c = document.createElement("canvas"); c.width = Math.round(S * qu); c.height = Math.round(S * qu);
+    const g = c.getContext("2d");
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+      const dx = x + .5 - C, dy = y + .5 - C, r = Math.hypot(dx, dy); let col = null;
+      if (r <= DISC) col = r > DISC - 1.5 ? P.ink : P.disc;
+      if (r < IN) col = r > IN - 1.5 ? P.ink : P.hole;
+      if (r >= IN + 2) {
+        let a = Math.atan2(dx, -dy); if (a < 0) a += 2 * Math.PI;
+        const t = (a + w / 2) % (2 * Math.PI), i = Math.floor(t / w) % n, off = Math.min(t % w, w - (t % w));
+        const out = i === hot ? OUT : OUT - 3;
+        if (r <= out && off * r > 1.2) col = i === hot ? ((r > out - 1 || off * r < 2) ? K.accentDk : K.accent) : (r > out - 1 ? P.rim : P.seg);
+      }
+      if (col) { g.fillStyle = col; g.fillRect(Math.floor(x * qu), Math.floor(y * qu), Math.ceil(qu), Math.ceil(qu)); }
+    }
+    g.font = `${Math.round(3.3 * qu)}px Silkscreen, monospace`; g.textAlign = "center"; g.textBaseline = "middle";
+    labels.forEach((l, i) => { const a = i * w; g.fillStyle = i === hot ? P.ink : P.tooth; g.fillText(l, (C + 22 * Math.sin(a)) * qu, (C - 22 * Math.cos(a)) * qu); });
+    return (qWheels[key] = c);
+  }
+
+  // Chomp's result disc: a round hole with a ring, like the app's.
+  function questDisc(ring) {
+    const key = "disc" + ring + qu;
+    if (qWheels[key]) return qWheels[key];
+    const S = 48, C = 24, c = document.createElement("canvas"); c.width = Math.round(S * qu); c.height = Math.round(S * qu);
+    const g = c.getContext("2d");
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+      const d = Math.hypot(x + .5 - C, y + .5 - C); let col = null;
+      if (d <= C) col = d > C - 1.5 ? P.ink : d > C - 4.5 ? ring : d > C - 6 ? P.ink : P.hole;
+      if (col) { g.fillStyle = col; g.fillRect(Math.floor(x * qu), Math.floor(y * qu), Math.ceil(qu), Math.ceil(qu)); }
+    }
+    return (qWheels[key] = c);
+  }
+
+  // A file: a folded page with a coloured band, at (x, y) its centre, scaled by `k`.
+  const PAGE = ["kkkkkkkk..", "kwwwwwwkk.", "kwwwwwwkwk", "kwwwwwwkkk", "kwwwwwwwwk", "kwwwwwwwwk", "kwwwwwwwwk", "kwwwwwwwwk", "kwwwwwwwwk", "kwwwwwwwwk", "kwwwwwwwwk", "kkkkkkkkkk"];
+  function page(g, x, y, k, tag, ext, alpha = 1) {
+    if (k <= 0.01 || alpha <= 0) return;
+    g.save(); g.globalAlpha = alpha; g.translate(x * qu, y * qu); g.scale(k, k);
+    const s = qu * 1.6;
+    g.translate(-5 * s, -6 * s);
+    sprite(g, PAGE, 0, 0, { k: P.ink, w: P.tooth }, s);
+    g.fillStyle = tag; g.fillRect(1 * s, 6 * s, 8 * s, 3 * s);
+    g.fillStyle = P.tooth; g.font = `${Math.round(2.6 * s)}px Silkscreen, monospace`; g.textAlign = "center"; g.textBaseline = "middle";
+    g.fillText(ext, 5 * s, 7.6 * s);
+    g.restore();
+  }
+  function qtext(g, str, x, y, color, size, align = "center", font = "Silkscreen", alpha = 1) {
+    if (alpha <= 0) return;
+    // Pixelify joins "fi" into one glyph ("file" reads "Ale"); a zero-width non-joiner keeps them apart.
+    if (font === "Pixelify Sans") str = str.replace(/f(?=[il])/g, "f\u200C");
+    g.save(); g.globalAlpha = alpha; g.font = `${Math.round(size * qu)}px ${font}, monospace`; g.textAlign = align; g.textBaseline = "middle";
+    g.fillStyle = P.ink; g.fillText(str, x * qu + Math.max(1, qu * .5), y * qu + Math.max(1, qu * .5));
+    g.fillStyle = color; g.fillText(str, x * qu, y * qu); g.restore();
+  }
+  function panel(g, x, y, w, h, fill, border, alpha = 1) {
+    g.save(); g.globalAlpha = alpha;
+    const R = (a, b, c, d, col) => { g.fillStyle = col; g.fillRect(Math.round(a * qu), Math.round(b * qu), Math.round(c * qu), Math.round(d * qu)); };
+    R(x + 1, y + h, w, 1.5, "rgba(0,0,0,.45)"); R(x, y, w, h, P.ink); R(x + 1, y + 1, w - 2, h - 2, border); R(x + 2, y + 2, w - 4, h - 4, fill);
+    g.restore();
+  }
+  // Little four-point sparkles flying out from (x, y).
+  function sparkle(g, x, y, p, color, n = 8, reach = 18) {
+    if (p <= 0 || p >= 1) return;
+    for (let i = 0; i < n; i++) {
+      const a = i / n * Math.PI * 2 + .3, d = E.out(p) * reach * (i % 2 ? .7 : 1), s = (1 - p) * 2.2;
+      const px = x + Math.sin(a) * d, py = y - Math.cos(a) * d;
+      g.fillStyle = color; g.globalAlpha = 1 - p * .6;
+      g.fillRect(Math.round((px - s / 2) * qu), Math.round((py - s / 6) * qu), Math.max(1, Math.round(s * qu)), Math.max(1, Math.round(s / 3 * qu)));
+      g.fillRect(Math.round((px - s / 6) * qu), Math.round((py - s / 2) * qu), Math.max(1, Math.round(s / 3 * qu)), Math.max(1, Math.round(s * qu)));
+      g.globalAlpha = 1;
+    }
+  }
+  function keycap(g, x, y, kind, down, lit) {
+    const w = 26, h = 14, sink = down ? 1.2 : 0;
+    const R = (a, b, c, d, col) => { g.fillStyle = col; g.fillRect(Math.round(a * qu), Math.round(b * qu), Math.round(c * qu), Math.round(d * qu)); };
+    R(x, y, w, h + 2, P.ink); R(x + 1, y + 1 + sink, w - 2, h - 1, lit ? K.accent : P.tooth);
+    if (!down) R(x + 1, y + h - 1, w - 2, 2, lit ? K.accentDk : "#c9bfd0");
+    qtext(g, kind === "shift" ? "⇧ SHIFT" : "⌘ CTRL", x + w / 2, y + 7.5 + sink, P.ink, 3.6, "center", "Silkscreen");
+  }
+
+  function drawQuest(qi, t, now) {
+    const q = QUESTS[qi], g = qx;
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.imageSmoothingEnabled = false;
+    // a little camera shake when Chomp bites
+    const bite = Math.max(0, 1 - Math.abs(t - 4.75) / .35), shake = bite * Math.sin(t * 90) * 1.2;
+    g.translate(Math.round(shake * qu), 0);
+    g.drawImage(qbg, 0, 0);
+    // torch flames
+    for (const tx of [14, 178]) sprite(g, torchFlame[Math.floor(now / 140 + tx) % 3], tx - 2, 29, { y: "#FFD45C", o: "#E8913A" }, qu);
+
+    const ext = f => f.split(".").pop().toUpperCase();
+    const n = q.files.length, start = { x: 46, y: 80 };
+    // 1. the loot drops in and bounces
+    const drop = span(t, .6, 1.5, E.bounce);
+    // 2. the cursor comes for it, then drags it to where the wheel will open
+    const grab = span(t, 1.5, 2.3), drag = span(t, 2.4, 3.1);
+    const held = t >= 2.35 && t < 4.1;
+    const fx = held ? start.x + (WC.x - start.x) * drag : start.x, fy = held ? start.y + (WC.y - start.y) * drag - Math.sin(drag * Math.PI) * 14 : start.y;
+    // 3. a key tap, and the wheel pops
+    const pop = span(t, 3.15, 3.55, E.back), shrink = span(t, 4.1, 4.45, E.in);
+    const wheelK = t < 3.15 ? 0 : t < 4.1 ? .55 + .45 * pop : 1 - shrink;
+    const hotNow = t > 3.85 && t < 4.45 ? q.hot : -1;
+    if (wheelK > .02) {
+      const img = questWheel(q.slices, hotNow), s = 66 * wheelK;
+      g.save(); g.globalAlpha = Math.min(1, wheelK * 1.4);
+      g.drawImage(img, Math.round((WC.x - s / 2) * qu), Math.round((WC.y - s / 2) * qu), Math.round(s * qu), Math.round(s * qu));
+      g.restore();
+    }
+    // 4. Chomp in a disc: bites, chews, cheers
+    if (t >= 4.3) {
+      const open = span(t, 4.3, 4.55, E.back), disc = 48 * open;
+      const ok = t > 5.85, img = questDisc(ok ? K.accent : P.seg);
+      if (disc > 1) g.drawImage(img, Math.round((WC.x - disc / 2) * qu), Math.round((WC.y - disc / 2) * qu), Math.round(disc * qu), Math.round(disc * qu));
+      if (t < 5.85 && t > 5.1) {
+        // a gold arc runs round the ring while it chews
+        g.save(); g.strokeStyle = K.accent; g.lineWidth = 2 * qu; g.beginPath();
+        const a0 = (now / 220) % (Math.PI * 2); g.arc(WC.x * qu, WC.y * qu, (disc / 2 - 3) * qu, a0, a0 + 1.4); g.stroke(); g.restore();
+      }
+      const fr = chompFrames(q.food);
+      const f = t < 5.1 ? fr[Math.min(fr.length - 1, Math.floor(span(t, 4.4, 5.1, x => x) * fr.length))]
+              : t < 5.85 ? working[Math.floor(now / 110) % working.length] : happy[Math.floor(now / 110) % happy.length];
+      if (open > .3) { g.save(); g.translate(Math.round((WC.x - 16 * open) * qu), Math.round((WC.y - 19 * open) * qu)); drawChomp(g, f, K, qu * open); g.restore(); }
+    }
+    // the file(s): on the floor, in the hand, then into the wheel
+    const into = span(t, 4.1, 4.4, E.in);
+    if (t < 4.4) {
+      const k = t < 4.1 ? (held ? 1.08 : 1) : 1 - into, y0 = t < .6 ? -30 : start.y - 92 + 92 * drop;
+      for (let i = n - 1; i >= 0; i--) {
+        const ox = (i - (n - 1) / 2) * (held ? 2 : 5), oy = (i - (n - 1) / 2) * (held ? 2 : 1);
+        const px = held || t >= 4.1 ? fx + ox + (WC.x - fx) * into : start.x + ox, py = held || t >= 4.1 ? fy + oy + (WC.y - fy) * into : y0 + oy;
+        page(g, px, py, k, q.tag, ext(q.files[i]));
+      }
+      if (!held && t < 2.35) {
+        sparkle(g, start.x, start.y, span(t, 1.15, 1.9, x => x), K.accent);
+        qtext(g, n > 1 ? `${n} PDFs` : q.files[0], start.x, start.y + 18, P.tooth, 3.6, "center", "Google Sans Code", span(t, 1.1, 1.4));
+      }
+    }
+    // 5. the new file pops out, with a sparkle burst
+    if (t >= 5.85) {
+      // out of the disc in an arc, landing on the floor with a bounce
+      const out = span(t, 5.85, 6.3, E.back), fly = span(t, 5.85, 6.35, x => x);
+      const ox = WC.x + (164 - WC.x) * E.out(fly), oy = WC.y + (80 - WC.y) * E.bounce(fly) - Math.sin(Math.min(1, fly * 1.6) * Math.PI) * 18;
+      sparkle(g, 164, 78, span(t, 6.2, 7.0, x => x), K.accent, 10, 20);
+      page(g, ox, oy, out * 1.1, K.accent, ext(q.out));
+      qtext(g, q.out, 164, 98, P.tooth, 3.6, "center", "Google Sans Code", span(t, 6.25, 6.55));
+    }
+    // the key, bottom left
+    if (t > 2.6 && t < 4.4) {
+      const k = span(t, 2.6, 2.9, E.out) * (1 - span(t, 4.1, 4.4));
+      g.save(); g.globalAlpha = k; keycap(g, 10, 84, q.key, t > 3.0 && t < 3.25, t >= 3.0 && t < 4.1); g.restore();
+      qtext(g, "TAP", 23, 79, P.muted, 3, "center", "Silkscreen", k * (t > 2.9 && t < 3.3 ? 1 : .6));
+    }
+    // the cursor
+    let cx, cy;
+    const slA = q.hot * 2 * Math.PI / q.slices.length, hx = WC.x + 22 * Math.sin(slA), hy = WC.y - 22 * Math.cos(slA);
+    if (t < 1.5) { cx = 176; cy = 104; }
+    else if (t < 2.35) { cx = 176 + (start.x + 2 - 176) * grab; cy = 104 + (start.y + 2 - 104) * grab; }
+    else if (t < 3.4) { cx = fx + 2; cy = fy + 2; }
+    else if (t < 4.1) { const m = span(t, 3.4, 4.0); cx = WC.x + 2 + (hx - WC.x - 2) * m; cy = WC.y + 2 + (hy - WC.y - 2) * m; }
+    else { const m = span(t, 4.5, 5.4); cx = hx + (182 - hx) * m; cy = hy + (100 - hy) * m; }
+    const cursorIn = t < 5.4 ? 1 - span(t, 0, 0) : 1 - span(t, 5.2, 5.5);
+    if (cursorIn > 0) { g.save(); g.globalAlpha = cursorIn; g.translate(Math.round(cx * qu), Math.round(cy * qu)); sprite(g, CURSOR, 0, 0, { k: P.ink, w: P.tooth }, qu * (held ? .9 : 1)); g.restore(); }
+
+    // the quest banner: slides down, waits, slides back up
+    const bin = span(t, .1, .65, E.back), bout = span(t, 2.0, 2.4, E.in), by = -18 + 22 * bin - 22 * bout;
+    if (by > -18) {
+      panel(g, 46, by, 100, 15, P.panel, P.rim);
+      qtext(g, `QUEST ${qi + 1}`, 96, by + 4.6, K.accent, 3, "center", "Silkscreen");
+      qtext(g, q.title, 96, by + 10, P.tooth, 4.6, "center", "Pixelify Sans");
+    }
+    // the stamp
+    if (t > 6.3) {
+      const s = span(t, 6.3, 6.7, E.back), k = 1.8 - .8 * s;
+      g.save(); g.translate(96 * qu, 22 * qu); g.rotate(-.08 * s); g.scale(k, k); g.globalAlpha = Math.min(1, s * 1.5);
+      g.translate(-96 * qu, -22 * qu);
+      panel(g, 56, 14, 80, 16, K.accent, K.accentDk);
+      qtext(g, "QUEST COMPLETE", 96, 19.3, P.ink, 3.4, "center", "Silkscreen");
+      qtext(g, q.reward, 96, 25.3, P.ink, 3.8, "center", "Pixelify Sans");
+      g.restore();
+    }
+    // fade between quests
+    const fade = Math.max(1 - span(t, 0, .35, E.out), span(t, QLEN - .4, QLEN, E.in));
+    if (fade > 0) { g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = `rgba(12,7,13,${fade})`; g.fillRect(0, 0, qs.width, qs.height); }
+  }
+
+  function buildLog() {
+    if (qlog.childElementCount) return;
+    QUESTS.forEach((q, i) => {
+      const li = document.createElement("li"), b = document.createElement("button");
+      b.type = "button";
+      b.innerHTML = `<span class="n"><span>Quest ${i + 1}</span><b></b></span><h3></h3><p></p>`;
+      b.querySelector("h3").textContent = q.title; b.querySelector("p").textContent = q.line;
+      b.addEventListener("click", () => jump(i));
+      li.append(b); qlog.append(li);
+      const pip = document.createElement("button"); pip.className = "pip"; pip.type = "button"; pip.setAttribute("aria-label", `Quest ${i + 1}: ${q.title}`);
+      pip.append(document.createElement("i")); pip.addEventListener("click", () => jump(i)); pipsEl.append(pip);
+    });
+  }
+  function jump(i) { qi = i; qt = reduce && !qPlaying ? 6.9 : 0; showQuest(true); }
+  function showQuest(force) {
+    if (qShown === qi && !force) return;
+    qShown = qi;
+    [...qlog.children].forEach((li, i) => { li.classList.toggle("on", i === qi); li.classList.toggle("done", done.has(i)); });
+    qs.setAttribute("aria-label", `Quest ${qi + 1}, ${QUESTS[qi].title}: ${QUESTS[qi].line} Chomp turns ${QUESTS[qi].files.join(", ")} into ${QUESTS[qi].out}.`);
+  }
+  function paintPlayIcon() {
+    qplayIcon.clearRect(0, 0, 7, 7);
+    sprite(qplayIcon, qPlaying ? ["##.##..", "##.##..", "##.##..", "##.##..", "##.##..", "##.##..", "##.##.."] : ["#......", "###....", "#####..", "#######", "#####..", "###....", "#......"], 0, 0, { "#": P.tooth });
+    qplay.setAttribute("aria-pressed", String(qPlaying)); qplay.setAttribute("aria-label", qPlaying ? "Pause" : "Play");
+  }
+  qplay.addEventListener("click", () => { qPlaying = !qPlaying; if (qPlaying && qt > QLEN - .5) qt = 0; paintPlayIcon(); if (!qPlaying) drawQuest(qi, qt, performance.now()); });
+  qs.addEventListener("click", () => qplay.click());
+  function tickQuests(now) {
+    const dt = Math.min(.1, (now - (qPrev || now)) / 1000); qPrev = now;
+    if (qPlaying) {
+      qt += dt;
+      if (qt >= QLEN) { done.add(qi); qi = (qi + 1) % QUESTS.length; qt = 0; showQuest(true); }
+    }
+    showQuest();
+    drawQuest(qi, qt, now);
+    [...pipsEl.children].forEach((p, i) => { p.firstChild.style.width = `calc(${i < qi || done.has(i) && i !== qi ? 100 : i === qi ? Math.min(100, qt / QLEN * 100) : 0}% - 4px)`; });
+  }
+
   // ---------- skins ----------
   const logo = document.getElementById("logo"), skinList = document.getElementById("skinList");
   function paintPortrait(canvas, k) { const ctx = canvas.getContext("2d"); ctx.clearRect(0, 0, canvas.width, canvas.height); drawChomp(ctx, portrait, k); }
@@ -782,7 +1152,7 @@ section.room-sec { padding-block: 96px; }
     }
   }
   function setSkin(id) {
-    skinId = id; K = sk(id); wheelCache = {};
+    skinId = id; K = sk(id); wheelCache = {}; qWheels = {};
     document.documentElement.style.setProperty("--accent", K.accent);
     document.documentElement.style.setProperty("--accent-dk", K.accentDk);
     try { localStorage.setItem("chomp-skin", id); } catch (e) {}
@@ -860,15 +1230,18 @@ section.room-sec { padding-block: 96px; }
   function toast(str) { const t = document.getElementById("toast"); t.textContent = str; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 2400); }
 
   // ---------- one loop for everything that moves ----------
-  function layout() { layoutHero(); layoutHow(); sizeDungeon(); }
+  function layout() { layoutHero(); layoutHow(); layoutQuests(); sizeDungeon(); }
   layout();
   let resizeT; addEventListener("resize", () => { clearTimeout(resizeT); resizeT = setTimeout(layout, 120); });
-  document.fonts?.ready.then(() => { wheelCache = {}; });
+  document.fonts?.ready.then(() => { wheelCache = {}; qWheels = {}; });
+  paintPlayIcon(); showQuest(true);
   setSkin(skinId);
   hero.t0 = performance.now();
   const visible = el => { const r = el.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; };
   let last = 0;
   function loop(now) {
+    // The quests run at full frame rate so the easing reads smoothly; the rest is pixel art at 25 fps.
+    if (visible(qs)) tickQuests(now); else qPrev = 0;
     if (now - last >= 40) {
       last = now;
       if (visible(scene)) drawHero(now);
@@ -879,7 +1252,14 @@ section.room-sec { padding-block: 96px; }
     }
     if (!reduce) requestAnimationFrame(loop);
   }
-  if (reduce) { hero.phase = "happy"; hero.t0 = -1e9; loop(1000); addEventListener("resize", () => setTimeout(() => loop(1000), 200)); }
+  if (reduce) {
+    // No autoplay: each quest shows its last moment, and the play button runs it on request.
+    hero.phase = "happy"; hero.t0 = -1e9; qt = 6.9; loop(1000);
+    addEventListener("resize", () => setTimeout(() => loop(1000), 200));
+    const step = now => { if (qPlaying && visible(qs)) { tickQuests(now); requestAnimationFrame(step); } else { qPrev = 0; drawQuest(qi, qt, now); } };
+    qplay.addEventListener("click", () => { if (qPlaying) requestAnimationFrame(step); });
+    for (const b of [...qlog.querySelectorAll("button"), ...pipsEl.children]) b.addEventListener("click", () => drawQuest(qi, qt, performance.now()));
+  }
   else requestAnimationFrame(loop);
 })();
 </script>

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
+using static Chomp.Loc;
+
 namespace Chomp;
 
 public enum Kind { Image, Video, Audio, Pdf, Document, Folder, Other }
@@ -22,7 +24,19 @@ public static class KindExt
         _ => "file",
     };
 
-    public static string Title(this Mode m) => m switch { Mode.Convert => "Convert", Mode.Tools => "Tools", _ => "Actions" };
+    public static string Title(this Mode m) => m switch { Mode.Convert => L("Convert"), Mode.Tools => L("Tools"), _ => L("Actions") };
+
+    /// <summary>"3 images", in whatever language Chomp is speaking.</summary>
+    public static string Count(this Kind k, int n) => k switch
+    {
+        Kind.Image => Counted(n, "image", "images"),
+        Kind.Video => Counted(n, "video", "videos"),
+        Kind.Audio => Counted(n, "audio file", "audio files"),
+        Kind.Pdf => Counted(n, "PDF", "PDFs"),
+        Kind.Document => Counted(n, "document", "documents"),
+        Kind.Folder => Counted(n, "folder", "folders"),
+        _ => Counted(n, "file", "files"),
+    };
     public static Mode Next(this Mode m) => (Mode)(((int)m + 1) % 3);
 }
 
@@ -96,19 +110,31 @@ public static class Catalog
 
     static readonly HashSet<Kind> Everything = new() { Kind.Image, Kind.Video, Kind.Audio, Kind.Pdf, Kind.Document, Kind.Folder, Kind.Other };
 
-    static Op O(string id, string t, string d, string? icon, IReadOnlySet<Kind> k, bool batch = false) => new(id, t, d, icon, k, batch);
+    static Op O(string id, string t, string d, string? icon, IReadOnlySet<Kind> k, bool batch = false) => new(id, L(t), L(d), icon, k, batch);
     static HashSet<Kind> K(params Kind[] k) => new(k);
 
-    public static List<Op> Ops(Mode mode, Kind kind) => mode switch
+    /// <summary>The slices for a mode and file kind, minus any switched off in More settings (but never all of them).</summary>
+    public static List<Op> Ops(Mode mode, Kind kind)
+    {
+        var all = AllOps(mode, kind);
+        var hidden = Prefs.Current.HiddenSlices;
+        var shown = all.Where(o => !hidden.Contains(SliceKey(o, mode, kind))).ToList();
+        return shown.Count > 0 ? shown : all;
+    }
+
+    public static List<Op> AllOps(Mode mode, Kind kind) => mode switch
     {
         Mode.Convert => Convert(kind),
         Mode.Tools => Tools(kind),
         _ => Actions(),
     };
 
+    public static string SliceKey(Op op, Mode mode, Kind kind) =>
+        $"{(mode == Mode.Actions ? "any" : kind.ToString().ToLowerInvariant())}:{op.Id}";
+
     public static IEnumerable<Op> All() =>
         new[] { Mode.Convert, Mode.Tools, Mode.Actions }
-            .SelectMany(m => new[] { Kind.Image, Kind.Video, Kind.Audio, Kind.Pdf, Kind.Document }.SelectMany(k => Ops(m, k)));
+            .SelectMany(m => new[] { Kind.Image, Kind.Video, Kind.Audio, Kind.Pdf, Kind.Document }.SelectMany(k => AllOps(m, k)));
 
     static List<Op> Convert(Kind kind)
     {
@@ -202,6 +228,7 @@ public static class Catalog
                     O("img.compress", "Compress", "Smaller file", "compress", k),
                     O("img.1080", "1080", "Web / Insta", "1080", k),
                     O("img.half", "Half", "50% size", "half", k),
+                    O("img.text", "Text", "Read words", "text", k),
                 };
                 if (Cutout.Available) l.Add(O("img.cutout", "Cut out", "Remove BG", "cutout", k));
                 l.Add(O("img.strip", "Clean", "No EXIF / GPS", "clean", k));
@@ -215,7 +242,8 @@ public static class Catalog
                 return new()
                 {
                     O("vid.compress", "Compress", "Smaller MP4", "compress", k),
-                    O("vid.10mb", "10 MB", "Send-able", "send", k),
+                    O("vid.fit", $"{Prefs.Current.Limit} MB", "Send-able", "send", k),
+                    O("vid.edit", "Trim", "Cut & crop", "trim", k),
                     O("vid.half", "Half", "50% size", "half", k),
                     O("vid.frame", "Frame", "Best still", "frame", k),
                     O("vid.mute", "Mute", "No audio", "mute", k),

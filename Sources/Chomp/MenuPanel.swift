@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 
 struct MenuPanel: View {
     @ObservedObject private var history = History.shared
+    @ObservedObject private var updates = Updates.shared
     @AppStorage("quality") private var quality = 0.85
     @AppStorage("saveTo") private var saveTo = Prefs.saveTo.rawValue
     @AppStorage("customFolder") private var customFolder = ""
@@ -25,10 +26,12 @@ struct MenuPanel: View {
                 MimicView(mood: .idle, scale: 2)
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Chomp").font(Fonts.display(22, .bold)).foregroundStyle(accent)
-                    Text("Drag a file, tap ⇧ ⌘ or ⌃. I'll eat it.").font(Fonts.body(11)).foregroundStyle(Pal.mutedC)
+                    Text(L("Drag a file, tap ⇧ ⌘ or ⌃. I'll eat it.")).font(Fonts.body(11)).foregroundStyle(Pal.mutedC)
                 }
                 Spacer()
             }
+
+            if let u = updates.available { updateNote(u) }
 
             dropZone
 
@@ -44,7 +47,7 @@ struct MenuPanel: View {
                 Text("v\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev") · \(Stats.chomps) chomps")
                     .font(Fonts.body(11)).foregroundStyle(Pal.mutedC.opacity(0.7))
                 Spacer()
-                Button("Quit") { NSApp.terminate(nil) }
+                Button(L("Quit")) { NSApp.terminate(nil) }
                     .buttonStyle(.plain)
                     .font(Fonts.label(10))
                     .foregroundStyle(Pal.mutedC)
@@ -63,7 +66,7 @@ struct MenuPanel: View {
         Button(action: pick) {
             VStack(spacing: 6) {
                 PixelIcon(name: targeted ? "combine" : "copy", color: targeted ? accent : Pal.mutedC)
-                Text(targeted ? "Let go" : "Drop files here or click to pick")
+                Text(targeted ? L("Let go") : L("Drop files here or click to pick"))
                     .font(Fonts.display(14, .regular))
             }
             .frame(maxWidth: .infinity)
@@ -83,11 +86,28 @@ struct MenuPanel: View {
         }
     }
 
+    private func updateNote(_ u: Updates.Release) -> some View {
+        Button { NSWorkspace.shared.open(u.page) } label: {
+            HStack(spacing: 8) {
+                PixelIcon(name: "send", color: Pal.inkC)
+                Text(L("Chomp {0} is out", u.version)).font(Fonts.display(14))
+                Spacer()
+                Text(L("Get it")).font(Fonts.label(9))
+            }
+            .foregroundStyle(Pal.inkC)
+            .padding(.horizontal, 10)
+            .frame(height: 36)
+            .pixelBox(accent, shade: true)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
     private var ffmpegNote: some View {
         HStack(alignment: .top, spacing: 8) {
             PixelIcon(name: "lock", color: accent)
             VStack(alignment: .leading, spacing: 4) {
-                Text("Video, audio, WebP and AVIF need ffmpeg")
+                Text(L("Video and audio need ffmpeg"))
                     .font(.system(size: 11.5, weight: .semibold))
                 Button("Copy: brew install ffmpeg") {
                     let pb = NSPasteboard.general
@@ -134,7 +154,7 @@ struct MenuPanel: View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
-                    Text("Quality").font(label)
+                    Text(L("Quality")).font(label)
                     Spacer()
                     Text("\(Int(quality * 100))")
                         .font(.system(size: 11, weight: .medium, design: .monospaced))
@@ -144,11 +164,11 @@ struct MenuPanel: View {
             }
 
             VStack(alignment: .leading, spacing: 6) {
-                Text("Save to").font(label)
+                Text(L("Save to")).font(label)
                 Picker("", selection: $saveTo) {
-                    Text("Beside original").tag(Prefs.SaveTo.beside.rawValue)
-                    Text("Downloads").tag(Prefs.SaveTo.downloads.rawValue)
-                    Text("Folder…").tag(Prefs.SaveTo.custom.rawValue)
+                    Text(L("Beside original")).tag(Prefs.SaveTo.beside.rawValue)
+                    Text(L("Downloads")).tag(Prefs.SaveTo.downloads.rawValue)
+                    Text(L("Folder…")).tag(Prefs.SaveTo.custom.rawValue)
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
@@ -167,7 +187,7 @@ struct MenuPanel: View {
                             .truncationMode(.middle)
                             .help(customFolder)
                         Spacer(minLength: 4)
-                        Button("Change") { _ = chooseFolder() }
+                        Button(L("Change")) { _ = chooseFolder() }
                             .buttonStyle(.plain)
                             .font(Fonts.label(9))
                             .foregroundStyle(accent)
@@ -192,6 +212,11 @@ struct MenuPanel: View {
                         loginItem = SMAppService.mainApp.status == .enabled
                     }
                 }
+            Button { SettingsWindow.show() } label: {
+                Text(L("More settings…")).font(Fonts.label(10)).foregroundStyle(accent)
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 2)
         }
     }
 
@@ -199,7 +224,7 @@ struct MenuPanel: View {
 
     private var skins: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Chest skin").font(label)
+            Text(L("Chest skin")).font(label)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
                 ForEach(Skin.allCases) { k in
                     let on = skin == k
@@ -225,7 +250,7 @@ struct MenuPanel: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .help(k.locked ? "Unlocks after \(Skin.royalAt) chomps" : k.title)
+                    .help(k.locked ? L("Unlocks after {0} chomps", Skin.royalAt) : k.title)
                 }
             }
         }
@@ -233,7 +258,7 @@ struct MenuPanel: View {
 
     private func row(_ title: String, _ value: Binding<Bool>) -> some View {
         HStack {
-            Text(title).font(label)
+            Text(L(title)).font(label)
             Spacer()
             Toggle("", isOn: value).labelsHidden().toggleStyle(.switch).controlSize(.mini).tint(accent)
         }
@@ -247,8 +272,8 @@ struct MenuPanel: View {
         p.canChooseDirectories = true
         p.canCreateDirectories = true
         p.allowsMultipleSelection = false
-        p.prompt = "Save Here"
-        p.message = "Chomp will save everything it makes into this folder."
+        p.prompt = L("Save Here")
+        p.message = L("Chomp will save everything it makes into this folder.")
         if !customFolder.isEmpty { p.directoryURL = URL(fileURLWithPath: customFolder) }
         guard p.runModal() == .OK, let url = p.url else { return false }
         customFolder = url.path
@@ -263,7 +288,7 @@ struct MenuPanel: View {
         p.allowsMultipleSelection = true
         p.canChooseDirectories = true
         p.canChooseFiles = true
-        p.prompt = "Choose"
+        p.prompt = L("Choose")
         guard p.runModal() == .OK, !p.urls.isEmpty else { return }
         let urls = p.urls
         DispatchQueue.main.async {

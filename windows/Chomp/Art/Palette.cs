@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
+using static Chomp.Loc;
+
 namespace Chomp;
 
 /// <summary>Colours every skin shares, so text and outlines always read the same. Same values as PixelArt.swift.</summary>
@@ -40,7 +42,7 @@ public sealed class Skin
     public string Note { get; }
     readonly uint[] hex;
 
-    Skin(string id, string note, params uint[] hex) { Id = id; Note = note; this.hex = hex; }
+    Skin(string id, string note, params uint[] hex) { Id = id; Note = L(note, RoyalAt); this.hex = hex; }
 
     public const int RoyalAt = 100;
 
@@ -52,7 +54,7 @@ public sealed class Skin
         new("slime", "Swamp green", 0x2B5A2A, 0x3F7A3A, 0x5FA34F, 0x8CCB6A, 0x1E3F1E, 0xD9F27A, 0x9BB83A, 0xFF7AD9, 0xB6F05A, 0x7FB02E),
         new("void", "Dungeon purple", 0x352050, 0x4B2F6B, 0x6A4A94, 0x9273C0, 0x24163A, 0xC9A6FF, 0x8A6AC8, 0x8FF6FF, 0xB894FF, 0x7E5CC4),
         new("bone", "Greyscale", 0x4A4A50, 0x6B6B70, 0x8E8E95, 0xB8B8C0, 0x333338, 0xF2F2F2, 0xA8A8B0, 0xFF5A5A, 0xEDEDED, 0xA8A8B0),
-        new("royal", $"{RoyalAt} chomps", 0x8F6118, 0xC48D2A, 0xE0AE45, 0xFFD45C, 0x6B4510, 0xFFF3B0, 0xE8C25A, 0xEA4F86, 0xFFE27A, 0xC9A23A),
+        new("royal", "{0} chomps", 0x8F6118, 0xC48D2A, 0xE0AE45, 0xFFD45C, 0x6B4510, 0xFFF3B0, 0xE8C25A, 0xEA4F86, 0xFFE27A, 0xC9A23A),
     };
 
     public uint WoodDark => hex[0];

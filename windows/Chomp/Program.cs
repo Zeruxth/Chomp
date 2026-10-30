@@ -12,6 +12,8 @@ using System.Windows;
 using System.Windows.Threading;
 using WinForms = System.Windows.Forms;
 
+using static Chomp.Loc;
+
 namespace Chomp;
 
 public static class Program
@@ -109,14 +111,17 @@ public sealed class ChompApp : Application
             Visible = true,
             ContextMenuStrip = new WinForms.ContextMenuStrip(),
         };
-        tray.ContextMenuStrip.Items.Add("Open Chomp", null, (_, _) => MenuWindow.Shared.Toggle());
-        tray.ContextMenuStrip.Items.Add("Quit", null, (_, _) => Shutdown());
+        tray.ContextMenuStrip.Items.Add(L("Open Chomp"), null, (_, _) => MenuWindow.Shared.Toggle());
+        tray.ContextMenuStrip.Items.Add(L("Quit"), null, (_, _) => Shutdown());
         tray.MouseClick += (_, e) => { if (e.Button == WinForms.MouseButtons.Left) MenuWindow.Shared.Toggle(); };
         Exit += (_, _) => { if (tray != null) tray.Visible = false; };
 
         WheelWindow.Shared.OnRun = Run;
         watcher.OnTrigger = m => WheelWindow.Shared.Trigger(m);
         watcher.Start();
+        Updates.Start();
+        FolderWatcher.Shared.Restart();
+        ClipboardShrinker.Shared.Start();
         Program.Listen(f => Dispatcher.InvokeAsync(() => OpenWheel(f)));
 
         var p = Prefs.Current;
@@ -124,7 +129,7 @@ public sealed class ChompApp : Application
         {
             p.Onboarded = true;
             p.Save();
-            Dispatcher.InvokeAsync(() => Toast.Shared.Show(Toast.Phase.Done, "Chomp is awake", "Drag any file, then tap Shift, Ctrl or Alt"), DispatcherPriority.ApplicationIdle);
+            Dispatcher.InvokeAsync(() => Toast.Shared.Show(Toast.Phase.Done, L("Chomp is awake"), L("Drag any file, then tap Shift, Ctrl or Alt")), DispatcherPriority.ApplicationIdle);
             if (!Integration.InSendTo) try { Integration.InSendTo = true; } catch { }
         }
         if (files.Count > 0) OpenWheel(files);
@@ -140,8 +145,8 @@ public sealed class ChompApp : Application
     async void Run(Op op, IReadOnlyList<string> files, int job)
     {
         var isConvert = op.Id.StartsWith("to.");
-        var what = files.Count == 1 ? Path.GetFileName(files[0]) : $"{files.Count} items";
-        var title = isConvert ? $"Converting to {op.Title}…" : $"{op.Title}…";
+        var what = files.Count == 1 ? Path.GetFileName(files[0]) : Counted(files.Count, "item", "items");
+        var title = isConvert ? L("Converting to {0}…", op.Title) : $"{op.Title}…";
         // The wheel shows progress in its ring; the bottom toast is only for when the wheel has gone.
         if (!WheelWindow.Shared.JobStarted(job, title, what) && !op.Id.StartsWith("act."))
             Toast.Shared.Show(Toast.Phase.Working, title, what);
@@ -157,6 +162,7 @@ public sealed class ChompApp : Application
 
     void Finish(Op op, RunResult r, int job)
     {
+        if (r.Cancelled && r.Outputs.Count == 0 && r.Failures.Count == 0) return;
         var isConvert = op.Id.StartsWith("to.");
         var n = r.Outputs.Count;
         var parts = new List<string>();
@@ -165,19 +171,19 @@ public sealed class ChompApp : Application
         {
             var diff = r.BytesOut - r.BytesIn;
             var f = Files.Bytes(Math.Abs(diff));
-            if (diff <= 0) parts.Add($"{f} saved ({(int)Math.Round(-diff * 100.0 / r.BytesIn)}%)");
+            if (diff <= 0) parts.Add(L("{0} saved ({1}%)", f, (int)Math.Round(-diff * 100.0 / r.BytesIn)));
             else parts.Add($"+{f}");
         }
-        if (r.Skipped > 0) parts.Add($"{r.Skipped} already {op.Title}");
-        if (r.Failures.Count > 0) parts.Add(r.Failures.Count == 1 ? r.Failures[0] : $"{r.Failures.Count} failed");
+        if (r.Skipped > 0) parts.Add(L("{0} already {1}", r.Skipped, op.Title));
+        if (r.Failures.Count > 0) parts.Add(r.Failures.Count == 1 ? r.Failures[0] : L("{0} failed", r.Failures.Count));
 
         var ok = n > 0 || (r.Failures.Count == 0 && (r.Note != null || r.Skipped > 0));
         string title;
-        if (!ok) title = "Couldn't chew that";
-        else if (n == 0 && r.Skipped > 0 && r.Note == null) title = $"Already {op.Title}";
+        if (!ok) title = L("Couldn't chew that");
+        else if (n == 0 && r.Skipped > 0 && r.Note == null) title = L("Already {0}", op.Title);
         else if (op.Id.StartsWith("act.") || op.Id == "doc.count") title = op.Title;
-        else if (isConvert) title = $"{n} file{(n == 1 ? "" : "s")} → {op.Title}";
-        else title = $"{op.Title} · {n} file{(n == 1 ? "" : "s")}";
+        else if (isConvert) title = L(n == 1 ? "{0} file → {1}" : "{0} files → {1}", n, op.Title);
+        else title = L(n == 1 ? "{0} · {1} file" : "{0} · {1} files", op.Title, n);
         var detail = string.Join(" · ", parts);
 
         if (!WheelWindow.Shared.JobFinished(job, ok, title, detail, r.Outputs))

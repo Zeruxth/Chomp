@@ -63,7 +63,7 @@ public static class Media
     }
 
     /// <summary>Seconds, read from ffmpeg's own banner (no ffprobe needed).</summary>
-    static async Task<double> Duration(string src)
+    public static async Task<double> Duration(string src)
     {
         var ff = Bin.FFmpeg ?? throw ChompException.NeedsFFmpeg;
         var psi = new ProcessStartInfo(ff) { RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
@@ -88,9 +88,32 @@ public static class Media
         var vf = videoK < 1500 ? "scale=w='trunc(min(1280,iw)/2)*2':h=-2" : Even;
         return await FF(src, "mp4", $"{(int)mb}MB",
         [
+            // Good quality by default, with the budget as a ceiling: small videos stay small.
             "-vf", vf, "-c:v", "libx264", "-preset", "veryfast",
-            "-b:v", $"{videoK}k", "-maxrate", $"{videoK}k", "-bufsize", $"{videoK * 2}k",
+            "-crf", "23", "-maxrate", $"{videoK}k", "-bufsize", $"{videoK * 2}k",
             "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "96k", "-movflags", "+faststart",
         ]);
     }
+
+    /// <summary>Keeps start…end and crops to the chosen shape, as an MP4.</summary>
+    public static Task<string> Edit(string src, EditPlan p)
+    {
+        var vf = Even;
+        if (p.Ratio is double r)
+        {
+            // The largest box of that shape that fits, slid along the spare room by Offset.
+            var rs = r.ToString(CultureInfo.InvariantCulture);
+            var o = p.Offset.ToString("0.000", CultureInfo.InvariantCulture);
+            vf = $"crop=trunc(min(iw\\,ih*{rs})/2)*2:trunc(min(ih\\,iw/{rs})/2)*2:(iw-ow)*{o}:(ih-oh)*{o}";
+        }
+        var start = p.Start.ToString("0.000", CultureInfo.InvariantCulture);
+        var span = Math.Max(0.1, p.End - p.Start).ToString("0.000", CultureInfo.InvariantCulture);
+        return FF(src, "mp4", "edited", ["-ss", start, "-t", span, .. H264(20, vf: vf), "-movflags", "+faststart"]);
+    }
+}
+
+/// <summary>What the video editor hands back: the part to keep, and the shape to crop to.</summary>
+public sealed record EditPlan(double Start, double End, double? Ratio, double Offset = 0.5)
+{
+    public static readonly (string Title, double? Ratio)[] Shapes = { ("Original", null), ("1:1", 1), ("9:16", 9.0 / 16), ("16:9", 16.0 / 9) };
 }

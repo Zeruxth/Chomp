@@ -44,12 +44,12 @@ enum Skin: String, CaseIterable, Identifiable {
 
     var note: String {
         switch self {
-        case .oak: return "Default"
-        case .frost: return "Icy blue"
-        case .slime: return "Swamp green"
-        case .void: return "Dungeon purple"
-        case .bone: return "Greyscale"
-        case .royal: return "\(Skin.royalAt) chomps"
+        case .oak: return L("Default")
+        case .frost: return L("Icy blue")
+        case .slime: return L("Swamp green")
+        case .void: return L("Dungeon purple")
+        case .bone: return L("Greyscale")
+        case .royal: return L("{0} chomps", Skin.royalAt)
         }
     }
 

@@ -4,6 +4,19 @@ import UniformTypeIdentifiers
 enum Kind: String {
     case image, video, audio, pdf, document, folder, other
 
+    /// "3 images", in whatever language Chomp is speaking.
+    func count(_ n: Int) -> String {
+        switch self {
+        case .image: return counted(n, "image", "images")
+        case .video: return counted(n, "video", "videos")
+        case .audio: return counted(n, "audio file", "audio files")
+        case .pdf: return counted(n, "PDF", "PDFs")
+        case .document: return counted(n, "document", "documents")
+        case .folder: return counted(n, "folder", "folders")
+        case .other: return counted(n, "file", "files")
+        }
+    }
+
     var noun: String {
         switch self {
         case .image: return "image"
@@ -20,7 +33,7 @@ enum Kind: String {
 enum Mode: Int, CaseIterable, Identifiable {
     case convert, tools, actions
     var id: Int { rawValue }
-    var title: String { ["Convert", "Tools", "Actions"][rawValue] }
+    var title: String { [L("Convert"), L("Tools"), L("Actions")][rawValue] }
     var key: String { ["⇧", "⌘", "⌃"][rawValue] }
     var next: Mode { Mode(rawValue: (rawValue + 1) % 3)! }
 }
@@ -109,17 +122,29 @@ enum Catalog {
     // MARK: Operations
 
     private static func o(_ id: String, _ t: String, _ d: String, _ s: String?, _ k: Set<Kind>, batch: Bool = false) -> Op {
-        Op(id: id, title: t, detail: d, icon: s, kinds: k, batch: batch)
+        Op(id: id, title: L(t), detail: L(d), icon: s, kinds: k, batch: batch)
     }
 
     private static let everything: Set<Kind> = [.image, .video, .audio, .pdf, .document, .folder, .other]
 
+    /// The slices for a mode and file kind, minus any switched off in More settings (but never all of them).
     static func ops(_ mode: Mode, _ kind: Kind) -> [Op] {
+        let all = allOps(mode, kind)
+        let hidden = Prefs.hiddenSlices
+        let shown = all.filter { !hidden.contains(sliceKey($0, mode, kind)) }
+        return shown.isEmpty ? all : shown
+    }
+
+    static func allOps(_ mode: Mode, _ kind: Kind) -> [Op] {
         switch mode {
         case .convert: return convert(kind)
         case .tools: return tools(kind)
         case .actions: return actions
         }
+    }
+
+    static func sliceKey(_ op: Op, _ mode: Mode, _ kind: Kind) -> String {
+        "\(mode == .actions ? "any" : kind.rawValue):\(op.id)"
     }
 
     private static func convert(_ kind: Kind) -> [Op] {
@@ -191,6 +216,7 @@ enum Catalog {
                 o("img.compress", "Compress", "Smaller file", "compress", K),
                 o("img.1080", "1080", "Web / Insta", "1080", K),
                 o("img.half", "Half", "50% size", "half", K),
+                o("img.text", "Text", "Read words", "text", K),
             ]
             if #available(macOS 14.0, *) {
                 l.append(o("img.cutout", "Cut out", "Remove BG", "cutout", K))
@@ -205,7 +231,8 @@ enum Catalog {
             let K: Set<Kind> = [.video]
             return [
                 o("vid.compress", "Compress", "Smaller MP4", "compress", K),
-                o("vid.10mb", "10 MB", "Send-able", "send", K),
+                o("vid.fit", "\(Prefs.sizeLimit) MB", "Send-able", "send", K),
+                o("vid.edit", "Trim", "Cut & crop", "trim", K),
                 o("vid.half", "Half", "50% size", "half", K),
                 o("vid.frame", "Frame", "Best still", "frame", K),
                 o("vid.mute", "Mute", "No audio", "mute", K),

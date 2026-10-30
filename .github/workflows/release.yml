@@ -20,6 +20,9 @@ jobs:
       - name: Toolchain
         run: swift --version
 
+      - name: Bundle ffmpeg
+        run: ./fetch-ffmpeg.sh
+
       - name: Build Chomp.app
         env:
           UNIVERSAL: "1"
@@ -31,6 +34,9 @@ jobs:
             export VERSION="0.0.0-test"
           fi
           ./build.sh
+
+      - name: Smoke test
+        run: ./smoke-test.sh build/Chomp.app
 
       - name: Zip
         run: |

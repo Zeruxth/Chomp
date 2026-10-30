@@ -256,8 +256,9 @@ enum Media {
         guard videoK >= 80 else { throw ChompError.msg("Too long to fit \(Int(mb)) MB") }
         let vf = videoK < 1500 ? "scale=w='trunc(min(1280,iw)/2)*2':h=-2" : even
         return try await ff(src, ext: "mp4", suffix: "\(Int(mb))MB", [
+            // Good quality by default, with the budget as a ceiling: small videos stay small.
             "-vf", vf, "-c:v", "libx264", "-preset", "veryfast",
-            "-b:v", "\(videoK)k", "-maxrate", "\(videoK)k", "-bufsize", "\(videoK * 2)k",
+            "-crf", "23", "-maxrate", "\(videoK)k", "-bufsize", "\(videoK * 2)k",
             "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "96k", "-movflags", "+faststart",
         ])
     }
@@ -470,7 +471,7 @@ enum Docs {
         let n = NumberFormatter()
         n.numberStyle = .decimal
         var r = RunResult()
-        r.note = "\(n.string(from: NSNumber(value: words)) ?? "\(words)") words · \(n.string(from: NSNumber(value: chars)) ?? "\(chars)") characters"
+        r.note = L("{0} words · {1} characters", n.string(from: NSNumber(value: words)) ?? "\(words)", n.string(from: NSNumber(value: chars)) ?? "\(chars)")
         return r
     }
 }
@@ -482,28 +483,28 @@ enum Actions {
         var r = RunResult()
         guard let first = urls.first else { return r }
         let n = urls.count
-        let things = n == 1 ? first.lastPathComponent : "\(n) items"
+        let things = n == 1 ? first.lastPathComponent : counted(n, "item", "items")
         switch op.id {
         case "act.airdrop":
             await MainActor.run {
                 NSApp.activate(ignoringOtherApps: true)
                 NSSharingService(named: .sendViaAirDrop)?.perform(withItems: urls)
             }
-            r.note = "AirDrop · \(things)"
+            r.note = L("AirDrop · {0}", things)
         case "act.copy":
             await MainActor.run {
                 let pb = NSPasteboard.general
                 pb.clearContents()
                 pb.writeObjects(urls.map { $0 as NSURL })
             }
-            r.note = "Copied \(things)"
+            r.note = L("Copied {0}", things)
         case "act.path":
             await MainActor.run {
                 let pb = NSPasteboard.general
                 pb.clearContents()
                 pb.setString(urls.map(\.path).joined(separator: "\n"), forType: .string)
             }
-            r.note = n == 1 ? first.path : "Copied \(n) paths"
+            r.note = n == 1 ? first.path : L("Copied {0} paths", n)
         case "act.zip":
             do {
                 let out = try await zip(urls)
@@ -519,7 +520,7 @@ enum Actions {
                                         withApplicationAt: URL(fileURLWithPath: "/System/Applications/Utilities/Terminal.app"),
                                         configuration: NSWorkspace.OpenConfiguration())
             }
-            r.note = "Terminal · \(dir.lastPathComponent)"
+            r.note = L("Terminal · {0}", dir.lastPathComponent)
         case "act.desktop":
             let desk = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask)[0]
             for u in urls {
@@ -531,7 +532,7 @@ enum Actions {
                     r.failures.append("\(u.lastPathComponent): \(error.localizedDescription)")
                 }
             }
-            r.note = "Copied \(things) to Desktop"
+            r.note = L("Copied {0} to Desktop", things)
         default:
             break
         }
@@ -549,5 +550,74 @@ enum Actions {
             try await Shell.run("/usr/bin/zip", ["-r", "-q", "-X", out.path] + names, cwd: parent)
         }
         return out
+    }
+}
+
+// MARK: - Text in pictures, size limits, trim and crop
+
+extension Images {
+    /// Words in a picture, read on this Mac with Vision.
+    static func text(_ src: URL) throws -> String {
+        let img = try load(src)
+        let req = VNRecognizeTextRequest()
+        req.recognitionLevel = .accurate
+        req.usesLanguageCorrection = true
+        if #available(macOS 13.0, *) { req.automaticallyDetectsLanguage = true }
+        try VNImageRequestHandler(cgImage: img, options: [:]).perform([req])
+        let lines = (req.results ?? []).compactMap { $0.topCandidates(1).first?.string }
+        guard !lines.isEmpty else { throw ChompError.msg("No text found") }
+        return lines.joined(separator: "\n")
+    }
+
+    /// Still over the size limit? Lower the quality, then the size, until it fits.
+    static func squeeze(_ out: URL, ext: String, under limit: Int64) async throws {
+        guard Files.size(out) > limit, ["jpg", "webp", "heic", "avif"].contains(ext) else { return }
+        let full = try load(out)
+        var q = 0.6, scale = 1.0
+        for _ in 0..<8 {
+            var img = full
+            if scale < 1, let c = context(Int(Double(full.width) * scale), Int(Double(full.height) * scale)) {
+                c.interpolationQuality = .high
+                c.draw(full, in: CGRect(x: 0, y: 0, width: c.width, height: c.height))
+                img = c.makeImage() ?? full
+            }
+            let tmp = Files.tempURL(ext)
+            try await save(img, to: tmp, ext: ext, quality: q, meta: [:])
+            let fits = Files.size(tmp) <= limit
+            _ = try FileManager.default.replaceItemAt(out, withItemAt: tmp)
+            if fits { return }
+            if q > 0.45 { q -= 0.1 } else { scale *= 0.75 }
+        }
+    }
+}
+
+/// What the video editor hands back: the part to keep, and the shape to crop to.
+struct EditPlan {
+    enum Aspect: String, CaseIterable, Identifiable {
+        case original, square, portrait, landscape
+        var id: String { rawValue }
+        var title: String { [L("Original"), "1:1", "9:16", "16:9"][Aspect.allCases.firstIndex(of: self)!] }
+        /// Width ÷ height, or nil to keep the video's own.
+        var ratio: Double? { [nil, 1, 9.0 / 16, 16.0 / 9][Aspect.allCases.firstIndex(of: self)!] }
+    }
+    var start: Double
+    var end: Double
+    var aspect: Aspect
+    /// Where the crop sits, 0…1 across the room it has to move (0.5 = centred).
+    var offset: Double = 0.5
+}
+
+extension Media {
+    /// Keeps start…end and crops to the chosen shape, as an MP4.
+    static func edit(_ src: URL, _ p: EditPlan) async throws -> URL {
+        var vf = even
+        if let r = p.aspect.ratio {
+            // The largest box of that shape that fits, slid along the spare room by `offset`.
+            let o = String(format: "%.3f", p.offset)
+            vf = "crop=trunc(min(iw\\,ih*\(r))/2)*2:trunc(min(ih\\,iw/\(r))/2)*2:(iw-ow)*\(o):(ih-oh)*\(o)"
+        }
+        let span = String(format: "%.3f", max(0.1, p.end - p.start))
+        return try await ff(src, ext: "mp4", suffix: "edited",
+                            ["-ss", String(format: "%.3f", p.start), "-t", span] + h264(crf: 20, vf: vf) + ["-movflags", "+faststart"])
     }
 }
