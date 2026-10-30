@@ -17,6 +17,7 @@ final class HUD: ObservableObject {
     private var panel: NSPanel?
     private var hideItem: DispatchWorkItem?
     private var token = 0
+    private var holds = 0
 
     func show(_ phase: Phase, title: String, detail: String, outputs: [URL] = []) {
         self.phase = phase
@@ -60,7 +61,9 @@ final class HUD: ObservableObject {
     }
 
     private func hideNow() {
-        if hovering { scheduleHide(1.5); return }
+        // Where the pointer is now, not a remembered hover, which can go stale in a panel that never activates.
+        if let p = panel, p.frame.contains(NSEvent.mouseLocation), hovering, holds < 6 { holds += 1; scheduleHide(1.5); return }
+        holds = 0
         guard let p = panel else { return }
         let t = token
         NSAnimationContext.runAnimationGroup({ ctx in

@@ -345,14 +345,23 @@ public sealed class WheelWindow : Window
     }
 
     /// <summary>Fades out by itself; hovering one of the keys under the wheel holds it open.</summary>
-    void ScheduleHide(double secs)
+    bool PointerOnKeys()
+    {
+        if (!IsVisible) return false;
+        var c = Native.Cursor();
+        var p = root.PointFromScreen(new Point(c.X, c.Y));
+        return ZoneAt(p).Kind == ZoneKind.Pill;
+    }
+
+    void ScheduleHide(double secs, double waited = 0)
     {
         hideTimer?.Stop();
         var t = new DispatcherTimer { Interval = TimeSpan.FromSeconds(secs) };
         t.Tick += (_, _) =>
         {
             t.Stop();
-            if (pillHover != null) ScheduleHide(1.5); else Close_();
+            // Where the pointer is now, not a remembered hover: a window that never activates can miss MouseLeave.
+            if (PointerOnKeys() && waited < 10) ScheduleHide(1.5, waited + secs); else Close_();
         };
         hideTimer = t;
         t.Start();
