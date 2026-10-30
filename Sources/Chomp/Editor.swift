@@ -85,7 +85,7 @@ struct EditorView: View {
             preview
             TrimBar(model: model, accent: skin.accent)
             HStack(spacing: 10) {
-                Text("Shape").font(Fonts.display(14, .regular)).foregroundStyle(Pal.mutedC)
+                Text(L("Shape")).font(Fonts.display(14, .regular)).foregroundStyle(Pal.mutedC)
                 ForEach(EditPlan.Aspect.allCases) { a in
                     Button { withAnimation(.easeOut(duration: 0.18)) { model.aspect = a; model.offset = 0.5 } } label: {
                         Keycap(on: model.aspect == a, skin: skin) {
@@ -96,7 +96,7 @@ struct EditorView: View {
                 }
                 Spacer()
                 Button { onDone(nil) } label: {
-                    Keycap(on: false, skin: skin) { Text("Cancel").font(Fonts.label(10)).padding(.horizontal, 14).frame(height: 30) }
+                    Keycap(on: false, skin: skin) { Text(L("Cancel")).font(Fonts.label(10)).padding(.horizontal, 14).frame(height: 30) }
                 }
                 .buttonStyle(.plain)
                 .keyboardShortcut(.cancelAction)
@@ -104,7 +104,7 @@ struct EditorView: View {
                     model.player.pause()
                     onDone(EditPlan(start: model.start, end: model.end, aspect: model.aspect, offset: model.offset))
                 } label: {
-                    Keycap(on: true, skin: skin) { Text("Save").font(Fonts.label(10)).padding(.horizontal, 18).frame(height: 30) }
+                    Keycap(on: true, skin: skin) { Text(L("Save")).font(Fonts.label(10)).padding(.horizontal, 18).frame(height: 30) }
                 }
                 .buttonStyle(.plain)
                 .keyboardShortcut(.defaultAction)
@@ -199,7 +199,7 @@ struct TrimBar: View {
             HStack {
                 Text(clock(model.start)).font(.system(size: 11, design: .monospaced)).foregroundStyle(Pal.mutedC)
                 Spacer()
-                Text("Keeping \(clock(model.end - model.start))").font(Fonts.body(12)).foregroundStyle(Pal.toothC)
+                Text(L("Keeping {0}", clock(model.end - model.start))).font(Fonts.body(12)).foregroundStyle(Pal.toothC)
                 Spacer()
                 Text(clock(model.end)).font(.system(size: 11, design: .monospaced)).foregroundStyle(Pal.mutedC)
             }

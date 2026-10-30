@@ -7,11 +7,13 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 
+using static Chomp.Loc;
+
 namespace Chomp;
 
 // MARK: - Errors
 
-public sealed class ChompException(string message) : Exception(message)
+public sealed class ChompException(string message) : Exception(L(message))
 {
     public static ChompException NeedsFFmpeg => new("This copy of Chomp has no ffmpeg: download it again from the site");
 }

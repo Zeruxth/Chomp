@@ -471,7 +471,7 @@ enum Docs {
         let n = NumberFormatter()
         n.numberStyle = .decimal
         var r = RunResult()
-        r.note = "\(n.string(from: NSNumber(value: words)) ?? "\(words)") words · \(n.string(from: NSNumber(value: chars)) ?? "\(chars)") characters"
+        r.note = L("{0} words · {1} characters", n.string(from: NSNumber(value: words)) ?? "\(words)", n.string(from: NSNumber(value: chars)) ?? "\(chars)")
         return r
     }
 }
@@ -483,28 +483,28 @@ enum Actions {
         var r = RunResult()
         guard let first = urls.first else { return r }
         let n = urls.count
-        let things = n == 1 ? first.lastPathComponent : "\(n) items"
+        let things = n == 1 ? first.lastPathComponent : counted(n, "item", "items")
         switch op.id {
         case "act.airdrop":
             await MainActor.run {
                 NSApp.activate(ignoringOtherApps: true)
                 NSSharingService(named: .sendViaAirDrop)?.perform(withItems: urls)
             }
-            r.note = "AirDrop · \(things)"
+            r.note = L("AirDrop · {0}", things)
         case "act.copy":
             await MainActor.run {
                 let pb = NSPasteboard.general
                 pb.clearContents()
                 pb.writeObjects(urls.map { $0 as NSURL })
             }
-            r.note = "Copied \(things)"
+            r.note = L("Copied {0}", things)
         case "act.path":
             await MainActor.run {
                 let pb = NSPasteboard.general
                 pb.clearContents()
                 pb.setString(urls.map(\.path).joined(separator: "\n"), forType: .string)
             }
-            r.note = n == 1 ? first.path : "Copied \(n) paths"
+            r.note = n == 1 ? first.path : L("Copied {0} paths", n)
         case "act.zip":
             do {
                 let out = try await zip(urls)
@@ -520,7 +520,7 @@ enum Actions {
                                         withApplicationAt: URL(fileURLWithPath: "/System/Applications/Utilities/Terminal.app"),
                                         configuration: NSWorkspace.OpenConfiguration())
             }
-            r.note = "Terminal · \(dir.lastPathComponent)"
+            r.note = L("Terminal · {0}", dir.lastPathComponent)
         case "act.desktop":
             let desk = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask)[0]
             for u in urls {
@@ -532,7 +532,7 @@ enum Actions {
                     r.failures.append("\(u.lastPathComponent): \(error.localizedDescription)")
                 }
             }
-            r.note = "Copied \(things) to Desktop"
+            r.note = L("Copied {0} to Desktop", things)
         default:
             break
         }
@@ -596,7 +596,7 @@ struct EditPlan {
     enum Aspect: String, CaseIterable, Identifiable {
         case original, square, portrait, landscape
         var id: String { rawValue }
-        var title: String { ["Original", "1:1", "9:16", "16:9"][Aspect.allCases.firstIndex(of: self)!] }
+        var title: String { [L("Original"), "1:1", "9:16", "16:9"][Aspect.allCases.firstIndex(of: self)!] }
         /// Width ÷ height, or nil to keep the video's own.
         var ratio: Double? { [nil, 1, 9.0 / 16, 16.0 / 9][Aspect.allCases.firstIndex(of: self)!] }
     }

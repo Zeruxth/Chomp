@@ -10,11 +10,11 @@ enum WatchRule: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .heicToJpg: return "HEIC photos → JPG"
-        case .compressImages: return "Compress images"
-        case .imagesToWebp: return "Images → WebP"
-        case .compressVideos: return "Compress videos"
-        case .fitVideos: return "Videos → under the size limit"
+        case .heicToJpg: return L("HEIC photos → JPG")
+        case .compressImages: return L("Compress images")
+        case .imagesToWebp: return L("Images → WebP")
+        case .compressVideos: return L("Compress videos")
+        case .fitVideos: return L("Videos → under the size limit")
         }
     }
 
@@ -105,7 +105,7 @@ final class FolderWatcher {
                 self.made.formUnion(r.outputs.map(\.path))
                 guard r.outputs.count > 0 || !r.failures.isEmpty else { return }
                 let ok = r.failures.isEmpty
-                HUD.shared.show(ok ? .done : .failed, title: ok ? "Watched folder · \(rule.title)" : "Couldn't chew that",
+                HUD.shared.show(ok ? .done : .failed, title: ok ? L("Watched folder · {0}", rule.title) : L("Couldn't chew that"),
                                 detail: ok ? f.lastPathComponent : (r.failures.first ?? ""), outputs: r.outputs)
                 if ok { History.shared.add(rule.title, f.lastPathComponent, r.outputs) }
             }
@@ -160,7 +160,7 @@ final class ClipboardShrinker {
         pb.writeObjects([item])
         last = pb.changeCount
         let b = ByteCountFormatter()
-        HUD.shared.show(.done, title: "Shrunk the copied picture",
+        HUD.shared.show(.done, title: L("Shrunk the copied picture"),
                         detail: "\(b.string(fromByteCount: Int64(data.count))) → \(b.string(fromByteCount: Int64(jpg.count)))")
     }
 }

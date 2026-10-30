@@ -10,6 +10,8 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
 
+using static Chomp.Loc;
+
 namespace Chomp;
 
 /// <summary>Geometry shared by drawing and hit-testing, in device-independent pixels (y down). Same numbers as Wheel.swift.</summary>
@@ -256,9 +258,7 @@ public sealed class WheelWindow : Window
     string Label_()
     {
         if (files.Count == 1 && Catalog.KindOf(files[0]) != Kind.Folder) return Path.GetFileName(files[0]);
-        var n = mode == Mode.Actions ? files.Count : count;
-        var noun = mode == Mode.Actions ? "item" : kind.Noun();
-        return $"{n} {noun}{(n == 1 ? "" : "s")}";
+        return mode == Mode.Actions ? Counted(files.Count, "item", "items") : kind.Count(count);
     }
 
     /// <summary>Chomp follows the hovered slice with its eyes.</summary>
@@ -374,8 +374,8 @@ public sealed class WheelWindow : Window
                 History.Remove(o);
                 outputs = new();
                 stage = Stage.Spat;
-                jobTitle = "Spat it out";
-                jobDetail = $"Moved {o.Count} file{(o.Count == 1 ? "" : "s")} to the Recycle Bin";
+                jobTitle = L("Spat it out");
+                jobDetail = L(o.Count == 1 ? "Moved {0} file to the Recycle Bin" : "Moved {0} files to the Recycle Bin", o.Count);
                 Render();
                 ScheduleHide(2.5);
                 break;
@@ -554,7 +554,7 @@ public sealed class WheelWindow : Window
         }
 
         // Centre: Chomp and a caption.
-        var caption = files.Count == 0 ? "sniff sniff" : (hover == -1 ? "nevermind" : (ops.Count == 0 ? "can't eat that" : Label_()));
+        var caption = files.Count == 0 ? L("sniff sniff") : (hover == -1 ? L("nevermind") : (ops.Count == 0 ? L("can't eat that") : Label_()));
         var stack = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
         mimic.Margin = new Thickness(0, 2, 0, 0);
         mimic.HorizontalAlignment = HorizontalAlignment.Center;
@@ -645,7 +645,7 @@ public sealed class WheelWindow : Window
                 // Same three keys become Show / Undo / Close.
                 var busy = stage is Stage.Eating or Stage.Working;
                 var enabled = i == 2 || outputs.Count > 0;
-                var text = i == 0 ? "Show" : (i == 1 ? "Undo" : (busy ? "Hide" : "Close"));
+                var text = i == 0 ? L("Show") : (i == 1 ? L("Undo") : (busy ? L("Hide") : L("Close")));
                 key = PixelUI.Keycap(text, enabled && pillHover == i, k, rect.Width, rect.Height, enabled ? 1 : 0.35);
             }
             Canvas.SetLeft(key, rect.X);

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
+using static Chomp.Loc;
+
 namespace Chomp;
 
 public enum Kind { Image, Video, Audio, Pdf, Document, Folder, Other }
@@ -22,7 +24,19 @@ public static class KindExt
         _ => "file",
     };
 
-    public static string Title(this Mode m) => m switch { Mode.Convert => "Convert", Mode.Tools => "Tools", _ => "Actions" };
+    public static string Title(this Mode m) => m switch { Mode.Convert => L("Convert"), Mode.Tools => L("Tools"), _ => L("Actions") };
+
+    /// <summary>"3 images", in whatever language Chomp is speaking.</summary>
+    public static string Count(this Kind k, int n) => k switch
+    {
+        Kind.Image => Counted(n, "image", "images"),
+        Kind.Video => Counted(n, "video", "videos"),
+        Kind.Audio => Counted(n, "audio file", "audio files"),
+        Kind.Pdf => Counted(n, "PDF", "PDFs"),
+        Kind.Document => Counted(n, "document", "documents"),
+        Kind.Folder => Counted(n, "folder", "folders"),
+        _ => Counted(n, "file", "files"),
+    };
     public static Mode Next(this Mode m) => (Mode)(((int)m + 1) % 3);
 }
 
@@ -96,7 +110,7 @@ public static class Catalog
 
     static readonly HashSet<Kind> Everything = new() { Kind.Image, Kind.Video, Kind.Audio, Kind.Pdf, Kind.Document, Kind.Folder, Kind.Other };
 
-    static Op O(string id, string t, string d, string? icon, IReadOnlySet<Kind> k, bool batch = false) => new(id, t, d, icon, k, batch);
+    static Op O(string id, string t, string d, string? icon, IReadOnlySet<Kind> k, bool batch = false) => new(id, L(t), L(d), icon, k, batch);
     static HashSet<Kind> K(params Kind[] k) => new(k);
 
     /// <summary>The slices for a mode and file kind, minus any switched off in More settings (but never all of them).</summary>

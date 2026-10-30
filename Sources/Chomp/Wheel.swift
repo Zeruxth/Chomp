@@ -84,9 +84,7 @@ final class WheelModel: ObservableObject {
 
     var label: String {
         if files.count == 1, let f = files.first, Catalog.kind(of: f) != .folder { return f.lastPathComponent }
-        let n = mode == .actions ? files.count : count
-        let noun = mode == .actions ? "item" : kind.noun
-        return "\(n) \(noun)\(n == 1 ? "" : "s")"
+        return mode == .actions ? counted(files.count, "item", "items") : kind.count(count)
     }
 }
 
@@ -290,8 +288,8 @@ final class WheelController {
             History.shared.remove(o)
             model.outputs = []
             model.stage = .spat
-            model.jobTitle = "Spat it out"
-            model.jobDetail = "Moved \(o.count) file\(o.count == 1 ? "" : "s") to the Trash"
+            model.jobTitle = L("Spat it out")
+            model.jobDetail = L(o.count == 1 ? "Moved {0} file to the Trash" : "Moved {0} files to the Trash", o.count)
             scheduleHide(2.5)
         default:
             hide()
@@ -579,14 +577,14 @@ struct WheelRoot: View {
 
     private var caption: String {
         switch model.stage {
-        case .eating: return "chomp."
-        case .working: return "chewing…"
-        case .done(let ok): return ok ? "yum." : "blegh."
-        case .spat: return "ptooey."
+        case .eating: return L("chomp.")
+        case .working: return L("chewing…")
+        case .done(let ok): return ok ? L("yum.") : L("blegh.")
+        case .spat: return L("ptooey.")
         case .pick: break
         }
-        if model.hover == -1 { return "nevermind" }
-        if model.ops.isEmpty { return "can't eat that" }
+        if model.hover == -1 { return L("nevermind") }
+        if model.ops.isEmpty { return L("can't eat that") }
         return model.label
     }
 
@@ -621,7 +619,7 @@ struct WheelRoot: View {
         } else {
             // Same three keys become Show / Undo / Close.
             let busy = model.stage == .eating || model.stage == .working
-            let keys = [("Show", !model.outputs.isEmpty), ("Undo", !model.outputs.isEmpty), (busy ? "Hide" : "Close", true)]
+            let keys = [(L("Show"), !model.outputs.isEmpty), (L("Undo"), !model.outputs.isEmpty), (busy ? L("Hide") : L("Close"), true)]
             HStack(spacing: Geo.pillGap) {
                 ForEach(0..<3, id: \.self) { i in
                     Keycap(on: keys[i].1 && model.pillHover == i, skin: skin) {

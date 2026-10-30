@@ -7,6 +7,8 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using IOPath = System.IO.Path;
 
+using static Chomp.Loc;
+
 namespace Chomp;
 
 /// <summary>The Trim slice: a small window to pick the part of a video to keep and, if you like, a shape to crop it to.
@@ -49,7 +51,7 @@ public sealed class EditorWindow : Window
         Topmost = true;
 
         var body = new StackPanel { Margin = new Thickness(20) };
-        var stage = new Grid { Height = VideoH, Background = Brushes.Black, Cursor = Cursors.Hand, ToolTip = "Click to play or pause" };
+        var stage = new Grid { Height = VideoH, Background = Brushes.Black, Cursor = Cursors.Hand, ToolTip = L("Click to play or pause") };
         stage.Children.Add(video);
         stage.Children.Add(overlay);
         overlay.SizeChanged += (_, _) => DrawCrop();
@@ -69,11 +71,11 @@ public sealed class EditorWindow : Window
 
         var row = new DockPanel { Margin = new Thickness(0, 16, 0, 0) };
         var buttons = new StackPanel { Orientation = Orientation.Horizontal };
-        buttons.Children.Add(Key("Cancel", false, 84, () => Close()));
-        buttons.Children.Add(Key("Save", true, 84, Save));
+        buttons.Children.Add(Key(L("Cancel"), false, 84, () => Close()));
+        buttons.Children.Add(Key(L("Save"), true, 84, Save));
         DockPanel.SetDock(buttons, Dock.Right);
         row.Children.Add(buttons);
-        var label = Fonts.Display("Shape", 14, Pal.Muted);
+        var label = Fonts.Display(L("Shape"), 14, Pal.Muted);
         label.VerticalAlignment = VerticalAlignment.Center;
         label.Margin = new Thickness(0, 0, 10, 0);
         shapes.Children.Add(label);
@@ -177,7 +179,7 @@ public sealed class EditorWindow : Window
         Handle(x1, false);
         startText.Text = Clock(start);
         endText.Text = Clock(end);
-        keepText.Text = $"Keeping {Clock(end - start)}";
+        keepText.Text = L("Keeping {0}", Clock(end - start));
     }
 
     void Handle(double x, bool isStart)
@@ -201,7 +203,7 @@ public sealed class EditorWindow : Window
             bar.Width = Math.Max(0, x1 - x0);
             startText.Text = Clock(start);
             endText.Text = Clock(end);
-            keepText.Text = $"Keeping {Clock(end - start)}";
+            keepText.Text = L("Keeping {0}", Clock(end - start));
         };
     }
 

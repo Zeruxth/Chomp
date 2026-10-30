@@ -35,6 +35,8 @@
     <!-- The same pixel fonts the Mac app uses. -->
     <Resource Include="..\..\Resources\Fonts\*.ttf" LinkBase="Fonts" />
     <Resource Include="Assets\Chomp.ico" />
+    <!-- Translations, shared with the Mac app. -->
+    <EmbeddedResource Include="..\..\Resources\Localization\strings.json" LogicalName="strings.json" />
   </ItemGroup>
 
   <ItemGroup>

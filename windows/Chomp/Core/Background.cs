@@ -13,6 +13,8 @@ using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 
+using static Chomp.Loc;
+
 namespace Chomp;
 
 // MARK: - Watched folder
@@ -22,11 +24,11 @@ public sealed record WatchRule(string Id, string Title, string OpId, Kind Kind, 
 {
     public static readonly WatchRule[] All =
     {
-        new("heicToJpg", "HEIC photos → JPG", "to.jpg", Kind.Image, HeicOnly: true),
-        new("compressImages", "Compress images", "img.compress", Kind.Image),
-        new("imagesToWebp", "Images → WebP", "to.webp", Kind.Image),
-        new("compressVideos", "Compress videos", "vid.compress", Kind.Video),
-        new("fitVideos", "Videos → under the size limit", "vid.fit", Kind.Video),
+        new("heicToJpg", L("HEIC photos → JPG"), "to.jpg", Kind.Image, HeicOnly: true),
+        new("compressImages", L("Compress images"), "img.compress", Kind.Image),
+        new("imagesToWebp", L("Images → WebP"), "to.webp", Kind.Image),
+        new("compressVideos", L("Compress videos"), "vid.compress", Kind.Video),
+        new("fitVideos", L("Videos → under the size limit"), "vid.fit", Kind.Video),
     };
 
     public static WatchRule Current => All.FirstOrDefault(r => r.Id == Prefs.Current.WatchRule) ?? All[0];
@@ -95,7 +97,7 @@ public sealed class FolderWatcher
         foreach (var o in r.Outputs) made.Add(o);
         if (r.Outputs.Count == 0 && r.Failures.Count == 0) return;
         var ok = r.Failures.Count == 0;
-        Toast.Shared.Show(ok ? Toast.Phase.Done : Toast.Phase.Failed, ok ? $"Watched folder · {rule.Title}" : "Couldn't chew that",
+        Toast.Shared.Show(ok ? Toast.Phase.Done : Toast.Phase.Failed, ok ? L("Watched folder · {0}", rule.Title) : L("Couldn't chew that"),
             ok ? Path.GetFileName(f) : r.Failures[0], r.Outputs);
         if (ok) History.Add(rule.Title, Path.GetFileName(f), r.Outputs.ToList());
     }
@@ -174,7 +176,7 @@ public sealed class ClipboardShrinker
             busy = true;
             try { Clipboard.SetDataObject(swap, true); }
             finally { Application.Current.Dispatcher.InvokeAsync(() => busy = false, DispatcherPriority.Background); }
-            Toast.Shared.Show(Toast.Phase.Done, "Shrunk the copied picture", $"{Files.Bytes(before)} → {Files.Bytes(after)}");
+            Toast.Shared.Show(Toast.Phase.Done, L("Shrunk the copied picture"), $"{Files.Bytes(before)} → {Files.Bytes(after)}");
         }
         catch { /* the clipboard is shared with every app; never crash over it */ }
     }

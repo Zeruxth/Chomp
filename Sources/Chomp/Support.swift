@@ -8,7 +8,7 @@ enum ChompError: LocalizedError {
     static var needsFFmpeg: ChompError { .msg("This copy of Chomp has no ffmpeg: download it again from the site") }
     var errorDescription: String? {
         switch self {
-        case .msg(let m): return m
+        case .msg(let m): return L(m)
         }
     }
 }

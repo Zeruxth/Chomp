@@ -33,6 +33,7 @@ if [[ -n "${VERSION:-}" ]]; then
   plutil -replace CFBundleVersion -string "${BUILD_NUMBER:-$VERSION}" "$APP/Contents/Info.plist"
 fi
 cp -R Resources/Fonts "$APP/Contents/Resources/Fonts"
+cp Resources/Localization/strings.json "$APP/Contents/Resources/strings.json"
 iconutil -c icns Resources/AppIcon.iconset -o "$APP/Contents/Resources/AppIcon.icns"
 if [[ -x vendor/ffmpeg/ffmpeg ]]; then
   cp vendor/ffmpeg/ffmpeg "$APP/Contents/MacOS/ffmpeg"

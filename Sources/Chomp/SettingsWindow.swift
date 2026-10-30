@@ -11,7 +11,7 @@ enum SettingsWindow {
         if window == nil {
             let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 520, height: 640),
                              styleMask: [.titled, .closable, .fullSizeContentView], backing: .buffered, defer: false)
-            w.title = "Chomp settings"
+            w.title = L("Chomp settings")
             w.titlebarAppearsTransparent = true
             w.isReleasedWhenClosed = false
             w.backgroundColor = NSColor(Pal.panelC)
@@ -35,7 +35,7 @@ struct MoreSettings: View {
     @State private var kind: Kind = .image
     var scrolls = true   // the snapshot renderer can't draw scroll views
 
-    private static let names: [Kind: String] = [.image: "Images", .video: "Videos", .audio: "Audio", .pdf: "PDFs", .document: "Docs", .other: "Actions"]
+    private static let names: [Kind: String] = [.image: L("Images"), .video: L("Videos"), .audio: L("Audio"), .pdf: L("PDFs"), .document: L("Docs"), .other: L("Actions")]
 
     private var skin: Skin { Skin(rawValue: skinRaw) ?? .oak }
     private var label: Font { Fonts.display(15, .regular) }
@@ -62,9 +62,9 @@ struct MoreSettings: View {
 
                 section("Watch a folder", "New files that land in it get chewed automatically. The originals stay.") {
                     HStack(spacing: 8) {
-                        key(watchFolder.isEmpty ? "Choose folder…" : "Change…", on: false) { chooseFolder() }
+                        key(watchFolder.isEmpty ? L("Choose folder…") : L("Change…"), on: false) { chooseFolder() }
                         if !watchFolder.isEmpty {
-                            key("Stop", on: false) {
+                            key(L("Stop"), on: false) {
                                 watchFolder = ""
                                 FolderWatcher.shared.restart()
                             }
@@ -118,8 +118,8 @@ struct MoreSettings: View {
 
     private func section<C: View>(_ title: String, _ note: String, @ViewBuilder _ content: () -> C) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(title).font(Fonts.display(18)).foregroundStyle(skin.accent)
-            Text(note).font(Fonts.body(12)).foregroundStyle(Pal.mutedC).fixedSize(horizontal: false, vertical: true)
+            Text(L(title)).font(Fonts.display(18)).foregroundStyle(skin.accent)
+            Text(L(note)).font(Fonts.body(12)).foregroundStyle(Pal.mutedC).fixedSize(horizontal: false, vertical: true)
             content()
         }
     }
@@ -135,7 +135,7 @@ struct MoreSettings: View {
 
     private func toggle(_ t: String, _ v: Binding<Bool>) -> some View {
         HStack {
-            Text(t).font(label)
+            Text(L(t)).font(label)
             Spacer()
             Toggle("", isOn: v).labelsHidden().toggleStyle(.switch).controlSize(.mini).tint(skin.accent)
         }
@@ -146,8 +146,8 @@ struct MoreSettings: View {
         p.canChooseFiles = false
         p.canChooseDirectories = true
         p.canCreateDirectories = true
-        p.prompt = "Watch"
-        p.message = "Chomp will chew new files that land in this folder."
+        p.prompt = L("Watch")
+        p.message = L("Chomp will chew new files that land in this folder.")
         guard p.runModal() == .OK, let url = p.url else { return }
         watchFolder = url.path
         FolderWatcher.shared.restart()

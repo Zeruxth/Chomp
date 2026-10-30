@@ -4,6 +4,19 @@ import UniformTypeIdentifiers
 enum Kind: String {
     case image, video, audio, pdf, document, folder, other
 
+    /// "3 images", in whatever language Chomp is speaking.
+    func count(_ n: Int) -> String {
+        switch self {
+        case .image: return counted(n, "image", "images")
+        case .video: return counted(n, "video", "videos")
+        case .audio: return counted(n, "audio file", "audio files")
+        case .pdf: return counted(n, "PDF", "PDFs")
+        case .document: return counted(n, "document", "documents")
+        case .folder: return counted(n, "folder", "folders")
+        case .other: return counted(n, "file", "files")
+        }
+    }
+
     var noun: String {
         switch self {
         case .image: return "image"
@@ -20,7 +33,7 @@ enum Kind: String {
 enum Mode: Int, CaseIterable, Identifiable {
     case convert, tools, actions
     var id: Int { rawValue }
-    var title: String { ["Convert", "Tools", "Actions"][rawValue] }
+    var title: String { [L("Convert"), L("Tools"), L("Actions")][rawValue] }
     var key: String { ["⇧", "⌘", "⌃"][rawValue] }
     var next: Mode { Mode(rawValue: (rawValue + 1) % 3)! }
 }
@@ -109,7 +122,7 @@ enum Catalog {
     // MARK: Operations
 
     private static func o(_ id: String, _ t: String, _ d: String, _ s: String?, _ k: Set<Kind>, batch: Bool = false) -> Op {
-        Op(id: id, title: t, detail: d, icon: s, kinds: k, batch: batch)
+        Op(id: id, title: L(t), detail: L(d), icon: s, kinds: k, batch: batch)
     }
 
     private static let everything: Set<Kind> = [.image, .video, .audio, .pdf, .document, .folder, .other]

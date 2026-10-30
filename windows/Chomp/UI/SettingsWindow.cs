@@ -5,6 +5,8 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Microsoft.Win32;
 
+using static Chomp.Loc;
+
 namespace Chomp;
 
 /// <summary>The settings that don't fit in the tray panel: size limit, watched folder, clipboard, updates and which
@@ -25,12 +27,12 @@ public sealed class SettingsWindow : Window
 
     static readonly (Kind Kind, string Name)[] Kinds =
     {
-        (Kind.Image, "Images"), (Kind.Video, "Videos"), (Kind.Audio, "Audio"), (Kind.Pdf, "PDFs"), (Kind.Document, "Docs"), (Kind.Other, "Actions"),
+        (Kind.Image, L("Images")), (Kind.Video, L("Videos")), (Kind.Audio, L("Audio")), (Kind.Pdf, L("PDFs")), (Kind.Document, L("Docs")), (Kind.Other, L("Actions")),
     };
 
     SettingsWindow()
     {
-        Title = "Chomp settings";
+        Title = L("Chomp settings");
         Width = 540;
         Height = 680;
         ResizeMode = ResizeMode.CanMinimize;
@@ -56,10 +58,10 @@ public sealed class SettingsWindow : Window
 
         Section("Watch a folder", "New files that land in it get chewed automatically. The originals stay.", k);
         var folder = Row();
-        folder.Children.Add(Key(p.WatchFolder.Length == 0 ? "Choose folder…" : "Change…", false, 150, k, ChooseFolder));
+        folder.Children.Add(Key(p.WatchFolder.Length == 0 ? L("Choose folder…") : L("Change…"), false, 150, k, ChooseFolder));
         if (p.WatchFolder.Length > 0)
         {
-            folder.Children.Add(Key("Stop", false, 80, k, () =>
+            folder.Children.Add(Key(L("Stop"), false, 80, k, () =>
             {
                 p.WatchFolder = "";
                 p.Save();
@@ -112,8 +114,8 @@ public sealed class SettingsWindow : Window
 
     void Section(string title, string note, Skin k)
     {
-        body.Children.Add(Left(Fonts.Display(title, 18, k.Accent), new Thickness(0, body.Children.Count == 0 ? 0 : 22, 0, 4)));
-        var n = Left(Fonts.BodyText(note, 12), new Thickness(0, 0, 0, 8));
+        body.Children.Add(Left(Fonts.Display(L(title), 18, k.Accent), new Thickness(0, body.Children.Count == 0 ? 0 : 22, 0, 4)));
+        var n = Left(Fonts.BodyText(L(note), 12), new Thickness(0, 0, 0, 8));
         n.TextWrapping = TextWrapping.Wrap;
         n.TextTrimming = TextTrimming.None;
         body.Children.Add(n);
@@ -144,11 +146,11 @@ public sealed class SettingsWindow : Window
     void Toggle(string title, bool value, Action<bool> set, Skin k)
     {
         var row = new DockPanel { Margin = new Thickness(0, 4, 0, 0) };
-        var key = Key(value ? "On" : "Off", value, 52, k, () => set(!value));
+        var key = Key(value ? L("On") : L("Off"), value, 52, k, () => set(!value));
         key.Margin = new Thickness(0);
         DockPanel.SetDock(key, Dock.Right);
         row.Children.Add(key);
-        var label = Left(Fonts.Display(title, 15), new Thickness(0));
+        var label = Left(Fonts.Display(L(title), 15), new Thickness(0));
         label.VerticalAlignment = VerticalAlignment.Center;
         row.Children.Add(label);
         body.Children.Add(row);
@@ -156,7 +158,7 @@ public sealed class SettingsWindow : Window
 
     void ChooseFolder()
     {
-        var d = new OpenFolderDialog { Title = "Chomp will chew new files that land in this folder" };
+        var d = new OpenFolderDialog { Title = L("Chomp will chew new files that land in this folder.") };
         if (Prefs.Current.WatchFolder.Length > 0) d.InitialDirectory = Prefs.Current.WatchFolder;
         if (d.ShowDialog(this) != true) return;
         Prefs.Current.WatchFolder = d.FolderName;

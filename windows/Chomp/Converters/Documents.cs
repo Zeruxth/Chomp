@@ -11,6 +11,8 @@ using PdfSharp.Drawing;
 using PdfSharp.Fonts;
 using PdfSharp.Pdf;
 
+using static Chomp.Loc;
+
 namespace Chomp;
 
 // MARK: - The shape every document goes through
@@ -115,7 +117,7 @@ public static class Docs
             words += s.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
             chars += s.Length;
         }
-        return new RunResult { Note = $"{words:N0} words · {chars:N0} characters" };
+        return new RunResult { Note = L("{0} words · {1} characters", words.ToString("N0"), chars.ToString("N0")) };
     }
 }
 

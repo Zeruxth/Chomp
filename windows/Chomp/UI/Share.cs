@@ -9,6 +9,8 @@ using System.Windows.Media;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 
+using static Chomp.Loc;
+
 namespace Chomp;
 
 /// <summary>The Windows share sheet: Nearby Sharing, Mail, Phone Link and whatever apps take files. It stands in for AirDrop.
@@ -81,8 +83,8 @@ public static class Share
         try
         {
             var n = items.Count;
-            req.Data.Properties.Title = n == 1 ? Path.GetFileName(items[0].TrimEnd('\\')) : $"{n} items";
-            req.Data.Properties.Description = "From Chomp";
+            req.Data.Properties.Title = n == 1 ? Path.GetFileName(items[0].TrimEnd('\\')) : Counted(n, "item", "items");
+            req.Data.Properties.Description = L("From Chomp");
             var things = new List<IStorageItem>();
             foreach (var p in items)
                 things.Add(Directory.Exists(p) ? await StorageFolder.GetFolderFromPathAsync(p) : (IStorageItem)await StorageFile.GetFileFromPathAsync(p));

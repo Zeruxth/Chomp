@@ -22,7 +22,7 @@ enum Snapshot {
             m.ops = Catalog.ops(mode, .image)
             m.hover = hover
             m.pop = 2
-            save(WheelRoot(model: m).background(Color(white: 0.55)), "wheel-\(mode.title.lowercased())", dir)
+            save(WheelRoot(model: m).background(Color(white: 0.55)), "wheel-\(["convert", "tools", "actions"][mode.rawValue])", dir)
         }
 
         for (name, stage) in [("working", WheelModel.Stage.working), ("done", .done(ok: true)), ("failed", .done(ok: false))] {
