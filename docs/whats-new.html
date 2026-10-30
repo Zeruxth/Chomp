@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>What's new in Chomp</title>
+<meta name="description" content="Every Chomp release, newest first.">
+<link rel="icon" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Code:wght@400;500;600;700&display=swap">
+<style>
+@font-face { font-family: "Pixelify Sans"; src: url("fonts/PixelifySans.ttf") format("truetype"); font-weight: 400 700; font-display: swap; }
+@font-face { font-family: "Silkscreen"; src: url("fonts/Silkscreen-Regular.ttf") format("truetype"); font-display: swap; }
+:root {
+  --night: #120c14; --stone: #1d1420; --panel: #241a26; --raised: #2f2231; --rim: #3d2d3f; --ink: #140a08;
+  --tooth: #f6f1e6; --muted: #b3a6b8; --accent: #ffd45c; --accent-dk: #c48d2a;
+  --display: "Pixelify Sans", "Silkscreen", ui-monospace, monospace;
+  --label: "Silkscreen", "Pixelify Sans", ui-monospace, monospace;
+  --body: "Google Sans Code", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { background: var(--night); }
+body { margin: 0; color: var(--tooth); font: 16px/1.65 var(--body); background: var(--stone);
+  background-image: linear-gradient(to bottom, rgba(18,12,20,.35), rgba(18,12,20,.92)), repeating-linear-gradient(0deg, transparent 0 15px, #170f1a 15px 16px),
+    repeating-linear-gradient(90deg, transparent 0 31px, #170f1a 31px 32px); -webkit-font-smoothing: antialiased; }
+a { color: var(--accent); text-underline-offset: 4px; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; font-variant-ligatures: none; margin: 0; line-height: 1.1; }
+main { max-width: 760px; margin: 0 auto; padding: 40px max(20px, env(safe-area-inset-left, 0px)) 96px; }
+.back { font-family: var(--label); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); text-decoration: none; }
+.back:hover { color: var(--accent); }
+h1 { font-size: clamp(34px, 6vw, 52px); color: var(--accent); text-shadow: 3px 3px 0 var(--ink); margin: 28px 0 8px; }
+.lede { color: var(--muted); margin: 0 0 40px; }
+.release { background: var(--panel); padding: 24px 26px 26px; margin-bottom: 28px;
+  box-shadow: 0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink), -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink), 0 10px 0 0 rgba(0,0,0,.45); }
+.release header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 14px; }
+.release h2 { font-size: 28px; }
+.release .tag { font-family: var(--label); font-size: 11px; text-transform: uppercase; padding: 3px 8px; background: var(--accent); color: var(--ink); }
+.release time { font-size: 13px; color: var(--muted); margin-left: auto; }
+.release h3 { font-family: var(--label); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 18px 0 6px; font-weight: 400; }
+.release ul { margin: 0; padding-left: 20px; }
+.release li { margin: 6px 0; color: #ddd3e0; }
+.release li::marker { color: var(--accent); content: "▪  "; }
+.release b { color: var(--tooth); }
+footer { color: var(--muted); font-size: 14px; text-align: center; padding-top: 12px; }
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="./">← Back to Chomp</a>
+  <h1>What's new</h1>
+  <p class="lede">Every release, newest first. Chomp tells you itself when a new one is out.</p>
+
+  <article class="release">
+    <header><h2>0.6</h2><span class="tag">Latest</span><time datetime="2026-10-30">30 October 2026</time></header>
+    <h3>New tricks</h3>
+    <ul>
+      <li><b>Trim and crop videos.</b> Pick the part to keep and a shape (square, 9:16, 16:9) in a little editor.</li>
+      <li><b>Words in pictures.</b> The Text slice reads a screenshot or photo and copies the words for you.</li>
+      <li><b>Size limit.</b> Choose 10, 25 or 50 MB and the fit slice aims under it. Compress also keeps images under it.</li>
+      <li><b>Watch a folder.</b> New files that land in it get chewed automatically, like turning phone photos into JPGs.</li>
+      <li><b>Shrink copied pictures.</b> Copy a big screenshot, paste a small JPG. Off until you switch it on.</li>
+      <li><b>Choose your slices.</b> Hide the options you never use in More settings.</li>
+      <li><b>Seven languages.</b> English, Spanish, French, German, Portuguese, Japanese and Chinese, following your computer's language.</li>
+    </ul>
+    <h3>Mac</h3>
+    <ul>
+      <li><b>Video and audio work out of the box.</b> ffmpeg now comes inside the app, so there's nothing to install.</li>
+      <li><b>Chomp it</b> in Finder's right-click menu, under Quick Actions.</li>
+    </ul>
+    <h3>Both</h3>
+    <ul>
+      <li>A once-a-day check for new versions, shown at the top of the panel. You can turn it off.</li>
+      <li>Fitting a small video under the limit no longer makes it bigger.</li>
+    </ul>
+  </article>
+
+  <article class="release">
+    <header><h2>0.5</h2><time datetime="2026-10-30">30 October 2026</time></header>
+    <h3>Windows catches up</h3>
+    <ul>
+      <li><b>Drag anywhere, tap a key.</b> Shift, Ctrl or Alt mid-drag opens the wheel under your cursor.</li>
+      <li><b>Cut out backgrounds</b>, on your PC.</li>
+      <li><b>Documents</b> between PDF, DOCX, RTF, TXT, HTML, ODT and Markdown, and Combine into one PDF.</li>
+      <li><b>Share</b> opens the Windows share sheet. <b>HEIC</b> works with Microsoft's free codecs.</li>
+      <li>A pixel toast at the bottom of the screen, with Show and Undo.</li>
+    </ul>
+  </article>
+
+  <article class="release">
+    <header><h2>0.4</h2><time datetime="2026-10-30">30 October 2026</time></header>
+    <h3>Hello, Windows</h3>
+    <ul>
+      <li>The first Chomp for Windows: tray panel, the wheel, Send to, and conversions for images, PDFs, video and audio.</li>
+    </ul>
+  </article>
+
+  <article class="release">
+    <header><h2>0.3</h2><time datetime="2026-10-30">30 October 2026</time></header>
+    <ul>
+      <li>Results show right in the wheel, with Show, Undo and Close.</li>
+      <li>WebP built in, and an AVIF fix.</li>
+      <li>Save to a folder of your choice.</li>
+      <li>Chomp eats a random snack every time. There are ten.</li>
+    </ul>
+  </article>
+
+  <article class="release">
+    <header><h2>0.2</h2></header>
+    <ul>
+      <li>The pixel pass: a pixel wheel, pixel icons, pixel fonts, and chest skins.</li>
+    </ul>
+  </article>
+
+  <article class="release">
+    <header><h2>0.1</h2></header>
+    <ul>
+      <li>The first chomp.</li>
+    </ul>
+  </article>
+
+  <footer><a href="https://github.com/Zeruxth/Chomp/releases">Every download on GitHub</a></footer>
+</main>
+</body>
+</html>

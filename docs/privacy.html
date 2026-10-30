@@ -22,19 +22,25 @@
   <p class="meta">Last updated: 30 October 2026</p>
 
   <h2>The short version</h2>
-  <p>Chomp doesn't collect anything. Your files never leave your computer.</p>
+  <p>Chomp doesn't collect anything. Your files never leave your computer. The only thing it asks the internet is whether there's a newer version.</p>
 
   <h2>Your files</h2>
-  <p>Chomp converts, resizes and compresses files entirely on your computer, using the frameworks built into macOS or Windows and, on Windows, a copy of ffmpeg for video and audio and a small model for cutting out backgrounds, both inside Chomp. Files are never uploaded, sent or shared with anyone, including us. Chomp only opens files you drop on it or pick yourself, and saves new files to Downloads/Chomped or to a folder you choose.</p>
+  <p>Chomp converts, resizes and compresses files entirely on your computer, using the frameworks built into macOS or Windows, a copy of ffmpeg inside Chomp for video and audio, and on Windows a small model for cutting out backgrounds. Reading text in pictures uses the text recognition built into your system. Files are never uploaded, sent or shared with anyone, including us. Chomp only opens files you drop on it, pick yourself, or put in a folder you've asked it to watch, and saves new files next to the original, to Downloads/Chomp or to a folder you choose.</p>
 
   <h2>Data we collect</h2>
-  <p>None. Chomp has no accounts, no analytics, no ads, no tracking and no network connections.</p>
+  <p>None. Chomp has no accounts, no analytics, no ads and no tracking.</p>
+
+  <h2>Update checks</h2>
+  <p>Once a day Chomp asks GitHub for the number of the latest release, so it can tell you when there's a new one. That request carries nothing about you or your files; GitHub sees it like any visit to a public web page. You can switch it off in More settings.</p>
+
+  <h2>The clipboard</h2>
+  <p>If you switch on “Shrink copied pictures”, Chomp looks at pictures you copy and, when a big one can be made much smaller, swaps it for a JPG kept in Chomp's cache folder. Nothing leaves your computer, and it's off unless you turn it on.</p>
 
   <h2>What stays on your computer</h2>
   <ul>
     <li>Your settings, like your chest skin, quality and where to save files.</li>
     <li>A count of how many files you've fed Chomp, used to unlock the Royal skin.</li>
-    <li>Permission for folders you've allowed Chomp to save into.</li>
+    <li>Permission for folders you've allowed Chomp to save into or watch.</li>
   </ul>
   <p>On a Mac these are stored by macOS for the app and are removed when you delete Chomp. On Windows they are kept in <code>%APPDATA%\Chomp\settings.json</code>; Chomp also adds itself to the Send to menu, and to the apps that start with Windows if you turn that on. To remove everything, turn both off in Chomp's settings and delete that folder.</p>
 
