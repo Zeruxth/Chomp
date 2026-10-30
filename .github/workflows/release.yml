@@ -1,5 +1,5 @@
-# Builds Chomp.app for Apple Silicon and Intel.
-# - Push a tag like v0.3.0 → publishes a GitHub Release with Chomp.zip.
+# Builds Chomp.app for Apple Silicon and Intel, and Chomp for Windows.
+# - Push a tag like v0.3.0 → publishes a GitHub Release with Chomp.zip and Chomp-Windows.zip.
 # - Run it by hand (Actions → Release → Run workflow) → test build only, downloadable from the run page.
 name: Release
 
@@ -46,12 +46,61 @@ jobs:
             Chomp.zip
             Chomp.zip.sha256
 
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Build Chomp.exe
+        shell: pwsh
+        run: |
+          $v = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME.TrimStart('v') } else { '0.0.0' }
+          dotnet publish windows/Chomp -c Release -o Chomp -p:Version=$v
+
+      - name: Bundle ffmpeg
+        shell: pwsh
+        run: windows/fetch-ffmpeg.ps1 Chomp
+
+      - name: Smoke test
+        shell: pwsh
+        run: windows/smoke-test.ps1 Chomp/Chomp.exe
+
+      - name: Zip
+        shell: pwsh
+        run: |
+          Compress-Archive -Path Chomp -DestinationPath Chomp-Windows.zip
+          $h = (Get-FileHash Chomp-Windows.zip -Algorithm SHA256).Hash.ToLower()
+          "$h  Chomp-Windows.zip" | Tee-Object Chomp-Windows.zip.sha256
+          Get-Item Chomp-Windows.zip | Select-Object Name, Length
+
+      - name: Keep the build on the run page
+        uses: actions/upload-artifact@v4
+        with:
+          name: Chomp-Windows
+          path: |
+            Chomp-Windows.zip
+            Chomp-Windows.zip.sha256
+
+  publish:
+    if: github.ref_type == 'tag'
+    needs: [build, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
       - name: Publish release
-        if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" Chomp.zip Chomp.zip.sha256 \
+          gh release create "$GITHUB_REF_NAME" Chomp.zip Chomp.zip.sha256 Chomp-Windows.zip Chomp-Windows.zip.sha256 \
             --title "Chomp $GITHUB_REF_NAME" \
             --notes-file .github/release-notes.md \
             --generate-notes

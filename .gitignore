@@ -3,3 +3,5 @@ build/
 .swiftpm/
 .DS_Store
 .claude/
+windows/Chomp/bin/
+windows/Chomp/obj/
