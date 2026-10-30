@@ -39,7 +39,7 @@ For later versions, bump `MARKETING_VERSION` (e.g. `1.0.1`) and `CURRENT_PROJECT
 
 Everything is written already in `APP_STORE_CONNECT.md`: name, subtitle, description, keywords, URLs, review notes, age rating and privacy answers. Screenshots are in `screenshots/`, already 2880 × 1800.
 
-The privacy policy URL (`https://zeruxth.github.io/Chomp/privacy.html`) must be live before you submit. The page is `privacy.html` in this folder.
+The privacy policy is already live at `https://zeruxth.github.io/Chomp/privacy.html`.
 
 ## 5. Submit
 
