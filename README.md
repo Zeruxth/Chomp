@@ -33,6 +33,18 @@ Your originals are never touched. Results go next to the original, to Downloads/
 
 Video and audio formats, plus AVIF on macOS 13, need [ffmpeg](https://ffmpeg.org) for now (`brew install ffmpeg`). Images, PDFs and documents work out of the box, including WebP.
 
+## Windows (early)
+
+Chomp for Windows is in its first phase. Download **Chomp-Windows.zip** from the [latest release](https://github.com/Zeruxth/Chomp/releases/latest), unzip it anywhere and run **Chomp.exe**. The chest lives in the system tray.
+
+- Click the chest and drop files on the panel: the wheel pops up under your cursor, just like on a Mac.
+- Or right-click any file → **Send to → Chomp**.
+- Images (JPG, PNG, WebP, TIFF, GIF, BMP, AVIF), PDFs, video and audio work. ffmpeg comes in the zip.
+- HEIC and AVIF *input* need Microsoft's free HEIF / AV1 Image Extensions from the Store.
+- Not yet: the drag-anywhere-and-tap-a-key trick, cut out background, and Word/RTF conversions.
+
+Windows will warn that Chomp is from an unknown publisher (it isn't paid-signed). Click **More info → Run anyway**.
+
 ## Build it yourself
 
 ```bash
@@ -42,9 +54,17 @@ xcode-select --install     # once, for Apple's command line tools
 
 `UNIVERSAL=1 ./build.sh` builds one app that runs on both Apple Silicon and Intel.
 
+On Windows, with the [.NET 10 SDK](https://dotnet.microsoft.com/download):
+
+```powershell
+dotnet publish windows/Chomp -c Release -o out
+windows/fetch-ffmpeg.ps1 out          # optional: video, audio and AVIF
+windows/smoke-test.ps1 out/Chomp.exe  # runs real conversions headlessly
+```
+
 ## Releases
 
-Pushing a tag like `v0.3.0` makes GitHub build Chomp.zip and publish it as a release (see `.github/workflows/release.yml`):
+Pushing a tag like `v0.3.0` makes GitHub build Chomp.zip and Chomp-Windows.zip and publish them as a release (see `.github/workflows/release.yml`):
 
 ```bash
 git tag v0.3.0
@@ -60,6 +80,7 @@ git push origin v0.3.0
 - `Catalog.swift`: which options show for which file type.
 - `Engine.swift`, `Converters.swift`, `WebP.swift`: the actual work (ImageIO, PDFKit, textutil, libwebp, ffmpeg).
 - `HUD.swift`: the bottom toast, used when the wheel has closed. `MenuPanel.swift`: menu bar panel and settings.
+- `windows/Chomp/`: the Windows app (C#, WPF). Same catalog, pixel art and wheel, drawn by the same maths; WIC, PDFsharp, PdfPig and Windows' PDF renderer do the work.
 - `Snapshot.swift`: `Chomp --snapshot <folder> [--skin slime]` saves PNGs of the UI; `Chomp --run <op> <files>` runs a conversion from Terminal.
 
 ## Licence
