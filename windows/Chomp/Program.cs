@@ -77,7 +77,10 @@ public static class Program
     static int RunOp(string id, List<string> files)
     {
         AttachConsole(-1);
-        var op = Catalog.All().FirstOrDefault(o => o.Id == id);
+        // The same id (to.gif, to.jpg…) exists for several kinds of file: take the one for these files.
+        var kind = files.Count > 0 ? Catalog.KindOf(files[0]) : Kind.Other;
+        var matches = Catalog.All().Where(o => o.Id == id).ToList();
+        var op = matches.FirstOrDefault(o => o.Kinds.Contains(kind)) ?? matches.FirstOrDefault();
         if (op == null) { Console.WriteLine($"No such op: {id}"); return 2; }
         var r = Task.Run(() => Engine.Run(op, files.Select(Path.GetFullPath).ToList())).GetAwaiter().GetResult();
         Console.WriteLine("outputs: " + string.Join(", ", r.Outputs));
