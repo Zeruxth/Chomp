@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.IO;
+using System.Windows;
 
 namespace Chomp;
 
@@ -14,7 +16,12 @@ public sealed class RunResult
     public List<string> Failures { get; } = new();
     public int Skipped { get; set; }
     public string? Note { get; set; }
+    /// <summary>The person backed out (closed the editor): nothing to report.</summary>
+    public bool Cancelled { get; set; }
 }
+
+/// <summary>Thrown when someone backs out halfway, like closing the video editor.</summary>
+public sealed class CancelledException : Exception;
 
 /// <summary>Runs one wheel choice over a drop (files and/or folders).</summary>
 public static class Engine
@@ -55,6 +62,9 @@ public static class Engine
             r.Skipped = before - files.Count;
         }
 
+        // The editor works on one video at a time.
+        if (op.Id == "vid.edit") files = files.Take(1).ToList();
+
         var limit = Math.Max(2, Math.Min(4, Environment.ProcessorCount / 2));
         using var gate = new SemaphoreSlim(limit);
         var sync = new object();
@@ -70,6 +80,10 @@ public static class Engine
                     r.BytesIn += Files.Size(f);
                     r.BytesOut += outs.Sum(Files.Size);
                 }
+            }
+            catch (CancelledException)
+            {
+                r.Cancelled = true;
             }
             catch (Exception e)
             {
@@ -120,7 +134,17 @@ public static class Engine
             case "img.compress":
             {
                 var t = Images.CompressTarget(src);
-                return new() { await Images.Convert(src, t, Files.Dest(src, t, "small"), Math.Min(q, 0.7)) };
+                var o = await Images.Convert(src, t, Files.Dest(src, t, "small"), Math.Min(q, 0.7));
+                await Images.Squeeze(o, t, Prefs.Current.Limit * 1_000_000L);
+                return new() { o };
+            }
+            case "img.text":
+            {
+                var text = Ocr.Text(src);
+                var o = Files.Dest(src, "txt");
+                await File.WriteAllTextAsync(o, text);
+                Application.Current?.Dispatcher.Invoke(() => Clipboard.SetText(text));
+                return new() { o };
             }
             case "img.1080":
             {
@@ -149,8 +173,14 @@ public static class Engine
             // Video
             case "vid.compress":
                 return new() { await Media.FF(src, "mp4", "small", [.. Media.H264(28, audio: "128k"), "-movflags", "+faststart"]) };
-            case "vid.10mb":
-                return new() { await Media.Under(src, 10) };
+            case "vid.fit":
+                return new() { await Media.Under(src, Prefs.Current.Limit) };
+            case "vid.edit":
+            {
+                var d = Application.Current?.Dispatcher ?? throw new ChompException("The editor needs the app running");
+                var plan = await d.InvokeAsync(() => EditorWindow.Ask(src)).Task.Unwrap() ?? throw new CancelledException();
+                return new() { await Media.Edit(src, plan) };
+            }
             case "vid.half":
                 return new() { await Media.FF(src, "mp4", "half", Media.H264(23, vf: "scale=trunc(iw/4)*2:trunc(ih/4)*2")) };
             case "vid.frame":

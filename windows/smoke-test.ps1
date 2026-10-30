@@ -9,6 +9,15 @@ Remove-Item -Recurse -Force $work -ErrorAction SilentlyContinue
 New-Item -ItemType Directory $work | Out-Null
 
 Copy-Item Resources/AppIcon.iconset/icon_256x256.png "$work\icon.png"
+# A picture of words, for the text-recognition test.
+Add-Type -AssemblyName System.Drawing
+$bmp = New-Object System.Drawing.Bitmap 900, 220
+$g = [System.Drawing.Graphics]::FromImage($bmp)
+$g.Clear([System.Drawing.Color]::White)
+$g.TextRenderingHint = 'AntiAlias'
+$g.DrawString('Chomp eats files', (New-Object System.Drawing.Font 'Arial', 60), [System.Drawing.Brushes]::Black, 20, 50)
+$bmp.Save("$work\text.png")
+$g.Dispose(); $bmp.Dispose()
 @"
 # Notes
 
@@ -70,6 +79,12 @@ Chomp img.strip icon.jpg 'icon (clean).jpg'
 Chomp img.compress icon.png 'icon (small).webp'
 Chomp img.pdf @('icon.png', 'icon.jpg') Combined.pdf
 
+# Text in a picture: Windows' own recognition, if the build machine has an OCR language.
+$p = Start-Process $Exe -ArgumentList @('--run', 'img.text', "`"$work\text.png`"") -Wait -PassThru -NoNewWindow
+if (Test-Path "$work\text.txt") { Text text.txt 'Chomp' }
+elseif ($p.ExitCode -eq 1) { Write-Host 'ok   img.text fails cleanly (no OCR language here)' }
+else { Write-Host "FAIL img.text (exit $($p.ExitCode))"; $failed++ }
+
 # PDF
 Chomp to.jpg icon.pdf 'icon 2.jpg'
 Chomp to.txt icon.pdf icon.txt
@@ -127,7 +142,7 @@ if ($hasFF) {
     Chomp to.gif clip.mp4 clip.gif
     Chomp to.webm clip.mp4 clip.webm
     Chomp to.mp3 clip.mp4 clip.mp3
-    Chomp vid.10mb clip.mp4 'clip (10MB).mp4'
+    Chomp vid.fit clip.mp4 'clip (10MB).mp4'
     Chomp vid.frame clip.mp4 'clip (frame).png'
     Chomp aud.loud clip.mp3 'clip (loud).mp3'
 } else {

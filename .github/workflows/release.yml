@@ -35,6 +35,9 @@ jobs:
           fi
           ./build.sh
 
+      - name: Smoke test
+        run: ./smoke-test.sh build/Chomp.app
+
       - name: Zip
         run: |
           ditto -c -k --sequesterRsrc --keepParent build/Chomp.app Chomp.zip

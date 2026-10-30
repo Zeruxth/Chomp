@@ -37,6 +37,7 @@ public sealed class MenuWindow : Window
         KeyDown += (_, e) => { if (e.Key == Key.Escape) Hide(); };
         Prefs.Changed += () => { if (IsVisible) Build(); };
         History.Items.CollectionChanged += (_, _) => { if (IsVisible) Build(); };
+        Updates.Changed += () => { if (IsVisible) Build(); };
     }
 
     /// <summary>Opens just above the tray, at the bottom right of the screen the cursor is on.</summary>
@@ -74,6 +75,7 @@ public sealed class MenuWindow : Window
         head.Children.Add(titles);
         body.Children.Add(head);
 
+        if (Updates.Available is { } u) body.Children.Add(UpdateNote(u, k));
         body.Children.Add(DropZone(k));
 
         if (Bin.FFmpeg == null) body.Children.Add(FFmpegNote(k));
@@ -137,10 +139,31 @@ public sealed class MenuWindow : Window
             WheelWindow.Shared.Open(d.FileNames, Mode.Convert, interactive: true);
     }
 
+    UIElement UpdateNote(Updates.Release u, Skin k)
+    {
+        var row = new DockPanel { Margin = new Thickness(10, 0, 10, 0), Height = 36 };
+        var get = Fonts.Label("Get it", 9, Pal.Ink);
+        get.VerticalAlignment = VerticalAlignment.Center;
+        DockPanel.SetDock(get, Dock.Right);
+        row.Children.Add(get);
+        var t = AlignLeft(Fonts.Display($"Chomp {u.Version} is out", 14, Pal.Ink));
+        t.VerticalAlignment = VerticalAlignment.Center;
+        row.Children.Add(t);
+        var box = PixelUI.Box(row, k.Accent, shade: true);
+        box.Margin = new Thickness(0, 0, 0, 12);
+        box.Cursor = Cursors.Hand;
+        box.MouseLeftButtonUp += (_, _) =>
+        {
+            Hide();
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(u.Page) { UseShellExecute = true });
+        };
+        return box;
+    }
+
     UIElement FFmpegNote(Skin k)
     {
         var s = new StackPanel { Margin = new Thickness(0, 12, 0, 0) };
-        s.Children.Add(AlignLeft(Fonts.BodyText("Video, audio and AVIF need ffmpeg", 11, Pal.Tooth)));
+        s.Children.Add(AlignLeft(Fonts.BodyText("Video and audio need ffmpeg", 11, Pal.Tooth)));
         var copy = AlignLeft(Fonts.Label("Copy: winget install ffmpeg", 9, k.Accent));
         copy.Cursor = Cursors.Hand;
         copy.Margin = new Thickness(0, 4, 0, 0);
@@ -245,6 +268,12 @@ public sealed class MenuWindow : Window
         Toggle("Sounds", p.Sounds, v => { p.Sounds = v; p.Save(); }, k);
         Toggle("Start with Windows", Integration.StartsWithWindows, v => { Integration.StartsWithWindows = v; Build(); }, k);
         Toggle("In Send to menu", Integration.InSendTo, v => { Integration.InSendTo = v; Build(); }, k);
+
+        var more = AlignLeft(Fonts.Label("More settings…", 10, k.Accent));
+        more.Cursor = Cursors.Hand;
+        more.Margin = new Thickness(0, 14, 0, 0);
+        more.MouseLeftButtonUp += (_, _) => { Hide(); SettingsWindow.ShowIt(); };
+        body.Children.Add(more);
     }
 
     void Toggle(string title, bool value, Action<bool> set, Skin k)

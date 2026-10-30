@@ -13,7 +13,7 @@ namespace Chomp;
 
 public sealed class ChompException(string message) : Exception(message)
 {
-    public static ChompException NeedsFFmpeg => new("Needs ffmpeg (winget install ffmpeg)");
+    public static ChompException NeedsFFmpeg => new("This copy of Chomp has no ffmpeg: download it again from the site");
 }
 
 // MARK: - Preferences
@@ -31,6 +31,18 @@ public sealed class Prefs
     public bool Sounds { get; set; } = true;
     public int Chomps { get; set; }
     public bool Onboarded { get; set; }
+
+    /// <summary>What the "fit" slices aim under, in MB: 10 is Discord's limit, 25 email's.</summary>
+    public int SizeLimit { get; set; } = 10;
+    public static readonly int[] SizeLimits = { 10, 25, 50 };
+    public bool CheckUpdates { get; set; } = true;
+    public bool ShrinkClipboard { get; set; }
+    public string WatchFolder { get; set; } = "";
+    public string WatchRule { get; set; } = "heicToJpg";
+    /// <summary>Wheel slices someone switched off, as "kind:op id" (actions use "any:").</summary>
+    public List<string> HiddenSlices { get; set; } = new();
+
+    public int Limit => SizeLimits.Contains(SizeLimit) ? SizeLimit : 10;
 
     public static readonly string Dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Chomp");
     static readonly string FilePath = Path.Combine(Dir, "settings.json");

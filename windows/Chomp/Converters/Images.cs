@@ -312,6 +312,24 @@ public static class Images
         return o;
     }
 
+    /// <summary>Still over the size limit? Lower the quality, then the size, until it fits.</summary>
+    public static async Task Squeeze(string o, string ext, long limit)
+    {
+        if (Files.Size(o) <= limit || ext is not ("jpg" or "webp" or "avif" or "heic")) return;
+        var full = Load(o);
+        double q = 0.6, scale = 1;
+        for (var i = 0; i < 8; i++)
+        {
+            var img = scale < 1 ? full.Fit(Math.Max(1, (int)(Math.Max(full.W, full.H) * scale))) : full;
+            var tmp = Files.Temp(ext);
+            await Save(img, tmp, ext, q, null);
+            var fits = Files.Size(tmp) <= limit;
+            File.Move(tmp, o, overwrite: true);
+            if (fits) return;
+            if (q > 0.45) q -= 0.1; else scale *= 0.75;
+        }
+    }
+
     /// <summary>One page per image, each page the image's own size.</summary>
     public static void ToPdf(IReadOnlyList<string> files, string o)
     {

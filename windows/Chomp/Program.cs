@@ -117,6 +117,9 @@ public sealed class ChompApp : Application
         WheelWindow.Shared.OnRun = Run;
         watcher.OnTrigger = m => WheelWindow.Shared.Trigger(m);
         watcher.Start();
+        Updates.Start();
+        FolderWatcher.Shared.Restart();
+        ClipboardShrinker.Shared.Start();
         Program.Listen(f => Dispatcher.InvokeAsync(() => OpenWheel(f)));
 
         var p = Prefs.Current;
@@ -157,6 +160,7 @@ public sealed class ChompApp : Application
 
     void Finish(Op op, RunResult r, int job)
     {
+        if (r.Cancelled && r.Outputs.Count == 0 && r.Failures.Count == 0) return;
         var isConvert = op.Id.StartsWith("to.");
         var n = r.Outputs.Count;
         var parts = new List<string>();
