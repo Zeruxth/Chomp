@@ -53,7 +53,7 @@ public static class Mimic
 
     public static List<Frame> ChompFrames(int food)
     {
-        var k = Food.Colors.GetValueOrDefault(Food.All[food % Food.All.Length].Crumb, 0xFFFFFF);
+        var k = Food.Colors.TryGetValue(Food.All[food % Food.All.Length].Crumb, out var crumb) ? crumb : 0xFFFFFFu;
         var frames = ChompSteps.Select(s => new Frame
         {
             Open = s.Open, Eyes = s.Open > 0 ? Eyes.Glow : Eyes.None, Tongue = s.Tongue, Food = (food, s.Y, s.Inside),
