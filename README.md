@@ -1,40 +1,67 @@
 # Chomp
 
-Zero-click file converter for Mac. Lives in the menu bar.
+A pixel-art treasure chest that eats your files. Drag a file, tap a key, drop it on the wheel: Chomp converts, shrinks or sends it. Lives in the menu bar on your Mac.
+
+<p>
+  <img src="docs/screens/wheel-convert.png" width="300" alt="The Chomp wheel showing image formats">
+  <img src="docs/screens/wheel-done.png" width="300" alt="Chomp after converting a file, showing the space saved">
+</p>
+
+## Install
+
+1. Download **Chomp.zip** from the [latest release](https://github.com/Zeruxth/Chomp/releases/latest) and unzip it.
+2. Drag **Chomp.app** into your Applications folder and open it.
+3. The first time, macOS will say it can't check Chomp for malware. That's because Chomp is free and isn't paid-signed with Apple. Click **Done**, then open **System Settings → Privacy & Security**, scroll down, and click **Open Anyway** next to Chomp. You only do this once.
+
+Look for the little chest in your menu bar. Works on macOS 13 or newer, on Apple Silicon and Intel Macs.
+
+Everything happens on your Mac. Chomp never uploads your files.
 
 ## Use
 
 Start dragging any file or folder, then tap:
 
-- **⇧ Shift**: convert (JPG, WebP, HEIC, MP4, GIF, MP3, PDF, DOCX…)
+- **⇧ Shift**: convert (JPG, PNG, WebP, HEIC, AVIF, PDF, MP4, GIF, MP3, DOCX…)
 - **⌘ Command**: tools (compress, 10 MB video, cut out background, merge PDFs, word count…)
 - **⌃ Control**: actions (AirDrop, copy, copy path, zip, Terminal, Desktop)
 
-A wheel opens under the cursor. Drop on a segment and you're done. Drop in the middle to cancel. While dragging, you can also hover the pills under the wheel to switch modes.
+A wheel opens under the cursor. Drop on a slice and Chomp gets to work, right there in the wheel: it chews, then shows what it made with **Show**, **Undo** and **Close**. Drop in the middle to cancel. While dragging, you can also hover the keys under the wheel to switch modes.
 
-There are other ways in, too: right-click a file and choose Open With → Chomp, or drop files on the menu bar panel. Then click a segment, use ←/→ and Return, or press 1–9.
+Other ways in: right-click a file and choose Open With → Chomp, or drop files on the menu bar panel. Then click a slice, use ←/→ and Return, or press 1–9.
 
-Your originals are never touched. Results go next to the original (or to Downloads/Chomp, which you can set in the menu bar panel). After each job, the toast at the bottom shows how much space you saved, plus **Show** and **Undo** buttons.
+Your originals are never touched. Results go next to the original, to Downloads/Chomp, or to a folder you pick (menu bar panel → Save to). The panel also has chest skins, quality, and a switch for plain text if pixel fonts are hard to read.
 
-## Build
+Video and audio formats, plus AVIF on macOS 13, need [ffmpeg](https://ffmpeg.org) for now (`brew install ffmpeg`). Images, PDFs and documents work out of the box, including WebP.
+
+## Build it yourself
 
 ```bash
-xcode-select --install     # once, if you don't have Apple's command line tools
-brew install ffmpeg        # for video, audio, WebP, AVIF
-./build.sh --install
+xcode-select --install     # once, for Apple's command line tools
+./build.sh --install       # builds Chomp.app and copies it to /Applications
 ```
 
-Requires macOS 13+. Cut out needs macOS 14+.
+`UNIVERSAL=1 ./build.sh` builds one app that runs on both Apple Silicon and Intel.
+
+## Releases
+
+Pushing a tag like `v0.3.0` makes GitHub build Chomp.zip and publish it as a release (see `.github/workflows/release.yml`):
+
+```bash
+git tag v0.3.0
+git push origin v0.3.0
+```
 
 ## Files
 
 - `DragWatcher.swift`: spots file drags anywhere and catches the key taps. No Accessibility permission needed.
-- `Wheel.swift`: the wheel window, hit-testing, layout.
-- `PixelArt.swift`: chest skins, pixel icons, pixel fonts, frames, and the pixel-by-pixel wheel disc.
-- `Mimic.swift`: Chomp himself, frame by frame.
+- `Wheel.swift`: the wheel window, hit-testing, layout, and the result disc after a drop.
+- `PixelArt.swift`: chest skins, pixel icons, pixel fonts, frames, and the pixel-by-pixel wheel art.
+- `Mimic.swift`: Chomp, frame by frame.
 - `Catalog.swift`: which options show for which file type.
-- `Engine.swift`, `Converters.swift`: the actual work (ImageIO, PDFKit, textutil, ffmpeg).
-- `HUD.swift`: the toast. `MenuPanel.swift`: menu bar panel and settings.
-- `Snapshot.swift`: `Chomp.app/Contents/MacOS/Chomp --snapshot <folder> [--skin slime]` saves PNGs of the wheel, toast and panel.
+- `Engine.swift`, `Converters.swift`, `WebP.swift`: the actual work (ImageIO, PDFKit, textutil, libwebp, ffmpeg).
+- `HUD.swift`: the bottom toast, used when the wheel has closed. `MenuPanel.swift`: menu bar panel and settings.
+- `Snapshot.swift`: `Chomp --snapshot <folder> [--skin slime]` saves PNGs of the UI; `Chomp --run <op> <files>` runs a conversion from Terminal.
 
-Fonts: Pixelify Sans and Silkscreen, both SIL Open Font License, in `Resources/Fonts`.
+## Licence
+
+MIT, see [LICENSE](LICENSE). Includes libwebp (BSD) and the Pixelify Sans and Silkscreen fonts (SIL Open Font License).

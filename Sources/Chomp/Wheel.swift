@@ -257,17 +257,18 @@ final class WheelController {
             self.model.jobTitle = title
             self.model.jobDetail = detail
             self.model.outputs = outputs
-            self.scheduleHide(ok ? 4.5 : 7)
+            self.scheduleHide(ok ? 3 : 6)
         }
         return true
     }
 
-    /// Fades out after a while, but never from under the pointer.
+    /// Fades out by itself. The pointer is usually still on Chomp after a drop, so only
+    /// hovering one of the Show / Undo / Close keys holds it open.
     private func scheduleHide(_ secs: Double) {
         hideItem?.cancel()
         let item = DispatchWorkItem { [weak self] in
             guard let self else { return }
-            if NSMouseInRect(NSEvent.mouseLocation, self.panel.frame, false) { self.scheduleHide(1.5) } else { self.hide() }
+            if self.model.pillHover != nil { self.scheduleHide(1.5) } else { self.hide() }
         }
         hideItem = item
         DispatchQueue.main.asyncAfter(deadline: .now() + secs, execute: item)
