@@ -54,6 +54,23 @@ public static class Native
     /// <summary>How far the mouse has to move with the button down before Windows calls it a drag, in physical pixels.</summary>
     public static (int X, int Y) DragDistance() => (GetSystemMetrics(68 /* SM_CXDRAG */), GetSystemMetrics(69 /* SM_CYDRAG */));
 
+    [DllImport("user32.dll")] static extern IntPtr WindowFromPoint(POINT p);
+    [DllImport("user32.dll")] static extern IntPtr GetParent(IntPtr h);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetClassName(IntPtr h, char[] name, int max);
+
+    /// <summary>Whether a point is over the shell's file view: an Explorer folder, the desktop, or an Open/Save dialog in
+    /// any app (they all host SHELLDLL_DefView), or Explorer's folder tree.</summary>
+    public static bool OverFileView(POINT p)
+    {
+        var buf = new char[64];
+        for (var h = WindowFromPoint(p); h != IntPtr.Zero; h = GetParent(h))
+        {
+            var name = new string(buf, 0, GetClassName(h, buf, buf.Length));
+            if (name is "SHELLDLL_DefView" or "NamespaceTreeControl") return true;
+        }
+        return false;
+    }
+
     /// <summary>Clicks don't steal focus from the app you're dragging out of, and no taskbar button.</summary>
     public static void NoActivate(IntPtr hwnd, bool on)
     {

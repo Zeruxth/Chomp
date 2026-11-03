@@ -129,7 +129,7 @@ public sealed class ChompApp : Application
         {
             p.Onboarded = true;
             p.Save();
-            Dispatcher.InvokeAsync(() => Toast.Shared.Show(Toast.Phase.Done, L("Chomp is awake"), L("Drag any file, then tap Shift, Ctrl or Alt")), DispatcherPriority.ApplicationIdle);
+            Dispatcher.InvokeAsync(() => Toast.Shared.Show(Toast.Phase.Done, L("Chomp is awake"), L("Drag a file from a folder, then tap Shift, Ctrl or Alt")), DispatcherPriority.ApplicationIdle);
             if (!Integration.InSendTo) try { Integration.InSendTo = true; } catch { }
         }
         if (files.Count > 0) OpenWheel(files);
